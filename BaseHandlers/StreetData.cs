@@ -13,13 +13,21 @@ using PluginAPI;
 namespace BaseHandlers
 {
 
+    public interface ByteSerializable
+    {
+        void Read(BinaryReader2 br);
+
+        byte[] ToBytes();
+
+    }
+
     //48-4992 Street
     //5020-12796 Junction
     //12832-18232 Road
     //18304-21304 ChallengePar
     //21344-23840 Spans
     //23856-29552 Exits(8) - Array Padding (Must be dividable by 16)
-    public class ScoreList
+    public class ScoreList : ByteSerializable
     {
         public int[] maScores; //0x0	0x8	int32_t[2] maScores
 
@@ -37,19 +45,9 @@ namespace BaseHandlers
             bytes.Add(BitConverter.GetBytes(maScores[1]));
             return bytes.SelectMany(i => i).ToArray();
         }
-
-        public int getDataSize()
-        {
-            return ToBytes().Count();
-        }
-
-        public void Write(BinaryWriter br)
-        {
-            br.Write(ToBytes());
-        }
     }
 
-    public class ChallengeData
+    public class ChallengeData : ByteSerializable
     {
         public long position;
         public byte[] mDirty;//0x0	0x8	BitArray<2u> mDirty		
@@ -73,21 +71,12 @@ namespace BaseHandlers
             return bytes.SelectMany(i => i).ToArray();
         }
 
-        public int getDataSize()
-        {
-            return ToBytes().Count();
-        }
-
-        public void Write(BinaryWriter br)
-        {
-            br.Write(ToBytes());
-        }
     }
 
-    public class Exit
+    public class Exit : ByteSerializable
     {
         public long position;
-        public int byteLength;
+        public int byteLength = 0;
         public short mSpan; //0x0	0x2	SpanIndex	mSpan
         public byte[] padding; //0x2	0x2			padding
         public float mrAngle; //0x4	0x4	float_t	mrAngle	
@@ -98,7 +87,7 @@ namespace BaseHandlers
             mSpan = br.ReadInt16();
             padding = br.ReadBytes(2);
             mrAngle = br.ReadSingle();
-            byteLength = getDataSize();
+            byteLength = ToBytes().Count();
         }
 
         public byte[] ToBytes()
@@ -110,19 +99,9 @@ namespace BaseHandlers
             return bytes.SelectMany(i => i).ToArray();
         }
 
-        public int getDataSize()
-        {
-            return ToBytes().Count();
-        }
-
-        public void Write(BinaryWriter br)
-        {
-            br.Write(ToBytes());
-        }
-
     }
 
-    public class AIInfo
+    public class AIInfo : ByteSerializable
     {
         public byte muMaxSpeedMPS;
         public byte muMinSpeedMPS;
@@ -141,15 +120,6 @@ namespace BaseHandlers
             return bytes.SelectMany(i => i).ToArray();
         }
 
-        public int getDataSize()
-        {
-            return ToBytes().Count();
-        }
-
-        public void Write(BinaryWriter br)
-        {
-            br.Write(ToBytes());
-        }
     }
 
     public enum ESpanType
@@ -158,7 +128,7 @@ namespace BaseHandlers
         Junction = 1,
         Span_Type_Count = 2,
     }
-    public class SpanBase
+    public class SpanBase : ByteSerializable
     {
         public int miRoadIndex;// 0x0	0x4	RoadIndex	miRoadIndex					
         public short miSpanIndex; //0x4	0x2	SpanIndex	miSpanIndex	
@@ -183,25 +153,17 @@ namespace BaseHandlers
             return bytes.SelectMany(i => i).ToArray();
         }
 
-        public int getDataSize()
-        {
-            return ToBytes().Count();
-        }
-
-        public void Write(BinaryWriter br)
-        {
-            br.Write(ToBytes());
-        }
     }
 
-    public class Street
+    public class Street : ByteSerializable
     {
         public long position;
         public SpanBase super_SpanBase; //0x0	0xC	SpanBase super_SpanBase      SpanBase format
         public AIInfo mAiInfo; //0xC	0x2	AIInfo mAIInfo     AIInfo format
         public byte[] padding; //0xE	0x2			padding
 
-        public void Read(BinaryReader2 br) {
+        public void Read(BinaryReader2 br)
+        {
             position = br.BaseStream.Position;
             SpanBase spanBase = new SpanBase();
             spanBase.Read(br);
@@ -220,19 +182,9 @@ namespace BaseHandlers
             return bytes.SelectMany(i => i).ToArray();
         }
 
-        public int getDataSize()
-        {
-            return ToBytes().Count();
-        }
-
-        public void Write(BinaryWriter br)
-        {
-            br.Write(ToBytes());
-        }
-
     }
 
-    public class Junction
+    public class Junction : ByteSerializable
     {
         public long position;
         public SpanBase super_SpanBase;  //0x0	0xC	SpanBase super_SpanBase      SpanBase format
@@ -269,14 +221,15 @@ namespace BaseHandlers
         {
             List<byte[]> bytes = new List<byte[]>();
             bytes.Add(super_SpanBase.ToBytes());
-            bytes.Add(BitConverter.GetBytes(mpaExits));
+            bytes.Add(BitConverter.GetBytes(mpaExits)); //Calculate this 
             bytes.Add(BitConverter.GetBytes(miExitCount));
             bytes.Add(Encoding.ASCII.GetBytes(macName.PadRight(16).Substring(0, 16).ToCharArray()));
             bytes.Add(BitConverter.GetBytes(miExitCount));
             return bytes.SelectMany(i => i).ToArray();
         }
 
-        public byte[] ExitsToBytes() {
+        public byte[] ExitsToBytes()
+        {
             List<byte[]> bytes = new List<byte[]>();
             foreach (Exit exit in exits)
             {
@@ -290,18 +243,9 @@ namespace BaseHandlers
             return bytes.SelectMany(i => i).ToArray();
         }
 
-        public int getDataSize()
-        {
-            return ToBytes().Count();
-        }
-
-        public void Write(BinaryWriter br)
-        {
-            br.Write(ToBytes());
-        }
     }
 
-    public class Road
+    public class Road : ByteSerializable
     {
         public long position;
         public Vector3 mReferencePosition; //0x0	0xC	Vector3	mReferencePosition
@@ -329,7 +273,7 @@ namespace BaseHandlers
             bytes.Add(BitConverter.GetBytes(mReferencePosition.X));
             bytes.Add(BitConverter.GetBytes(mReferencePosition.Y));
             bytes.Add(BitConverter.GetBytes(mReferencePosition.Z));
-            bytes.Add(BitConverter.GetBytes(mpaSpans));
+            bytes.Add(BitConverter.GetBytes(mpaSpans)); //Calculate this
             bytes.Add(BitConverter.GetBytes(mId));
             bytes.Add(BitConverter.GetBytes(miRoadLimitId0));
             bytes.Add(BitConverter.GetBytes(miRoadLimitId1));
@@ -341,16 +285,18 @@ namespace BaseHandlers
             return bytes.SelectMany(i => i).ToArray();
         }
 
-        public byte[] SpansToBytes() {
+        public byte[] SpansToBytes()
+        {
             List<byte[]> bytes = new List<byte[]>();
-            foreach(int span in spans)
+            foreach (int span in spans)
             {
                 bytes.Add(BitConverter.GetBytes(span));
             }
             return bytes.SelectMany(i => i).ToArray();
         }
 
-        public void Read(BinaryReader2 br) {
+        public void Read(BinaryReader2 br)
+        {
             position = br.BaseStream.Position;
             mReferencePosition = br.ReadVector3F();
             mpaSpans = br.ReadInt32();
@@ -372,7 +318,7 @@ namespace BaseHandlers
         }
     }
 
-    public class ChallengeParScores
+    public class ChallengeParScores : ByteSerializable
     {
         public long position;
         public ChallengeData challengeData; //0x0	0x18	ChallengeData	super_ChallengeData		ChallengeData format
@@ -423,17 +369,58 @@ namespace BaseHandlers
             challenges = new List<ChallengeParScores>();
         }
 
+        public int GetSizeHeader()
+        {
+            List<byte[]> bytes = new List<byte[]>();
+            bytes.Add(BitConverter.GetBytes(miVersion));
+            bytes.Add(BitConverter.GetBytes(miSize));
+            bytes.Add(BitConverter.GetBytes(mpaStreets)); 
+            bytes.Add(BitConverter.GetBytes(mpaJunctions)); 
+            bytes.Add(BitConverter.GetBytes(mpaRoads)); 
+            bytes.Add(BitConverter.GetBytes(mpaChallengeParScores));
+            bytes.Add(BitConverter.GetBytes(streets.Count()));
+            bytes.Add(BitConverter.GetBytes(junctions.Count()));
+            bytes.Add(BitConverter.GetBytes(roads.Count()));
+            return bytes.SelectMany(i => i).ToArray().Count();
+        }
+
+        public int GetSize()
+        {
+            List<byte[]> bytes = new List<byte[]>();
+            bytes.Add(BitConverter.GetBytes(miVersion));
+            bytes.Add(BitConverter.GetBytes(miSize));
+            bytes.Add(BitConverter.GetBytes(mpaStreets)); 
+            bytes.Add(BitConverter.GetBytes(mpaJunctions)); 
+            bytes.Add(BitConverter.GetBytes(mpaRoads)); 
+            bytes.Add(BitConverter.GetBytes(mpaChallengeParScores));
+            bytes.Add(BitConverter.GetBytes(streets.Count()));
+            bytes.Add(BitConverter.GetBytes(junctions.Count()));
+            bytes.Add(BitConverter.GetBytes(roads.Count()));
+            bytes.Add(streets.SelectMany(i => i.ToBytes()).ToArray());
+            bytes.Add(junctions.SelectMany(i => i.ToBytes()).ToArray());
+            bytes.Add(roads.SelectMany(i => i.ToBytes()).ToArray());
+            bytes.Add(challenges.SelectMany(i => i.ToBytes()).ToArray());
+            bytes.Add(roads.SelectMany(i => i.SpansToBytes()).ToArray());
+            bytes.Add(junctions.SelectMany(i => i.ExitsToBytes()).ToArray());
+            return bytes.SelectMany(i => i).ToArray().Count();
+        }
+
+        public int getSizeOf(IEnumerable<ByteSerializable> bytes)
+        {
+            return bytes.ToList().SelectMany(i => i.ToBytes()).ToArray().Count();
+        }
+
         public byte[] ToBytes()
         {
             List<byte[]> bytes = new List<byte[]>();
             bytes.Add(BitConverter.GetBytes(miVersion));
-            bytes.Add(BitConverter.GetBytes(miSize)); //Calculate this
-            bytes.Add(BitConverter.GetBytes(mpaStreets)); //Calculate this
-            bytes.Add(BitConverter.GetBytes(mpaJunctions)); //Calculate this
-            bytes.Add(BitConverter.GetBytes(mpaRoads)); //Calculate this
-            bytes.Add(BitConverter.GetBytes(mpaChallengeParScores)); //Calculate this
+            bytes.Add(BitConverter.GetBytes(GetSize())); //miSize
+            bytes.Add(BitConverter.GetBytes(GetSizeHeader())); // mpaStreets
+            bytes.Add(BitConverter.GetBytes(GetSizeHeader() + getSizeOf(streets.Cast<ByteSerializable>()))); //mpaJunctions
+            bytes.Add(BitConverter.GetBytes(GetSizeHeader() + getSizeOf(streets.Cast<ByteSerializable>()) + getSizeOf(junctions.Cast<ByteSerializable>()))); //mpaRoads
+            bytes.Add(BitConverter.GetBytes(GetSizeHeader() + getSizeOf(streets.Cast<ByteSerializable>()) + getSizeOf(junctions.Cast<ByteSerializable>()) + getSizeOf(roads.Cast<ByteSerializable>()))); //mpaChallengeParScores
             bytes.Add(BitConverter.GetBytes(streets.Count()));
-            bytes.Add(BitConverter.GetBytes(junctions.Count())); 
+            bytes.Add(BitConverter.GetBytes(junctions.Count()));
             bytes.Add(BitConverter.GetBytes(roads.Count()));
             bytes.Add(streets.SelectMany(i => i.ToBytes()).ToArray());
             bytes.Add(junctions.SelectMany(i => i.ToBytes()).ToArray());
