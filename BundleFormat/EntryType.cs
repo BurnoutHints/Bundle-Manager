@@ -2,26 +2,29 @@ namespace BundleFormat
 {
     public enum EntryType
     {
-        // List pulled from RED
+        Invalid = -1,
 
         // Standard types, shared between games
-        Texture = 0x00, // Also called: RwRaster, PlaneTexture, TexturePage
-        Material = 0x01, // Also called: RwMaterial, MaterialAssembly
-        RenderableMesh = 0x02, // Also called: Renderable; likely deprecated
-        TextFile = 0x03,
-        DrawIndexParams = 0x04,
-        IndexBuffer = 0x05,
-        MeshState = 0x06,
-        VertexBuffer = 0x09,
-        VertexDescriptor = 0x0A, // Also called: RwVertexDesc
-        MaterialCRC32 = 0x0B, // Also called: RwMaterialCRC32
-        Renderable = 0x0C, // Also called: RwRenderable, GtRenderable
-        MaterialTechnique = 0x0D,
-        TextureState = 0x0E, // Also called: RwTextureState
-        MaterialState = 0x0F, // Also called: BlendState
+        Texture = 0x0, // Also called: RwRaster, PlaneTexture, TexturePage
+        Material = 0x1, // Also called: RwMaterial, MaterialAssembly
+        RenderableMesh = 0x2, // Also called: Renderable; likely deprecated
+        TextFile = 0x3,
+        DrawIndexParams = 0x4,
+        IndexBuffer = 0x5,
+        MeshState = 0x6,
+        TextureAuxInfo = 0x7,
+        VertexBufferItem = 0x8,
+        VertexBuffer = 0x9,
+        VertexDescriptor = 0xA, // Also called: RwVertexDesc
+        MaterialCRC32 = 0xB, // Also called: RwMaterialCRC32
+        Renderable = 0xC, // Also called: RwRenderable, GtRenderable
+        MaterialTechnique = 0xD,
+        TextureState = 0xE, // Also called: RwTextureState
+        MaterialState = 0xF, // Also called: BlendState
         DepthStencilState = 0x10,
         RasterizerState = 0x11,
         ShaderProgramBuffer = 0x12, // Also called: RwShaderProgramBuffer, PixelShader, VertexShader, ShaderProgramState
+        RenderTargetState = 0x13,
         ShaderParameter = 0x14, // Also called: RwShaderParameter
         RenderableAssembly = 0x15,
         Debug = 0x16, // Also called: RwDebug
@@ -57,10 +60,10 @@ namespace BundleFormat
         ICETakeDictionary = 0x41, // Also called: ICEDictionary; base type: Dictionary
         VideoData = 0x42,
         PolygonSoupList = 0x43, // Also called: CollisionMeshData
+        DeveloperList = 0x44,
         CommsToolListDefinition = 0x45, // Also called: CommsToolDef
         CommsToolList = 0x46, // Also called: CoomsToolInst
 
-        // DLC types?
         BinaryFile = 0x50, // Also called: AlignedBinaryFile; used as base type
         AnimationCollection = 0x51,
 
@@ -71,9 +74,9 @@ namespace BundleFormat
         BearFile = 0x343F, // Also called: Bear Data
         BkPropInstanceList = 0x3A98,
 
-        Registry = 0xA000,
-
         // Sound-related types
+        Registry = 0xA000,
+        GenericRwacFactoryConfiguration = 0xA010,
         GenericRwacWaveContent = 0xA020, // Also called: Generic Wave Content
         GinsuWaveContent = 0xA021, // Also called: Ginsu Wave Content
         AemsBank = 0xA022, // Also called: AEMS Bank
@@ -111,6 +114,7 @@ namespace BundleFormat
         BrnEnvironmentDictionary = 0x10014, // Base type: Dictionary
         GraphicsStub = 0x10015, // Also called: TrafficStub, TrafficGraphicsStub
         StaticSoundMap = 0x10016,
+        DEPRECATED_PFXHookBundle = 0x10017, // Replaced by type 0x31 shortly after 2006-11-13
         StreetData = 0x10018,
         VFXMeshCollection = 0x10019, // Also called: BrnVFXMeshCollection
         MassiveLookupTable = 0x1001A,
@@ -121,6 +125,7 @@ namespace BundleFormat
         ChallengeList = 0x1001F,
         FlaptFile = 0x10020,
         ProfileUpgrade = 0x10021,
+        OfflineChallengeList = 0x10022,
         VehicleAnimation = 0x10023,
         BodypartRemapData = 0x10024, // Also called: BodyPartRemapping
         LUAList = 0x10025, // Also called: LUAInst
@@ -132,7 +137,5 @@ namespace BundleFormat
         BkSoundBulletImpact = 0x11002, // Also called: SoundBulletImpact Data
         BkSoundBulletImpactList = 0x11003, // Also called: SoundBulletImpactList
         BkSoundBulletImpactStream = 0x11004,  // Also called: SoundBulletImpactStream Data
-
-        Invalid = 0x99999
     }
 }
