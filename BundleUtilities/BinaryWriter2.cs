@@ -7,11 +7,11 @@ namespace BundleUtilities
 {
     public class BinaryWriter2 : BinaryWriter
     {
-        public bool BigEndian { get; set; } = false;
+        public bool BigEndian { get; set; }
 
-        public BinaryWriter2(Stream input) : base(input)
+        public BinaryWriter2(Stream input, bool bigEndian = false) : base(input)
         {
-
+            BigEndian = bigEndian;
         }
 
         public override void Write(short value)
