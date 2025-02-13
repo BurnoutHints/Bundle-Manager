@@ -20,6 +20,10 @@
   </Target>
 
   <ItemGroup>
+    <PackageReference Include="ScottPlot.WinForms" Version="5.0.54" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\BundleFormat\BundleFormat.csproj" />
     <ProjectReference Include="..\BundleUtilities\BundleUtilities.csproj" />
     <ProjectReference Include="..\PluginAPI\PluginAPI.csproj" />
