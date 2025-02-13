@@ -52,6 +52,11 @@ namespace LoopModel
             accelGainPlot.Plot.XLabel("Accelerator");
             accelGainPlot.Plot.YLabel("Gain");
 
+            // Show legend on each plot. This must be done only once or it will duplicate itself.
+            rpmPitchPlot.Plot.ShowLegend(Edge.Right);
+            rpmGainPlot.Plot.ShowLegend(Edge.Right);
+            accelGainPlot.Plot.ShowLegend(Edge.Right);
+
             // Create graph grid rows (they're always the same)
             string[] graphNames = { "Pitch/RPM", "Gain/RPM", "Gain/Accelerator" };
             for (int i = 0; i < graphNames.Length; ++i)
@@ -108,7 +113,6 @@ namespace LoopModel
                 scatter.LegendText = _data.Partials[i].WaveName;
             }
             plot.Plot.Legend.FontSize = 10;
-            plot.Plot.ShowLegend(Edge.Right);
             plot.Refresh();
         }
 
