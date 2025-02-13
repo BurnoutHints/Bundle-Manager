@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DebugHelper" Version="1.0.0" />
+    <PackageReference Include="ScottPlot.WinForms" Version="5.0.54" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.9" />
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

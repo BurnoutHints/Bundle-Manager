@@ -7,11 +7,11 @@ namespace BundleUtilities
 {
     public class BinaryReader2 : BinaryReader
     {
-        public bool BigEndian { get; set; } = false;
+        public bool BigEndian { get; set; }
 
-        public BinaryReader2(Stream input) : base(input)
+        public BinaryReader2(Stream input, bool bigEndian = false) : base(input)
         {
-            
+            BigEndian = bigEndian;
         }
 
         public override short ReadInt16()
