@@ -215,7 +215,8 @@ namespace LoopModel
             partialsGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             partialsGrid.Size = new System.Drawing.Size(272, 273);
             partialsGrid.TabIndex = 1;
-            partialsGrid.CellContentClick += partialsGrid_CellContentClick;
+            partialsGrid.CellValueChanged += partialsGrid_CellValueChanged;
+            partialsGrid.CurrentCellDirtyStateChanged += partialsGrid_CurrentCellDirtyStateChanged;
             partialsGrid.RowEnter += partialsGrid_RowEnter;
             // 
             // showPartial

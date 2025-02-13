@@ -230,8 +230,7 @@ namespace LoopModel
                 String name = br.ReadLenString(pathLength);
                 if (name.Contains(".GinsuFile"))
                     continue;
-                if (!dict.TryAdd(nameHash, name))
-                    MessageBox.Show("Failed to add name: \"" + name + "\", 0x" + nameHash.ToString("X8"));
+                dict.TryAdd(nameHash, name); // There will be duplicates that don't get added
             }
 
             return dict;

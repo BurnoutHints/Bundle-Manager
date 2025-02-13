@@ -136,9 +136,16 @@ namespace LoopModel
                 MakeNewScatterPlot(accelGainPlot, 2);
         }
 
-        private void partialsGrid_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        private void partialsGrid_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
-            partialsGrid.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            if (partialsGrid.IsCurrentCellDirty)
+                partialsGrid.CommitEdit(DataGridViewDataErrorContexts.Commit);
+        }
+
+        private void partialsGrid_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (partialsGrid.SelectedRows.Count < 1)
+                return;
             bool isPartialShown = (bool)partialsGrid.Rows[e.RowIndex].Cells[0].Value;
             if (isPartialShown != partialsShown[e.RowIndex])
             {
