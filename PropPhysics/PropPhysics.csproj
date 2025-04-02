@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)BundleManager\bin\$(ConfigurationName)\$(TargetFramework)\plugins\&quot; /s /e /y" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BundleFormat\BundleFormat.csproj" />
+    <ProjectReference Include="..\BundleUtilities\BundleUtilities.csproj" />
+    <ProjectReference Include="..\PluginAPI\PluginAPI.csproj" />
+  </ItemGroup>
+
+</Project>
