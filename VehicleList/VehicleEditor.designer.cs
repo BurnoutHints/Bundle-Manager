@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+using System.Windows.Forms;
 
 namespace VehicleList
 {
@@ -30,896 +30,835 @@ namespace VehicleList
         /// </summary>
         private void InitializeComponent()
         {
-            this.btnOk = new System.Windows.Forms.Button();
-            this.btnCancel = new System.Windows.Forms.Button();
-            this.lblIndex = new System.Windows.Forms.Label();
-            this.txtIndex = new System.Windows.Forms.TextBox();
-            this.lblID = new System.Windows.Forms.Label();
-            this.txtID = new System.Windows.Forms.TextBox();
-            this.lblParentID = new System.Windows.Forms.Label();
-            this.txtParentID = new System.Windows.Forms.TextBox();
-            this.lblWheels = new System.Windows.Forms.Label();
-            this.txtWheels = new System.Windows.Forms.TextBox();
-            this.lblName = new System.Windows.Forms.Label();
-            this.txtName = new System.Windows.Forms.TextBox();
-            this.lblBrand = new System.Windows.Forms.Label();
-            this.txtBrand = new System.Windows.Forms.TextBox();
-            this.lblDamageLimit = new System.Windows.Forms.Label();
-            this.txtDamageLimit = new System.Windows.Forms.TextBox();
-            this.lblFlags = new System.Windows.Forms.Label();
-            this.chlFlags = new System.Windows.Forms.CheckedListBox();
-            this.lblBoostLength = new System.Windows.Forms.Label();
-            this.txtBoostLength = new System.Windows.Forms.TextBox();
-            this.lblRank = new System.Windows.Forms.Label();
-            this.cboRank = new System.Windows.Forms.ComboBox();
-            this.lblBoostCapacity = new System.Windows.Forms.Label();
-            this.txtBoostCapacity = new System.Windows.Forms.TextBox();
-            this.lblStrengthStat = new System.Windows.Forms.Label();
-            this.txtStrengthStat = new System.Windows.Forms.TextBox();
-            this.lblAttribSysCollectionKey = new System.Windows.Forms.Label();
-            this.txtAttribSysCollectionKey = new System.Windows.Forms.TextBox();
-            this.lblExhaustName = new System.Windows.Forms.Label();
-            this.txtExhaustName = new System.Windows.Forms.TextBox();
-            this.lblExhaustID = new System.Windows.Forms.Label();
-            this.txtExhaustID = new System.Windows.Forms.TextBox();
-            this.lblEngineID = new System.Windows.Forms.Label();
-            this.txtEngineID = new System.Windows.Forms.TextBox();
-            this.lblEngineName = new System.Windows.Forms.Label();
-            this.txtEngineName = new System.Windows.Forms.TextBox();
-            this.lblClassUnlock = new System.Windows.Forms.Label();
-            this.cboClassUnlock = new System.Windows.Forms.ComboBox();
-            this.lblCarWon = new System.Windows.Forms.Label();
-            this.txtCarWon = new System.Windows.Forms.TextBox();
-            this.lblCarReleased = new System.Windows.Forms.Label();
-            this.txtCarReleased = new System.Windows.Forms.TextBox();
-            this.lblAIMusic = new System.Windows.Forms.Label();
-            this.cboAIMusic = new System.Windows.Forms.ComboBox();
-            this.lblAIExhaust1 = new System.Windows.Forms.Label();
-            this.cboAIExhaust1 = new System.Windows.Forms.ComboBox();
-            this.lblAIExhaust2 = new System.Windows.Forms.Label();
-            this.cboAIExhaust2 = new System.Windows.Forms.ComboBox();
-            this.lblAIExhaust3 = new System.Windows.Forms.Label();
-            this.cboAIExhaust3 = new System.Windows.Forms.ComboBox();
-            this.lblCategory = new System.Windows.Forms.Label();
-            this.chlCategory = new System.Windows.Forms.CheckedListBox();
-            this.lblVehicleType = new System.Windows.Forms.Label();
-            this.cboVehicleType = new System.Windows.Forms.ComboBox();
-            this.lblBoostType = new System.Windows.Forms.Label();
-            this.cboBoostType = new System.Windows.Forms.ComboBox();
-            this.lblFinishType = new System.Windows.Forms.Label();
-            this.cboFinishType = new System.Windows.Forms.ComboBox();
-            this.lblMaxSpeed = new System.Windows.Forms.Label();
-            this.txtMaxSpeed = new System.Windows.Forms.TextBox();
-            this.lblMaxBoostSpeed = new System.Windows.Forms.Label();
-            this.txtMaxBoostSpeed = new System.Windows.Forms.TextBox();
-            this.lblSpeedStat = new System.Windows.Forms.Label();
-            this.txtSpeedStat = new System.Windows.Forms.TextBox();
-            this.lblBoostStat = new System.Windows.Forms.Label();
-            this.txtBoostStat = new System.Windows.Forms.TextBox();
-            this.lblColor = new System.Windows.Forms.Label();
-            this.txtColor = new System.Windows.Forms.TextBox();
-            this.lblColorType = new System.Windows.Forms.Label();
-            this.cboColorType = new System.Windows.Forms.ComboBox();
-            this.SuspendLayout();
+            btnOk = new Button();
+            btnCancel = new Button();
+            lblIndex = new Label();
+            txtIndex = new TextBox();
+            lblID = new Label();
+            txtID = new TextBox();
+            lblParentID = new Label();
+            txtParentID = new TextBox();
+            lblWheels = new Label();
+            txtWheels = new TextBox();
+            lblName = new Label();
+            txtName = new TextBox();
+            lblBrand = new Label();
+            txtBrand = new TextBox();
+            lblDamageLimit = new Label();
+            txtDamageLimit = new TextBox();
+            lblFlags = new Label();
+            chlFlags = new CheckedListBox();
+            lblBoostLength = new Label();
+            txtBoostLength = new TextBox();
+            lblRank = new Label();
+            cboRank = new ComboBox();
+            lblBoostCapacity = new Label();
+            txtBoostCapacity = new TextBox();
+            lblStrengthStat = new Label();
+            txtStrengthStat = new TextBox();
+            lblAttribSysCollectionKey = new Label();
+            txtAttribSysCollectionKey = new TextBox();
+            lblExhaustName = new Label();
+            txtExhaustName = new TextBox();
+            lblExhaustID = new Label();
+            txtExhaustID = new TextBox();
+            lblEngineID = new Label();
+            txtEngineID = new TextBox();
+            lblEngineName = new Label();
+            txtEngineName = new TextBox();
+            lblClassUnlock = new Label();
+            cboClassUnlock = new ComboBox();
+            lblCarWon = new Label();
+            txtCarWon = new TextBox();
+            lblCarReleased = new Label();
+            txtCarReleased = new TextBox();
+            lblAIMusic = new Label();
+            cboAIMusic = new ComboBox();
+            lblAIExhaust1 = new Label();
+            cboAIExhaust1 = new ComboBox();
+            lblAIExhaust2 = new Label();
+            cboAIExhaust2 = new ComboBox();
+            lblAIExhaust3 = new Label();
+            cboAIExhaust3 = new ComboBox();
+            lblCategory = new Label();
+            chlCategory = new CheckedListBox();
+            lblVehicleType = new Label();
+            cboVehicleType = new ComboBox();
+            lblBoostType = new Label();
+            cboBoostType = new ComboBox();
+            lblFinishType = new Label();
+            cboFinishType = new ComboBox();
+            lblMaxSpeed = new Label();
+            txtMaxSpeed = new TextBox();
+            lblMaxBoostSpeed = new Label();
+            txtMaxBoostSpeed = new TextBox();
+            lblSpeedStat = new Label();
+            txtSpeedStat = new TextBox();
+            lblBoostStat = new Label();
+            txtBoostStat = new TextBox();
+            lblColor = new Label();
+            txtColor = new TextBox();
+            lblColorType = new Label();
+            cboColorType = new ComboBox();
+            SuspendLayout();
             // 
             // btnOk
             // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(291, 785);
-            this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 0;
-            this.btnOk.Text = "OK";
-            this.btnOk.UseVisualStyleBackColor = true;
-            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
+            btnOk.Location = new System.Drawing.Point(1003, 680);
+            btnOk.Margin = new Padding(4, 5, 4, 5);
+            btnOk.Name = "btnOk";
+            btnOk.Size = new System.Drawing.Size(120, 35);
+            btnOk.TabIndex = 0;
+            btnOk.Text = "OK";
+            btnOk.UseVisualStyleBackColor = true;
+            btnOk.Click += btnOk_Click;
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(372, 785);
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 1;
-            this.btnCancel.Text = "Cancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
-            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            btnCancel.DialogResult = DialogResult.Cancel;
+            btnCancel.Location = new System.Drawing.Point(1131, 680);
+            btnCancel.Margin = new Padding(4, 5, 4, 5);
+            btnCancel.Name = "btnCancel";
+            btnCancel.Size = new System.Drawing.Size(120, 35);
+            btnCancel.TabIndex = 1;
+            btnCancel.Text = "Cancel";
+            btnCancel.UseVisualStyleBackColor = true;
+            btnCancel.Click += btnCancel_Click;
             // 
             // lblIndex
             // 
-            this.lblIndex.AutoSize = true;
-            this.lblIndex.Location = new System.Drawing.Point(2, 5);
-            this.lblIndex.Name = "lblIndex";
-            this.lblIndex.Size = new System.Drawing.Size(36, 13);
-            this.lblIndex.TabIndex = 2;
-            this.lblIndex.Text = "Index:";
+            lblIndex.AutoSize = true;
+            lblIndex.Location = new System.Drawing.Point(14, 10);
+            lblIndex.Margin = new Padding(4, 0, 4, 0);
+            lblIndex.Name = "lblIndex";
+            lblIndex.Size = new System.Drawing.Size(48, 20);
+            lblIndex.TabIndex = 2;
+            lblIndex.Text = "Index:";
             // 
             // txtIndex
             // 
-            this.txtIndex.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtIndex.Location = new System.Drawing.Point(96, 2);
-            this.txtIndex.Name = "txtIndex";
-            this.txtIndex.Size = new System.Drawing.Size(358, 20);
-            this.txtIndex.TabIndex = 3;
+            txtIndex.Location = new System.Drawing.Point(150, 7);
+            txtIndex.Margin = new Padding(4, 5, 4, 5);
+            txtIndex.Name = "txtIndex";
+            txtIndex.Size = new System.Drawing.Size(478, 27);
+            txtIndex.TabIndex = 3;
             // 
             // lblID
             // 
-            this.lblID.AutoSize = true;
-            this.lblID.Location = new System.Drawing.Point(2, 26);
-            this.lblID.Name = "lblID";
-            this.lblID.Size = new System.Drawing.Size(21, 13);
-            this.lblID.TabIndex = 4;
-            this.lblID.Text = "ID:";
+            lblID.AutoSize = true;
+            lblID.Location = new System.Drawing.Point(14, 70);
+            lblID.Margin = new Padding(4, 0, 4, 0);
+            lblID.Name = "lblID";
+            lblID.Size = new System.Drawing.Size(27, 20);
+            lblID.TabIndex = 4;
+            lblID.Text = "ID:";
             // 
             // txtID
             // 
-            this.txtID.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtID.Location = new System.Drawing.Point(96, 23);
-            this.txtID.Name = "txtID";
-            this.txtID.Size = new System.Drawing.Size(358, 20);
-            this.txtID.TabIndex = 5;
+            txtID.Location = new System.Drawing.Point(150, 67);
+            txtID.Margin = new Padding(4, 5, 4, 5);
+            txtID.Name = "txtID";
+            txtID.Size = new System.Drawing.Size(478, 27);
+            txtID.TabIndex = 5;
             // 
             // lblParentID
             // 
-            this.lblParentID.AutoSize = true;
-            this.lblParentID.Location = new System.Drawing.Point(2, 47);
-            this.lblParentID.Name = "lblParentID";
-            this.lblParentID.Size = new System.Drawing.Size(55, 13);
-            this.lblParentID.TabIndex = 6;
-            this.lblParentID.Text = "Parent ID:";
+            lblParentID.AutoSize = true;
+            lblParentID.Location = new System.Drawing.Point(14, 40);
+            lblParentID.Margin = new Padding(4, 0, 4, 0);
+            lblParentID.Name = "lblParentID";
+            lblParentID.Size = new System.Drawing.Size(72, 20);
+            lblParentID.TabIndex = 6;
+            lblParentID.Text = "Parent ID:";
             // 
             // txtParentID
             // 
-            this.txtParentID.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtParentID.Location = new System.Drawing.Point(96, 44);
-            this.txtParentID.Name = "txtParentID";
-            this.txtParentID.Size = new System.Drawing.Size(358, 20);
-            this.txtParentID.TabIndex = 7;
+            txtParentID.Location = new System.Drawing.Point(150, 37);
+            txtParentID.Margin = new Padding(4, 5, 4, 5);
+            txtParentID.Name = "txtParentID";
+            txtParentID.Size = new System.Drawing.Size(478, 27);
+            txtParentID.TabIndex = 7;
             // 
             // lblWheels
             // 
-            this.lblWheels.AutoSize = true;
-            this.lblWheels.Location = new System.Drawing.Point(2, 68);
-            this.lblWheels.Name = "lblWheels";
-            this.lblWheels.Size = new System.Drawing.Size(46, 13);
-            this.lblWheels.TabIndex = 8;
-            this.lblWheels.Text = "Wheels:";
+            lblWheels.AutoSize = true;
+            lblWheels.Location = new System.Drawing.Point(14, 550);
+            lblWheels.Margin = new Padding(4, 0, 4, 0);
+            lblWheels.Name = "lblWheels";
+            lblWheels.Size = new System.Drawing.Size(60, 20);
+            lblWheels.TabIndex = 8;
+            lblWheels.Text = "Wheels:";
             // 
             // txtWheels
             // 
-            this.txtWheels.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtWheels.Location = new System.Drawing.Point(96, 65);
-            this.txtWheels.Name = "txtWheels";
-            this.txtWheels.Size = new System.Drawing.Size(358, 20);
-            this.txtWheels.TabIndex = 9;
+            txtWheels.Location = new System.Drawing.Point(150, 547);
+            txtWheels.Margin = new Padding(4, 5, 4, 5);
+            txtWheels.Name = "txtWheels";
+            txtWheels.Size = new System.Drawing.Size(478, 27);
+            txtWheels.TabIndex = 9;
             // 
             // lblName
             // 
-            this.lblName.AutoSize = true;
-            this.lblName.Location = new System.Drawing.Point(2, 89);
-            this.lblName.Name = "lblName";
-            this.lblName.Size = new System.Drawing.Size(38, 13);
-            this.lblName.TabIndex = 10;
-            this.lblName.Text = "Name:";
+            lblName.AutoSize = true;
+            lblName.Location = new System.Drawing.Point(14, 130);
+            lblName.Margin = new Padding(4, 0, 4, 0);
+            lblName.Name = "lblName";
+            lblName.Size = new System.Drawing.Size(52, 20);
+            lblName.TabIndex = 10;
+            lblName.Text = "Name:";
             // 
             // txtName
             // 
-            this.txtName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtName.Location = new System.Drawing.Point(96, 86);
-            this.txtName.Name = "txtName";
-            this.txtName.Size = new System.Drawing.Size(358, 20);
-            this.txtName.TabIndex = 11;
+            txtName.Location = new System.Drawing.Point(150, 127);
+            txtName.Margin = new Padding(4, 5, 4, 5);
+            txtName.Name = "txtName";
+            txtName.Size = new System.Drawing.Size(478, 27);
+            txtName.TabIndex = 11;
             // 
             // lblBrand
             // 
-            this.lblBrand.AutoSize = true;
-            this.lblBrand.Location = new System.Drawing.Point(2, 110);
-            this.lblBrand.Name = "lblBrand";
-            this.lblBrand.Size = new System.Drawing.Size(38, 13);
-            this.lblBrand.TabIndex = 12;
-            this.lblBrand.Text = "Brand:";
+            lblBrand.AutoSize = true;
+            lblBrand.Location = new System.Drawing.Point(14, 100);
+            lblBrand.Margin = new Padding(4, 0, 4, 0);
+            lblBrand.Name = "lblBrand";
+            lblBrand.Size = new System.Drawing.Size(51, 20);
+            lblBrand.TabIndex = 12;
+            lblBrand.Text = "Brand:";
             // 
             // txtBrand
             // 
-            this.txtBrand.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtBrand.Location = new System.Drawing.Point(96, 107);
-            this.txtBrand.Name = "txtBrand";
-            this.txtBrand.Size = new System.Drawing.Size(358, 20);
-            this.txtBrand.TabIndex = 13;
+            txtBrand.Location = new System.Drawing.Point(150, 97);
+            txtBrand.Margin = new Padding(4, 5, 4, 5);
+            txtBrand.Name = "txtBrand";
+            txtBrand.Size = new System.Drawing.Size(478, 27);
+            txtBrand.TabIndex = 13;
             // 
             // lblDamageLimit
             // 
-            this.lblDamageLimit.AutoSize = true;
-            this.lblDamageLimit.Location = new System.Drawing.Point(2, 131);
-            this.lblDamageLimit.Name = "lblDamageLimit";
-            this.lblDamageLimit.Size = new System.Drawing.Size(74, 13);
-            this.lblDamageLimit.TabIndex = 14;
-            this.lblDamageLimit.Text = "Damage Limit:";
+            lblDamageLimit.AutoSize = true;
+            lblDamageLimit.Location = new System.Drawing.Point(14, 370);
+            lblDamageLimit.Margin = new Padding(4, 0, 4, 0);
+            lblDamageLimit.Name = "lblDamageLimit";
+            lblDamageLimit.Size = new System.Drawing.Size(106, 20);
+            lblDamageLimit.TabIndex = 14;
+            lblDamageLimit.Text = "Damage Limit:";
             // 
             // txtDamageLimit
             // 
-            this.txtDamageLimit.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtDamageLimit.Location = new System.Drawing.Point(96, 128);
-            this.txtDamageLimit.Name = "txtDamageLimit";
-            this.txtDamageLimit.Size = new System.Drawing.Size(358, 20);
-            this.txtDamageLimit.TabIndex = 15;
+            txtDamageLimit.Location = new System.Drawing.Point(150, 367);
+            txtDamageLimit.Margin = new Padding(4, 5, 4, 5);
+            txtDamageLimit.Name = "txtDamageLimit";
+            txtDamageLimit.Size = new System.Drawing.Size(478, 27);
+            txtDamageLimit.TabIndex = 15;
             // 
             // lblFlags
             // 
-            this.lblFlags.AutoSize = true;
-            this.lblFlags.Location = new System.Drawing.Point(2, 152);
-            this.lblFlags.Name = "lblFlags";
-            this.lblFlags.Size = new System.Drawing.Size(35, 13);
-            this.lblFlags.TabIndex = 16;
-            this.lblFlags.Text = "Flags:";
+            lblFlags.AutoSize = true;
+            lblFlags.Location = new System.Drawing.Point(674, 570);
+            lblFlags.Margin = new Padding(4, 0, 4, 0);
+            lblFlags.Name = "lblFlags";
+            lblFlags.Size = new System.Drawing.Size(46, 20);
+            lblFlags.TabIndex = 16;
+            lblFlags.Text = "Flags:";
             // 
             // chlFlags
             // 
-            this.chlFlags.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.chlFlags.CheckOnClick = true;
-            this.chlFlags.Items.AddRange(new object[] {
-            "Is Race Vehicle",
-            "Can Check Traffic",
-            "Can Be Checked",
-            "Is Trailer",
-            "Can Tow Trailer",
-            "Can Be Painted",
-            "Unknown0",
-            "Is First Car in Speed Range",
-            "Has Switchable Boost",
-            "Unknown1",
-            "Unknown2",
-            "Is WIP/Dev",
-            "Is from 1.0",
-            "Is from 1.3",
-            "Is from 1.4",
-            "Is from 1.5",
-            "Is from 1.6",
-            "Is from 1.7",
-            "Is from 1.8",
-            "Is from 1.9"});
-            this.chlFlags.Location = new System.Drawing.Point(96, 149);
-            this.chlFlags.Name = "chlFlags";
-            this.chlFlags.Size = new System.Drawing.Size(358, 49);
-            this.chlFlags.TabIndex = 17;
+            chlFlags.CheckOnClick = true;
+            chlFlags.Items.AddRange(new object[] { "Is Race Vehicle", "Can Check Traffic", "Can Be Checked", "Is Trailer", "Can Tow Trailer", "Can Be Painted", "Unknown0", "Is First Car in Speed Range", "Has Switchable Boost", "Unknown1", "Unknown2", "Is WIP/Dev", "Is from 1.0", "Is from 1.3", "Is from 1.4", "Is from 1.5", "Is from 1.6", "Is from 1.7", "Is from 1.8", "Is from 1.9" });
+            chlFlags.Location = new System.Drawing.Point(776, 507);
+            chlFlags.Margin = new Padding(4, 5, 4, 5);
+            chlFlags.Name = "chlFlags";
+            chlFlags.Size = new System.Drawing.Size(476, 158);
+            chlFlags.TabIndex = 17;
             // 
             // lblBoostLength
             // 
-            this.lblBoostLength.AutoSize = true;
-            this.lblBoostLength.Location = new System.Drawing.Point(2, 202);
-            this.lblBoostLength.Name = "lblBoostLength";
-            this.lblBoostLength.Size = new System.Drawing.Size(73, 13);
-            this.lblBoostLength.TabIndex = 18;
-            this.lblBoostLength.Text = "Boost Length:";
+            lblBoostLength.AutoSize = true;
+            lblBoostLength.Location = new System.Drawing.Point(14, 310);
+            lblBoostLength.Margin = new Padding(4, 0, 4, 0);
+            lblBoostLength.Name = "lblBoostLength";
+            lblBoostLength.Size = new System.Drawing.Size(99, 20);
+            lblBoostLength.TabIndex = 18;
+            lblBoostLength.Text = "Boost Length:";
             // 
             // txtBoostLength
             // 
-            this.txtBoostLength.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtBoostLength.Location = new System.Drawing.Point(96, 199);
-            this.txtBoostLength.Name = "txtBoostLength";
-            this.txtBoostLength.Size = new System.Drawing.Size(358, 20);
-            this.txtBoostLength.TabIndex = 19;
+            txtBoostLength.Location = new System.Drawing.Point(150, 307);
+            txtBoostLength.Margin = new Padding(4, 5, 4, 5);
+            txtBoostLength.Name = "txtBoostLength";
+            txtBoostLength.Size = new System.Drawing.Size(478, 27);
+            txtBoostLength.TabIndex = 19;
             // 
             // lblRank
             // 
-            this.lblRank.AutoSize = true;
-            this.lblRank.Location = new System.Drawing.Point(2, 223);
-            this.lblRank.Name = "lblRank";
-            this.lblRank.Size = new System.Drawing.Size(36, 13);
-            this.lblRank.TabIndex = 20;
-            this.lblRank.Text = "Rank:";
+            lblRank.AutoSize = true;
+            lblRank.Location = new System.Drawing.Point(674, 160);
+            lblRank.Margin = new Padding(4, 0, 4, 0);
+            lblRank.Name = "lblRank";
+            lblRank.Size = new System.Drawing.Size(44, 20);
+            lblRank.TabIndex = 20;
+            lblRank.Text = "Rank:";
             // 
             // cboRank
             // 
-            this.cboRank.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboRank.FormattingEnabled = true;
-            this.cboRank.Items.AddRange(new object[] {
-            "Learner",
-            "D_Class",
-            "C_Class",
-            "B_Class",
-            "A_Class",
-            "Burnout"});
-            this.cboRank.Location = new System.Drawing.Point(96, 220);
-            this.cboRank.Name = "cboRank";
-            this.cboRank.Size = new System.Drawing.Size(358, 21);
-            this.cboRank.TabIndex = 21;
+            cboRank.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboRank.FormattingEnabled = true;
+            cboRank.Items.AddRange(new object[] { "Learner", "D_Class", "C_Class", "B_Class", "A_Class", "Burnout" });
+            cboRank.Location = new System.Drawing.Point(776, 157);
+            cboRank.Margin = new Padding(4, 5, 4, 5);
+            cboRank.Name = "cboRank";
+            cboRank.Size = new System.Drawing.Size(476, 28);
+            cboRank.TabIndex = 21;
             // 
             // lblBoostCapacity
             // 
-            this.lblBoostCapacity.AutoSize = true;
-            this.lblBoostCapacity.Location = new System.Drawing.Point(2, 245);
-            this.lblBoostCapacity.Name = "lblBoostCapacity";
-            this.lblBoostCapacity.Size = new System.Drawing.Size(81, 13);
-            this.lblBoostCapacity.TabIndex = 22;
-            this.lblBoostCapacity.Text = "Boost Capacity:";
+            lblBoostCapacity.AutoSize = true;
+            lblBoostCapacity.Location = new System.Drawing.Point(14, 280);
+            lblBoostCapacity.Margin = new Padding(4, 0, 4, 0);
+            lblBoostCapacity.Name = "lblBoostCapacity";
+            lblBoostCapacity.Size = new System.Drawing.Size(111, 20);
+            lblBoostCapacity.TabIndex = 22;
+            lblBoostCapacity.Text = "Boost Capacity:";
             // 
             // txtBoostCapacity
             // 
-            this.txtBoostCapacity.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtBoostCapacity.Location = new System.Drawing.Point(96, 242);
-            this.txtBoostCapacity.Name = "txtBoostCapacity";
-            this.txtBoostCapacity.Size = new System.Drawing.Size(358, 20);
-            this.txtBoostCapacity.TabIndex = 23;
+            txtBoostCapacity.Location = new System.Drawing.Point(150, 277);
+            txtBoostCapacity.Margin = new Padding(4, 5, 4, 5);
+            txtBoostCapacity.Name = "txtBoostCapacity";
+            txtBoostCapacity.Size = new System.Drawing.Size(478, 27);
+            txtBoostCapacity.TabIndex = 23;
             // 
             // lblStrengthStat
             // 
-            this.lblStrengthStat.AutoSize = true;
-            this.lblStrengthStat.Location = new System.Drawing.Point(2, 266);
-            this.lblStrengthStat.Name = "lblStrengthStat";
-            this.lblStrengthStat.Size = new System.Drawing.Size(72, 13);
-            this.lblStrengthStat.TabIndex = 24;
-            this.lblStrengthStat.Text = "Strength Stat:";
+            lblStrengthStat.AutoSize = true;
+            lblStrengthStat.Location = new System.Drawing.Point(14, 340);
+            lblStrengthStat.Margin = new Padding(4, 0, 4, 0);
+            lblStrengthStat.Name = "lblStrengthStat";
+            lblStrengthStat.Size = new System.Drawing.Size(98, 20);
+            lblStrengthStat.TabIndex = 24;
+            lblStrengthStat.Text = "Strength Stat:";
             // 
             // txtStrengthStat
             // 
-            this.txtStrengthStat.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtStrengthStat.Location = new System.Drawing.Point(96, 263);
-            this.txtStrengthStat.Name = "txtStrengthStat";
-            this.txtStrengthStat.Size = new System.Drawing.Size(358, 20);
-            this.txtStrengthStat.TabIndex = 25;
+            txtStrengthStat.Location = new System.Drawing.Point(150, 337);
+            txtStrengthStat.Margin = new Padding(4, 5, 4, 5);
+            txtStrengthStat.Name = "txtStrengthStat";
+            txtStrengthStat.Size = new System.Drawing.Size(478, 27);
+            txtStrengthStat.TabIndex = 25;
             // 
             // lblAttribSysCollectionKey
             // 
-            this.lblAttribSysCollectionKey.AutoSize = true;
-            this.lblAttribSysCollectionKey.Location = new System.Drawing.Point(2, 287);
-            this.lblAttribSysCollectionKey.Name = "lblAttribSysCollectionKey";
-            this.lblAttribSysCollectionKey.Size = new System.Drawing.Size(65, 13);
-            this.lblAttribSysCollectionKey.TabIndex = 26;
-            this.lblAttribSysCollectionKey.Text = "AttribSys ID:";
+            lblAttribSysCollectionKey.AutoSize = true;
+            lblAttribSysCollectionKey.Location = new System.Drawing.Point(14, 400);
+            lblAttribSysCollectionKey.Margin = new Padding(4, 0, 4, 0);
+            lblAttribSysCollectionKey.Name = "lblAttribSysCollectionKey";
+            lblAttribSysCollectionKey.Size = new System.Drawing.Size(90, 20);
+            lblAttribSysCollectionKey.TabIndex = 26;
+            lblAttribSysCollectionKey.Text = "AttribSys ID:";
             // 
             // txtAttribSysCollectionKey
             // 
-            this.txtAttribSysCollectionKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtAttribSysCollectionKey.Location = new System.Drawing.Point(96, 284);
-            this.txtAttribSysCollectionKey.Name = "txtAttribSysCollectionKey";
-            this.txtAttribSysCollectionKey.Size = new System.Drawing.Size(358, 20);
-            this.txtAttribSysCollectionKey.TabIndex = 27;
+            txtAttribSysCollectionKey.Location = new System.Drawing.Point(150, 397);
+            txtAttribSysCollectionKey.Margin = new Padding(4, 5, 4, 5);
+            txtAttribSysCollectionKey.Name = "txtAttribSysCollectionKey";
+            txtAttribSysCollectionKey.Size = new System.Drawing.Size(478, 27);
+            txtAttribSysCollectionKey.TabIndex = 27;
             // 
             // lblExhaustName
             // 
-            this.lblExhaustName.AutoSize = true;
-            this.lblExhaustName.Location = new System.Drawing.Point(2, 308);
-            this.lblExhaustName.Name = "lblExhaustName";
-            this.lblExhaustName.Size = new System.Drawing.Size(79, 13);
-            this.lblExhaustName.TabIndex = 28;
-            this.lblExhaustName.Text = "Exhaust Name:";
+            lblExhaustName.AutoSize = true;
+            lblExhaustName.Location = new System.Drawing.Point(14, 520);
+            lblExhaustName.Margin = new Padding(4, 0, 4, 0);
+            lblExhaustName.Name = "lblExhaustName";
+            lblExhaustName.Size = new System.Drawing.Size(106, 20);
+            lblExhaustName.TabIndex = 28;
+            lblExhaustName.Text = "Exhaust Name:";
             // 
             // txtExhaustName
             // 
-            this.txtExhaustName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtExhaustName.Location = new System.Drawing.Point(96, 305);
-            this.txtExhaustName.Name = "txtExhaustName";
-            this.txtExhaustName.Size = new System.Drawing.Size(358, 20);
-            this.txtExhaustName.TabIndex = 29;
+            txtExhaustName.Location = new System.Drawing.Point(150, 517);
+            txtExhaustName.Margin = new Padding(4, 5, 4, 5);
+            txtExhaustName.Name = "txtExhaustName";
+            txtExhaustName.Size = new System.Drawing.Size(478, 27);
+            txtExhaustName.TabIndex = 29;
             // 
             // lblExhaustID
             // 
-            this.lblExhaustID.AutoSize = true;
-            this.lblExhaustID.Location = new System.Drawing.Point(2, 329);
-            this.lblExhaustID.Name = "lblExhaustID";
-            this.lblExhaustID.Size = new System.Drawing.Size(62, 13);
-            this.lblExhaustID.TabIndex = 30;
-            this.lblExhaustID.Text = "Exhaust ID:";
+            lblExhaustID.AutoSize = true;
+            lblExhaustID.Location = new System.Drawing.Point(14, 490);
+            lblExhaustID.Margin = new Padding(4, 0, 4, 0);
+            lblExhaustID.Name = "lblExhaustID";
+            lblExhaustID.Size = new System.Drawing.Size(81, 20);
+            lblExhaustID.TabIndex = 30;
+            lblExhaustID.Text = "Exhaust ID:";
             // 
             // txtExhaustID
             // 
-            this.txtExhaustID.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtExhaustID.Location = new System.Drawing.Point(96, 326);
-            this.txtExhaustID.Name = "txtExhaustID";
-            this.txtExhaustID.Size = new System.Drawing.Size(358, 20);
-            this.txtExhaustID.TabIndex = 31;
+            txtExhaustID.Location = new System.Drawing.Point(150, 487);
+            txtExhaustID.Margin = new Padding(4, 5, 4, 5);
+            txtExhaustID.Name = "txtExhaustID";
+            txtExhaustID.Size = new System.Drawing.Size(478, 27);
+            txtExhaustID.TabIndex = 31;
             // 
             // lblEngineID
             // 
-            this.lblEngineID.AutoSize = true;
-            this.lblEngineID.Location = new System.Drawing.Point(2, 350);
-            this.lblEngineID.Name = "lblEngineID";
-            this.lblEngineID.Size = new System.Drawing.Size(57, 13);
-            this.lblEngineID.TabIndex = 32;
-            this.lblEngineID.Text = "Engine ID:";
+            lblEngineID.AutoSize = true;
+            lblEngineID.Location = new System.Drawing.Point(14, 430);
+            lblEngineID.Margin = new Padding(4, 0, 4, 0);
+            lblEngineID.Name = "lblEngineID";
+            lblEngineID.Size = new System.Drawing.Size(76, 20);
+            lblEngineID.TabIndex = 32;
+            lblEngineID.Text = "Engine ID:";
             // 
             // txtEngineID
             // 
-            this.txtEngineID.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtEngineID.Location = new System.Drawing.Point(96, 347);
-            this.txtEngineID.Name = "txtEngineID";
-            this.txtEngineID.Size = new System.Drawing.Size(358, 20);
-            this.txtEngineID.TabIndex = 33;
+            txtEngineID.Location = new System.Drawing.Point(150, 427);
+            txtEngineID.Margin = new Padding(4, 5, 4, 5);
+            txtEngineID.Name = "txtEngineID";
+            txtEngineID.Size = new System.Drawing.Size(478, 27);
+            txtEngineID.TabIndex = 33;
             // 
             // lblEngineName
             // 
-            this.lblEngineName.AutoSize = true;
-            this.lblEngineName.Location = new System.Drawing.Point(2, 371);
-            this.lblEngineName.Name = "lblEngineName";
-            this.lblEngineName.Size = new System.Drawing.Size(74, 13);
-            this.lblEngineName.TabIndex = 34;
-            this.lblEngineName.Text = "Engine Name:";
+            lblEngineName.AutoSize = true;
+            lblEngineName.Location = new System.Drawing.Point(14, 460);
+            lblEngineName.Margin = new Padding(4, 0, 4, 0);
+            lblEngineName.Name = "lblEngineName";
+            lblEngineName.Size = new System.Drawing.Size(101, 20);
+            lblEngineName.TabIndex = 34;
+            lblEngineName.Text = "Engine Name:";
             // 
             // txtEngineName
             // 
-            this.txtEngineName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtEngineName.Location = new System.Drawing.Point(96, 368);
-            this.txtEngineName.Name = "txtEngineName";
-            this.txtEngineName.Size = new System.Drawing.Size(358, 20);
-            this.txtEngineName.TabIndex = 35;
+            txtEngineName.Location = new System.Drawing.Point(150, 457);
+            txtEngineName.Margin = new Padding(4, 5, 4, 5);
+            txtEngineName.Name = "txtEngineName";
+            txtEngineName.Size = new System.Drawing.Size(478, 27);
+            txtEngineName.TabIndex = 35;
             // 
             // lblClassUnlock
             // 
-            this.lblClassUnlock.AutoSize = true;
-            this.lblClassUnlock.Location = new System.Drawing.Point(2, 392);
-            this.lblClassUnlock.Name = "lblClassUnlock";
-            this.lblClassUnlock.Size = new System.Drawing.Size(72, 13);
-            this.lblClassUnlock.TabIndex = 36;
-            this.lblClassUnlock.Text = "Class Unlock:";
+            lblClassUnlock.AutoSize = true;
+            lblClassUnlock.Location = new System.Drawing.Point(674, 130);
+            lblClassUnlock.Margin = new Padding(4, 0, 4, 0);
+            lblClassUnlock.Name = "lblClassUnlock";
+            lblClassUnlock.Size = new System.Drawing.Size(94, 20);
+            lblClassUnlock.TabIndex = 36;
+            lblClassUnlock.Text = "Class Unlock:";
             // 
             // cboClassUnlock
             // 
-            this.cboClassUnlock.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboClassUnlock.FormattingEnabled = true;
-            this.cboClassUnlock.Items.AddRange(new object[] {
-            "SuperClassUnlock",
-            "MuscleClassUnlock",
-            "F1ClassUnlock",
-            "TunerClassUnlock",
-            "HotRodClassUnlock",
-            "RivalGen"});
-            this.cboClassUnlock.Location = new System.Drawing.Point(96, 389);
-            this.cboClassUnlock.Name = "cboClassUnlock";
-            this.cboClassUnlock.Size = new System.Drawing.Size(358, 21);
-            this.cboClassUnlock.TabIndex = 37;
+            cboClassUnlock.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboClassUnlock.FormattingEnabled = true;
+            cboClassUnlock.Items.AddRange(new object[] { "SuperClassUnlock", "MuscleClassUnlock", "F1ClassUnlock", "TunerClassUnlock", "HotRodClassUnlock", "RivalGen" });
+            cboClassUnlock.Location = new System.Drawing.Point(776, 127);
+            cboClassUnlock.Margin = new Padding(4, 5, 4, 5);
+            cboClassUnlock.Name = "cboClassUnlock";
+            cboClassUnlock.Size = new System.Drawing.Size(476, 28);
+            cboClassUnlock.TabIndex = 37;
             // 
             // lblCarWon
             // 
-            this.lblCarWon.AutoSize = true;
-            this.lblCarWon.Location = new System.Drawing.Point(2, 414);
-            this.lblCarWon.Name = "lblCarWon";
-            this.lblCarWon.Size = new System.Drawing.Size(52, 13);
-            this.lblCarWon.TabIndex = 38;
-            this.lblCarWon.Text = "Car Won:";
+            lblCarWon.AutoSize = true;
+            lblCarWon.Location = new System.Drawing.Point(14, 610);
+            lblCarWon.Margin = new Padding(4, 0, 4, 0);
+            lblCarWon.Name = "lblCarWon";
+            lblCarWon.Size = new System.Drawing.Size(68, 20);
+            lblCarWon.TabIndex = 38;
+            lblCarWon.Text = "Car Won:";
             // 
             // txtCarWon
             // 
-            this.txtCarWon.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtCarWon.Location = new System.Drawing.Point(96, 411);
-            this.txtCarWon.Name = "txtCarWon";
-            this.txtCarWon.Size = new System.Drawing.Size(358, 20);
-            this.txtCarWon.TabIndex = 39;
+            txtCarWon.Location = new System.Drawing.Point(150, 607);
+            txtCarWon.Margin = new Padding(4, 5, 4, 5);
+            txtCarWon.Name = "txtCarWon";
+            txtCarWon.Size = new System.Drawing.Size(478, 27);
+            txtCarWon.TabIndex = 39;
             // 
             // lblCarReleased
             // 
-            this.lblCarReleased.AutoSize = true;
-            this.lblCarReleased.Location = new System.Drawing.Point(2, 435);
-            this.lblCarReleased.Name = "lblCarReleased";
-            this.lblCarReleased.Size = new System.Drawing.Size(74, 13);
-            this.lblCarReleased.TabIndex = 40;
-            this.lblCarReleased.Text = "Car Released:";
+            lblCarReleased.AutoSize = true;
+            lblCarReleased.Location = new System.Drawing.Point(14, 580);
+            lblCarReleased.Margin = new Padding(4, 0, 4, 0);
+            lblCarReleased.Name = "lblCarReleased";
+            lblCarReleased.Size = new System.Drawing.Size(98, 20);
+            lblCarReleased.TabIndex = 40;
+            lblCarReleased.Text = "Car Released:";
             // 
             // txtCarReleased
             // 
-            this.txtCarReleased.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtCarReleased.Location = new System.Drawing.Point(96, 432);
-            this.txtCarReleased.Name = "txtCarReleased";
-            this.txtCarReleased.Size = new System.Drawing.Size(358, 20);
-            this.txtCarReleased.TabIndex = 41;
+            txtCarReleased.Location = new System.Drawing.Point(150, 577);
+            txtCarReleased.Margin = new Padding(4, 5, 4, 5);
+            txtCarReleased.Name = "txtCarReleased";
+            txtCarReleased.Size = new System.Drawing.Size(478, 27);
+            txtCarReleased.TabIndex = 41;
             // 
             // lblAIMusic
             // 
-            this.lblAIMusic.AutoSize = true;
-            this.lblAIMusic.Location = new System.Drawing.Point(2, 456);
-            this.lblAIMusic.Name = "lblAIMusic";
-            this.lblAIMusic.Size = new System.Drawing.Size(51, 13);
-            this.lblAIMusic.TabIndex = 42;
-            this.lblAIMusic.Text = "AI Music:";
+            lblAIMusic.AutoSize = true;
+            lblAIMusic.Location = new System.Drawing.Point(674, 190);
+            lblAIMusic.Margin = new Padding(4, 0, 4, 0);
+            lblAIMusic.Name = "lblAIMusic";
+            lblAIMusic.Size = new System.Drawing.Size(68, 20);
+            lblAIMusic.TabIndex = 42;
+            lblAIMusic.Text = "AI Music:";
             // 
             // cboAIMusic
             // 
-            this.cboAIMusic.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboAIMusic.FormattingEnabled = true;
-            this.cboAIMusic.Items.AddRange(new object[] {
-            "None",
-            "Muscle",
-            "Truck",
-            "Tuner",
-            "Sedan",
-            "Exotic",
-            "Super"});
-            this.cboAIMusic.Location = new System.Drawing.Point(96, 453);
-            this.cboAIMusic.Name = "cboAIMusic";
-            this.cboAIMusic.Size = new System.Drawing.Size(358, 21);
-            this.cboAIMusic.TabIndex = 43;
+            cboAIMusic.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboAIMusic.FormattingEnabled = true;
+            cboAIMusic.Items.AddRange(new object[] { "None", "Muscle", "Truck", "Tuner", "Sedan", "Exotic", "Super" });
+            cboAIMusic.Location = new System.Drawing.Point(776, 187);
+            cboAIMusic.Margin = new Padding(4, 5, 4, 5);
+            cboAIMusic.Name = "cboAIMusic";
+            cboAIMusic.Size = new System.Drawing.Size(476, 28);
+            cboAIMusic.TabIndex = 43;
             // 
             // lblAIExhaust1
             // 
-            this.lblAIExhaust1.AutoSize = true;
-            this.lblAIExhaust1.Location = new System.Drawing.Point(2, 478);
-            this.lblAIExhaust1.Name = "lblAIExhaust1";
-            this.lblAIExhaust1.Size = new System.Drawing.Size(61, 13);
-            this.lblAIExhaust1.TabIndex = 44;
-            this.lblAIExhaust1.Text = "AI Exhaust:";
+            lblAIExhaust1.AutoSize = true;
+            lblAIExhaust1.Location = new System.Drawing.Point(674, 220);
+            lblAIExhaust1.Margin = new Padding(4, 0, 4, 0);
+            lblAIExhaust1.Name = "lblAIExhaust1";
+            lblAIExhaust1.Size = new System.Drawing.Size(80, 20);
+            lblAIExhaust1.TabIndex = 44;
+            lblAIExhaust1.Text = "AI Exhaust:";
             // 
             // cboAIExhaust1
             // 
-            this.cboAIExhaust1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboAIExhaust1.FormattingEnabled = true;
-            this.cboAIExhaust1.Items.AddRange(new object[] {
-            "None",
-            "AIROD_EX",
-            "AI_CIVIC_EX",
-            "AI_GT_ENG",
-            "AI_MUST_EX",
-            "AI_F1_EX"});
-            this.cboAIExhaust1.Location = new System.Drawing.Point(96, 475);
-            this.cboAIExhaust1.Name = "cboAIExhaust1";
-            this.cboAIExhaust1.Size = new System.Drawing.Size(358, 21);
-            this.cboAIExhaust1.TabIndex = 45;
+            cboAIExhaust1.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboAIExhaust1.FormattingEnabled = true;
+            cboAIExhaust1.Items.AddRange(new object[] { "None", "AIROD_EX", "AI_CIVIC_EX", "AI_GT_ENG", "AI_MUST_EX", "AI_F1_EX" });
+            cboAIExhaust1.Location = new System.Drawing.Point(776, 217);
+            cboAIExhaust1.Margin = new Padding(4, 5, 4, 5);
+            cboAIExhaust1.Name = "cboAIExhaust1";
+            cboAIExhaust1.Size = new System.Drawing.Size(476, 28);
+            cboAIExhaust1.TabIndex = 45;
             // 
             // lblAIExhaust2
             // 
-            this.lblAIExhaust2.AutoSize = true;
-            this.lblAIExhaust2.Location = new System.Drawing.Point(2, 500);
-            this.lblAIExhaust2.Name = "lblAIExhaust2";
-            this.lblAIExhaust2.Size = new System.Drawing.Size(70, 13);
-            this.lblAIExhaust2.TabIndex = 46;
-            this.lblAIExhaust2.Text = "AI Exhaust 2:";
+            lblAIExhaust2.AutoSize = true;
+            lblAIExhaust2.Location = new System.Drawing.Point(674, 250);
+            lblAIExhaust2.Margin = new Padding(4, 0, 4, 0);
+            lblAIExhaust2.Name = "lblAIExhaust2";
+            lblAIExhaust2.Size = new System.Drawing.Size(92, 20);
+            lblAIExhaust2.TabIndex = 46;
+            lblAIExhaust2.Text = "AI Exhaust 2:";
             // 
             // cboAIExhaust2
             // 
-            this.cboAIExhaust2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboAIExhaust2.FormattingEnabled = true;
-            this.cboAIExhaust2.Items.AddRange(new object[] {
-            "None",
-            "AIROD_EX",
-            "AI_CIVIC_EX",
-            "AI_GT_ENG",
-            "AI_MUST_EX",
-            "AI_F1_EX"});
-            this.cboAIExhaust2.Location = new System.Drawing.Point(96, 497);
-            this.cboAIExhaust2.Name = "cboAIExhaust2";
-            this.cboAIExhaust2.Size = new System.Drawing.Size(358, 21);
-            this.cboAIExhaust2.TabIndex = 47;
+            cboAIExhaust2.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboAIExhaust2.FormattingEnabled = true;
+            cboAIExhaust2.Items.AddRange(new object[] { "None", "AIROD_EX", "AI_CIVIC_EX", "AI_GT_ENG", "AI_MUST_EX", "AI_F1_EX" });
+            cboAIExhaust2.Location = new System.Drawing.Point(776, 247);
+            cboAIExhaust2.Margin = new Padding(4, 5, 4, 5);
+            cboAIExhaust2.Name = "cboAIExhaust2";
+            cboAIExhaust2.Size = new System.Drawing.Size(476, 28);
+            cboAIExhaust2.TabIndex = 47;
             // 
             // lblAIExhaust3
             // 
-            this.lblAIExhaust3.AutoSize = true;
-            this.lblAIExhaust3.Location = new System.Drawing.Point(2, 522);
-            this.lblAIExhaust3.Name = "lblAIExhaust3";
-            this.lblAIExhaust3.Size = new System.Drawing.Size(70, 13);
-            this.lblAIExhaust3.TabIndex = 48;
-            this.lblAIExhaust3.Text = "AI Exhaust 3:";
+            lblAIExhaust3.AutoSize = true;
+            lblAIExhaust3.Location = new System.Drawing.Point(674, 280);
+            lblAIExhaust3.Margin = new Padding(4, 0, 4, 0);
+            lblAIExhaust3.Name = "lblAIExhaust3";
+            lblAIExhaust3.Size = new System.Drawing.Size(92, 20);
+            lblAIExhaust3.TabIndex = 48;
+            lblAIExhaust3.Text = "AI Exhaust 3:";
             // 
             // cboAIExhaust3
             // 
-            this.cboAIExhaust3.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboAIExhaust3.FormattingEnabled = true;
-            this.cboAIExhaust3.Items.AddRange(new object[] {
-            "None",
-            "AIROD_EX",
-            "AI_CIVIC_EX",
-            "AI_GT_ENG",
-            "AI_MUST_EX",
-            "AI_F1_EX"});
-            this.cboAIExhaust3.Location = new System.Drawing.Point(96, 519);
-            this.cboAIExhaust3.Name = "cboAIExhaust3";
-            this.cboAIExhaust3.Size = new System.Drawing.Size(358, 21);
-            this.cboAIExhaust3.TabIndex = 49;
+            cboAIExhaust3.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboAIExhaust3.FormattingEnabled = true;
+            cboAIExhaust3.Items.AddRange(new object[] { "None", "AIROD_EX", "AI_CIVIC_EX", "AI_GT_ENG", "AI_MUST_EX", "AI_F1_EX" });
+            cboAIExhaust3.Location = new System.Drawing.Point(776, 277);
+            cboAIExhaust3.Margin = new Padding(4, 5, 4, 5);
+            cboAIExhaust3.Name = "cboAIExhaust3";
+            cboAIExhaust3.Size = new System.Drawing.Size(476, 28);
+            cboAIExhaust3.TabIndex = 49;
             // 
             // lblCategory
             // 
-            this.lblCategory.AutoSize = true;
-            this.lblCategory.Location = new System.Drawing.Point(2, 544);
-            this.lblCategory.Name = "lblCategory";
-            this.lblCategory.Size = new System.Drawing.Size(52, 13);
-            this.lblCategory.TabIndex = 50;
-            this.lblCategory.Text = "Category:";
+            lblCategory.AutoSize = true;
+            lblCategory.Location = new System.Drawing.Point(674, 370);
+            lblCategory.Margin = new Padding(4, 0, 4, 0);
+            lblCategory.Name = "lblCategory";
+            lblCategory.Size = new System.Drawing.Size(72, 20);
+            lblCategory.TabIndex = 50;
+            lblCategory.Text = "Category:";
             // 
             // chlCategory
             // 
-            this.chlCategory.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.chlCategory.CheckOnClick = true;
-            this.chlCategory.Items.AddRange(new object[] {
-            "Paradise Cars",
-            "Paradise Bikes",
-            "Online Cars",
-            "Toy Cars",
-            "Legendary Cars",
-            "Boost Specials",
-            "Cop Cars",
-            "Island Cars"});
-            this.chlCategory.Location = new System.Drawing.Point(96, 541);
-            this.chlCategory.Name = "chlCategory";
-            this.chlCategory.Size = new System.Drawing.Size(358, 49);
-            this.chlCategory.TabIndex = 51;
+            chlCategory.CheckOnClick = true;
+            chlCategory.Items.AddRange(new object[] { "Paradise Cars", "Paradise Bikes", "Online Cars", "Toy Cars", "Legendary Cars", "Boost Specials", "Cop Cars", "Island Cars" });
+            chlCategory.Location = new System.Drawing.Point(776, 307);
+            chlCategory.Margin = new Padding(4, 5, 4, 5);
+            chlCategory.Name = "chlCategory";
+            chlCategory.Size = new System.Drawing.Size(476, 158);
+            chlCategory.TabIndex = 51;
             // 
             // lblVehicleType
             // 
-            this.lblVehicleType.AutoSize = true;
-            this.lblVehicleType.Location = new System.Drawing.Point(2, 594);
-            this.lblVehicleType.Name = "lblVehicleType";
-            this.lblVehicleType.Size = new System.Drawing.Size(72, 13);
-            this.lblVehicleType.TabIndex = 52;
-            this.lblVehicleType.Text = "Vehicle Type:";
+            lblVehicleType.AutoSize = true;
+            lblVehicleType.Location = new System.Drawing.Point(674, 10);
+            lblVehicleType.Margin = new Padding(4, 0, 4, 0);
+            lblVehicleType.Name = "lblVehicleType";
+            lblVehicleType.Size = new System.Drawing.Size(94, 20);
+            lblVehicleType.TabIndex = 52;
+            lblVehicleType.Text = "Vehicle Type:";
             // 
             // cboVehicleType
             // 
-            this.cboVehicleType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboVehicleType.FormattingEnabled = true;
-            this.cboVehicleType.Items.AddRange(new object[] {
-            "Car",
-            "Bike",
-            "Plane"});
-            this.cboVehicleType.Location = new System.Drawing.Point(96, 591);
-            this.cboVehicleType.Name = "cboVehicleType";
-            this.cboVehicleType.Size = new System.Drawing.Size(358, 21);
-            this.cboVehicleType.TabIndex = 53;
+            cboVehicleType.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboVehicleType.FormattingEnabled = true;
+            cboVehicleType.Items.AddRange(new object[] { "Car", "Bike", "Plane" });
+            cboVehicleType.Location = new System.Drawing.Point(776, 7);
+            cboVehicleType.Margin = new Padding(4, 5, 4, 5);
+            cboVehicleType.Name = "cboVehicleType";
+            cboVehicleType.Size = new System.Drawing.Size(476, 28);
+            cboVehicleType.TabIndex = 53;
             // 
             // lblBoostType
             // 
-            this.lblBoostType.AutoSize = true;
-            this.lblBoostType.Location = new System.Drawing.Point(2, 616);
-            this.lblBoostType.Name = "lblBoostType";
-            this.lblBoostType.Size = new System.Drawing.Size(64, 13);
-            this.lblBoostType.TabIndex = 54;
-            this.lblBoostType.Text = "Boost Type:";
+            lblBoostType.AutoSize = true;
+            lblBoostType.Location = new System.Drawing.Point(674, 40);
+            lblBoostType.Margin = new Padding(4, 0, 4, 0);
+            lblBoostType.Name = "lblBoostType";
+            lblBoostType.Size = new System.Drawing.Size(85, 20);
+            lblBoostType.TabIndex = 54;
+            lblBoostType.Text = "Boost Type:";
             // 
             // cboBoostType
             // 
-            this.cboBoostType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboBoostType.FormattingEnabled = true;
-            this.cboBoostType.Items.AddRange(new object[] {
-            "Speed",
-            "Aggression",
-            "Stunt",
-            "None",
-            "Locked"});
-            this.cboBoostType.Location = new System.Drawing.Point(96, 613);
-            this.cboBoostType.Name = "cboBoostType";
-            this.cboBoostType.Size = new System.Drawing.Size(358, 21);
-            this.cboBoostType.TabIndex = 55;
+            cboBoostType.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboBoostType.FormattingEnabled = true;
+            cboBoostType.Items.AddRange(new object[] { "Speed", "Aggression", "Stunt", "None", "Locked" });
+            cboBoostType.Location = new System.Drawing.Point(776, 37);
+            cboBoostType.Margin = new Padding(4, 5, 4, 5);
+            cboBoostType.Name = "cboBoostType";
+            cboBoostType.Size = new System.Drawing.Size(476, 28);
+            cboBoostType.TabIndex = 55;
             // 
             // lblFinishType
             // 
-            this.lblFinishType.AutoSize = true;
-            this.lblFinishType.Location = new System.Drawing.Point(2, 638);
-            this.lblFinishType.Name = "lblFinishType";
-            this.lblFinishType.Size = new System.Drawing.Size(64, 13);
-            this.lblFinishType.TabIndex = 56;
-            this.lblFinishType.Text = "Finish Type:";
+            lblFinishType.AutoSize = true;
+            lblFinishType.Location = new System.Drawing.Point(674, 70);
+            lblFinishType.Margin = new Padding(4, 0, 4, 0);
+            lblFinishType.Name = "lblFinishType";
+            lblFinishType.Size = new System.Drawing.Size(84, 20);
+            lblFinishType.TabIndex = 56;
+            lblFinishType.Text = "Finish Type:";
             // 
             // cboFinishType
             // 
-            this.cboFinishType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboFinishType.FormattingEnabled = true;
-            this.cboFinishType.Items.AddRange(new object[] {
-            "Default",
-            "Colour",
-            "Pattern",
-            "Platinum",
-            "Gold",
-            "Community"});
-            this.cboFinishType.Location = new System.Drawing.Point(96, 635);
-            this.cboFinishType.Name = "cboFinishType";
-            this.cboFinishType.Size = new System.Drawing.Size(358, 21);
-            this.cboFinishType.TabIndex = 57;
+            cboFinishType.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboFinishType.FormattingEnabled = true;
+            cboFinishType.Items.AddRange(new object[] { "Default", "Colour", "Pattern", "Platinum", "Gold", "Community" });
+            cboFinishType.Location = new System.Drawing.Point(776, 67);
+            cboFinishType.Margin = new Padding(4, 5, 4, 5);
+            cboFinishType.Name = "cboFinishType";
+            cboFinishType.Size = new System.Drawing.Size(476, 28);
+            cboFinishType.TabIndex = 57;
             // 
             // lblMaxSpeed
             // 
-            this.lblMaxSpeed.AutoSize = true;
-            this.lblMaxSpeed.Location = new System.Drawing.Point(2, 660);
-            this.lblMaxSpeed.Name = "lblMaxSpeed";
-            this.lblMaxSpeed.Size = new System.Drawing.Size(64, 13);
-            this.lblMaxSpeed.TabIndex = 58;
-            this.lblMaxSpeed.Text = "Max Speed:";
+            lblMaxSpeed.AutoSize = true;
+            lblMaxSpeed.Location = new System.Drawing.Point(14, 190);
+            lblMaxSpeed.Margin = new Padding(4, 0, 4, 0);
+            lblMaxSpeed.Name = "lblMaxSpeed";
+            lblMaxSpeed.Size = new System.Drawing.Size(86, 20);
+            lblMaxSpeed.TabIndex = 58;
+            lblMaxSpeed.Text = "Max Speed:";
             // 
             // txtMaxSpeed
             // 
-            this.txtMaxSpeed.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtMaxSpeed.Location = new System.Drawing.Point(96, 657);
-            this.txtMaxSpeed.Name = "txtMaxSpeed";
-            this.txtMaxSpeed.Size = new System.Drawing.Size(358, 20);
-            this.txtMaxSpeed.TabIndex = 59;
+            txtMaxSpeed.Location = new System.Drawing.Point(150, 187);
+            txtMaxSpeed.Margin = new Padding(4, 5, 4, 5);
+            txtMaxSpeed.Name = "txtMaxSpeed";
+            txtMaxSpeed.Size = new System.Drawing.Size(478, 27);
+            txtMaxSpeed.TabIndex = 59;
             // 
             // lblMaxBoostSpeed
             // 
-            this.lblMaxBoostSpeed.AutoSize = true;
-            this.lblMaxBoostSpeed.Location = new System.Drawing.Point(2, 681);
-            this.lblMaxBoostSpeed.Name = "lblMaxBoostSpeed";
-            this.lblMaxBoostSpeed.Size = new System.Drawing.Size(94, 13);
-            this.lblMaxBoostSpeed.TabIndex = 60;
-            this.lblMaxBoostSpeed.Text = "Max Boost Speed:";
+            lblMaxBoostSpeed.AutoSize = true;
+            lblMaxBoostSpeed.Location = new System.Drawing.Point(14, 250);
+            lblMaxBoostSpeed.Margin = new Padding(4, 0, 4, 0);
+            lblMaxBoostSpeed.Name = "lblMaxBoostSpeed";
+            lblMaxBoostSpeed.Size = new System.Drawing.Size(128, 20);
+            lblMaxBoostSpeed.TabIndex = 60;
+            lblMaxBoostSpeed.Text = "Max Boost Speed:";
             // 
             // txtMaxBoostSpeed
             // 
-            this.txtMaxBoostSpeed.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtMaxBoostSpeed.Location = new System.Drawing.Point(96, 678);
-            this.txtMaxBoostSpeed.Name = "txtMaxBoostSpeed";
-            this.txtMaxBoostSpeed.Size = new System.Drawing.Size(358, 20);
-            this.txtMaxBoostSpeed.TabIndex = 61;
+            txtMaxBoostSpeed.Location = new System.Drawing.Point(150, 247);
+            txtMaxBoostSpeed.Margin = new Padding(4, 5, 4, 5);
+            txtMaxBoostSpeed.Name = "txtMaxBoostSpeed";
+            txtMaxBoostSpeed.Size = new System.Drawing.Size(478, 27);
+            txtMaxBoostSpeed.TabIndex = 61;
             // 
             // lblSpeedStat
             // 
-            this.lblSpeedStat.AutoSize = true;
-            this.lblSpeedStat.Location = new System.Drawing.Point(2, 702);
-            this.lblSpeedStat.Name = "lblSpeedStat";
-            this.lblSpeedStat.Size = new System.Drawing.Size(63, 13);
-            this.lblSpeedStat.TabIndex = 62;
-            this.lblSpeedStat.Text = "Speed Stat:";
+            lblSpeedStat.AutoSize = true;
+            lblSpeedStat.Location = new System.Drawing.Point(14, 160);
+            lblSpeedStat.Margin = new Padding(4, 0, 4, 0);
+            lblSpeedStat.Name = "lblSpeedStat";
+            lblSpeedStat.Size = new System.Drawing.Size(84, 20);
+            lblSpeedStat.TabIndex = 62;
+            lblSpeedStat.Text = "Speed Stat:";
             // 
             // txtSpeedStat
             // 
-            this.txtSpeedStat.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtSpeedStat.Location = new System.Drawing.Point(96, 699);
-            this.txtSpeedStat.Name = "txtSpeedStat";
-            this.txtSpeedStat.Size = new System.Drawing.Size(358, 20);
-            this.txtSpeedStat.TabIndex = 63;
+            txtSpeedStat.Location = new System.Drawing.Point(150, 157);
+            txtSpeedStat.Margin = new Padding(4, 5, 4, 5);
+            txtSpeedStat.Name = "txtSpeedStat";
+            txtSpeedStat.Size = new System.Drawing.Size(478, 27);
+            txtSpeedStat.TabIndex = 63;
             // 
             // lblBoostStat
             // 
-            this.lblBoostStat.AutoSize = true;
-            this.lblBoostStat.Location = new System.Drawing.Point(2, 723);
-            this.lblBoostStat.Name = "lblBoostStat";
-            this.lblBoostStat.Size = new System.Drawing.Size(59, 13);
-            this.lblBoostStat.TabIndex = 64;
-            this.lblBoostStat.Text = "Boost Stat:";
+            lblBoostStat.AutoSize = true;
+            lblBoostStat.Location = new System.Drawing.Point(14, 220);
+            lblBoostStat.Margin = new Padding(4, 0, 4, 0);
+            lblBoostStat.Name = "lblBoostStat";
+            lblBoostStat.Size = new System.Drawing.Size(80, 20);
+            lblBoostStat.TabIndex = 64;
+            lblBoostStat.Text = "Boost Stat:";
             // 
             // txtBoostStat
             // 
-            this.txtBoostStat.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtBoostStat.Location = new System.Drawing.Point(96, 720);
-            this.txtBoostStat.Name = "txtBoostStat";
-            this.txtBoostStat.Size = new System.Drawing.Size(358, 20);
-            this.txtBoostStat.TabIndex = 65;
+            txtBoostStat.Location = new System.Drawing.Point(150, 217);
+            txtBoostStat.Margin = new Padding(4, 5, 4, 5);
+            txtBoostStat.Name = "txtBoostStat";
+            txtBoostStat.Size = new System.Drawing.Size(478, 27);
+            txtBoostStat.TabIndex = 65;
             // 
             // lblColor
             // 
-            this.lblColor.AutoSize = true;
-            this.lblColor.Location = new System.Drawing.Point(2, 744);
-            this.lblColor.Name = "lblColor";
-            this.lblColor.Size = new System.Drawing.Size(34, 13);
-            this.lblColor.TabIndex = 66;
-            this.lblColor.Text = "Color:";
+            lblColor.AutoSize = true;
+            lblColor.Location = new System.Drawing.Point(14, 640);
+            lblColor.Margin = new Padding(4, 0, 4, 0);
+            lblColor.Name = "lblColor";
+            lblColor.Size = new System.Drawing.Size(48, 20);
+            lblColor.TabIndex = 66;
+            lblColor.Text = "Color:";
             // 
             // txtColor
             // 
-            this.txtColor.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtColor.Location = new System.Drawing.Point(96, 741);
-            this.txtColor.Name = "txtColor";
-            this.txtColor.Size = new System.Drawing.Size(358, 20);
-            this.txtColor.TabIndex = 67;
+            txtColor.Location = new System.Drawing.Point(150, 637);
+            txtColor.Margin = new Padding(4, 5, 4, 5);
+            txtColor.Name = "txtColor";
+            txtColor.Size = new System.Drawing.Size(478, 27);
+            txtColor.TabIndex = 67;
             // 
             // lblColorType
             // 
-            this.lblColorType.AutoSize = true;
-            this.lblColorType.Location = new System.Drawing.Point(2, 765);
-            this.lblColorType.Name = "lblColorType";
-            this.lblColorType.Size = new System.Drawing.Size(61, 13);
-            this.lblColorType.TabIndex = 68;
-            this.lblColorType.Text = "Color Type:";
+            lblColorType.AutoSize = true;
+            lblColorType.Location = new System.Drawing.Point(674, 100);
+            lblColorType.Margin = new Padding(4, 0, 4, 0);
+            lblColorType.Name = "lblColorType";
+            lblColorType.Size = new System.Drawing.Size(83, 20);
+            lblColorType.TabIndex = 68;
+            lblColorType.Text = "Color Type:";
             // 
             // cboColorType
             // 
-            this.cboColorType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboColorType.FormattingEnabled = true;
-            this.cboColorType.Items.AddRange(new object[] {
-            "Gloss",
-            "Metallic",
-            "Pearlescent",
-            "Special",
-            "Party"});
-            this.cboColorType.Location = new System.Drawing.Point(96, 762);
-            this.cboColorType.Name = "cboColorType";
-            this.cboColorType.Size = new System.Drawing.Size(358, 21);
-            this.cboColorType.TabIndex = 69;
+            cboColorType.DropDownStyle = ComboBoxStyle.DropDownList;
+            cboColorType.FormattingEnabled = true;
+            cboColorType.Items.AddRange(new object[] { "Gloss", "Metallic", "Pearlescent", "Special", "Party" });
+            cboColorType.Location = new System.Drawing.Point(776, 97);
+            cboColorType.Margin = new Padding(4, 5, 4, 5);
+            cboColorType.Name = "cboColorType";
+            cboColorType.Size = new System.Drawing.Size(476, 28);
+            cboColorType.TabIndex = 69;
             // 
             // VehicleEditor
             // 
-            this.AcceptButton = this.btnOk;
-            this.AccessibleName = "";
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoScroll = true;
-            this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(470, 811);
-            this.Controls.Add(this.btnOk);
-            this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.lblIndex);
-            this.Controls.Add(this.txtIndex);
-            this.Controls.Add(this.lblID);
-            this.Controls.Add(this.txtID);
-            this.Controls.Add(this.lblParentID);
-            this.Controls.Add(this.txtParentID);
-            this.Controls.Add(this.lblWheels);
-            this.Controls.Add(this.txtWheels);
-            this.Controls.Add(this.lblName);
-            this.Controls.Add(this.txtName);
-            this.Controls.Add(this.lblBrand);
-            this.Controls.Add(this.txtBrand);
-            this.Controls.Add(this.lblDamageLimit);
-            this.Controls.Add(this.txtDamageLimit);
-            this.Controls.Add(this.lblFlags);
-            this.Controls.Add(this.chlFlags);
-            this.Controls.Add(this.lblBoostLength);
-            this.Controls.Add(this.txtBoostLength);
-            this.Controls.Add(this.lblRank);
-            this.Controls.Add(this.cboRank);
-            this.Controls.Add(this.lblBoostCapacity);
-            this.Controls.Add(this.txtBoostCapacity);
-            this.Controls.Add(this.lblStrengthStat);
-            this.Controls.Add(this.txtStrengthStat);
-            this.Controls.Add(this.lblAttribSysCollectionKey);
-            this.Controls.Add(this.txtAttribSysCollectionKey);
-            this.Controls.Add(this.lblExhaustName);
-            this.Controls.Add(this.txtExhaustName);
-            this.Controls.Add(this.lblExhaustID);
-            this.Controls.Add(this.txtExhaustID);
-            this.Controls.Add(this.lblEngineID);
-            this.Controls.Add(this.txtEngineID);
-            this.Controls.Add(this.lblEngineName);
-            this.Controls.Add(this.txtEngineName);
-            this.Controls.Add(this.lblClassUnlock);
-            this.Controls.Add(this.cboClassUnlock);
-            this.Controls.Add(this.lblCarWon);
-            this.Controls.Add(this.txtCarWon);
-            this.Controls.Add(this.lblCarReleased);
-            this.Controls.Add(this.txtCarReleased);
-            this.Controls.Add(this.lblAIMusic);
-            this.Controls.Add(this.cboAIMusic);
-            this.Controls.Add(this.lblAIExhaust1);
-            this.Controls.Add(this.cboAIExhaust1);
-            this.Controls.Add(this.lblAIExhaust2);
-            this.Controls.Add(this.cboAIExhaust2);
-            this.Controls.Add(this.lblAIExhaust3);
-            this.Controls.Add(this.cboAIExhaust3);
-            this.Controls.Add(this.lblCategory);
-            this.Controls.Add(this.chlCategory);
-            this.Controls.Add(this.lblVehicleType);
-            this.Controls.Add(this.cboVehicleType);
-            this.Controls.Add(this.lblBoostType);
-            this.Controls.Add(this.cboBoostType);
-            this.Controls.Add(this.lblFinishType);
-            this.Controls.Add(this.cboFinishType);
-            this.Controls.Add(this.lblMaxSpeed);
-            this.Controls.Add(this.txtMaxSpeed);
-            this.Controls.Add(this.lblMaxBoostSpeed);
-            this.Controls.Add(this.txtMaxBoostSpeed);
-            this.Controls.Add(this.lblSpeedStat);
-            this.Controls.Add(this.txtSpeedStat);
-            this.Controls.Add(this.lblBoostStat);
-            this.Controls.Add(this.txtBoostStat);
-            this.Controls.Add(this.lblColor);
-            this.Controls.Add(this.txtColor);
-            this.Controls.Add(this.lblColorType);
-            this.Controls.Add(this.cboColorType);
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.Name = "VehicleEditor";
-            this.Text = "Vehicle Editor";
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AcceptButton = btnOk;
+            AccessibleName = "";
+            AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
+            AutoScaleMode = AutoScaleMode.Font;
+            AutoScroll = true;
+            CancelButton = btnCancel;
+            ClientSize = new System.Drawing.Size(1264, 729);
+            Controls.Add(btnOk);
+            Controls.Add(btnCancel);
+            Controls.Add(lblIndex);
+            Controls.Add(txtIndex);
+            Controls.Add(lblID);
+            Controls.Add(txtID);
+            Controls.Add(lblParentID);
+            Controls.Add(txtParentID);
+            Controls.Add(lblWheels);
+            Controls.Add(txtWheels);
+            Controls.Add(lblName);
+            Controls.Add(txtName);
+            Controls.Add(lblBrand);
+            Controls.Add(txtBrand);
+            Controls.Add(lblDamageLimit);
+            Controls.Add(txtDamageLimit);
+            Controls.Add(lblFlags);
+            Controls.Add(chlFlags);
+            Controls.Add(lblBoostLength);
+            Controls.Add(txtBoostLength);
+            Controls.Add(lblRank);
+            Controls.Add(cboRank);
+            Controls.Add(lblBoostCapacity);
+            Controls.Add(txtBoostCapacity);
+            Controls.Add(lblStrengthStat);
+            Controls.Add(txtStrengthStat);
+            Controls.Add(lblAttribSysCollectionKey);
+            Controls.Add(txtAttribSysCollectionKey);
+            Controls.Add(lblExhaustName);
+            Controls.Add(txtExhaustName);
+            Controls.Add(lblExhaustID);
+            Controls.Add(txtExhaustID);
+            Controls.Add(lblEngineID);
+            Controls.Add(txtEngineID);
+            Controls.Add(lblEngineName);
+            Controls.Add(txtEngineName);
+            Controls.Add(lblClassUnlock);
+            Controls.Add(cboClassUnlock);
+            Controls.Add(lblCarWon);
+            Controls.Add(txtCarWon);
+            Controls.Add(lblCarReleased);
+            Controls.Add(txtCarReleased);
+            Controls.Add(lblAIMusic);
+            Controls.Add(cboAIMusic);
+            Controls.Add(lblAIExhaust1);
+            Controls.Add(cboAIExhaust1);
+            Controls.Add(lblAIExhaust2);
+            Controls.Add(cboAIExhaust2);
+            Controls.Add(lblAIExhaust3);
+            Controls.Add(cboAIExhaust3);
+            Controls.Add(lblCategory);
+            Controls.Add(chlCategory);
+            Controls.Add(lblVehicleType);
+            Controls.Add(cboVehicleType);
+            Controls.Add(lblBoostType);
+            Controls.Add(cboBoostType);
+            Controls.Add(lblFinishType);
+            Controls.Add(cboFinishType);
+            Controls.Add(lblMaxSpeed);
+            Controls.Add(txtMaxSpeed);
+            Controls.Add(lblMaxBoostSpeed);
+            Controls.Add(txtMaxBoostSpeed);
+            Controls.Add(lblSpeedStat);
+            Controls.Add(txtSpeedStat);
+            Controls.Add(lblBoostStat);
+            Controls.Add(txtBoostStat);
+            Controls.Add(lblColor);
+            Controls.Add(txtColor);
+            Controls.Add(lblColorType);
+            Controls.Add(cboColorType);
+            DoubleBuffered = true;
+            Margin = new Padding(4, 5, 4, 5);
+            MaximizeBox = false;
+            MinimizeBox = false;
+            Name = "VehicleEditor";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "Vehicle Editor";
+            ResumeLayout(false);
+            PerformLayout();
 
         }
 
@@ -942,7 +881,7 @@ namespace VehicleList
         private System.Windows.Forms.Label lblDamageLimit;
         private System.Windows.Forms.TextBox txtDamageLimit;
         private System.Windows.Forms.Label lblFlags;
-        public System.Windows.Forms.CheckedListBox chlFlags;
+        public  System.Windows.Forms.CheckedListBox chlFlags;
         private System.Windows.Forms.Label lblBoostLength;
         private System.Windows.Forms.TextBox txtBoostLength;
         private System.Windows.Forms.Label lblRank;
