@@ -1,16 +1,19 @@
 namespace VehicleList
 {
+    
     partial class VehicleListForm
     {
         /// <summary>
         /// Required designer variable.
         /// </summary>
+        
         private System.ComponentModel.IContainer components = null;
-
+        
         /// <summary>
         /// Clean up any resources being used.
         /// </summary>
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -26,8 +29,11 @@ namespace VehicleList
         /// Required method for Designer support - do not modify
         /// the contents of this method with the code editor.
         /// </summary>
+        
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(VehicleListForm));
             mnuMain = new System.Windows.Forms.MenuStrip();
             itemsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             addItemToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -74,6 +80,9 @@ namespace VehicleList
             tsbAddItem = new System.Windows.Forms.ToolStripButton();
             tsbCopyItem = new System.Windows.Forms.ToolStripButton();
             tsbDeleteItem = new System.Windows.Forms.ToolStripButton();
+            tstbSearchItem = new System.Windows.Forms.ToolStripTextBox();
+            tsbSearchItem = new System.Windows.Forms.ToolStripButton();
+            timer1 = new System.Windows.Forms.Timer(components);
             mnuMain.SuspendLayout();
             stsMain.SuspendLayout();
             toolStrip1.SuspendLayout();
@@ -84,8 +93,8 @@ namespace VehicleList
             mnuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { itemsToolStripMenuItem });
             mnuMain.Location = new System.Drawing.Point(0, 0);
             mnuMain.Name = "mnuMain";
-            mnuMain.Padding = new System.Windows.Forms.Padding(7, 2, 0, 2);
-            mnuMain.Size = new System.Drawing.Size(1259, 24);
+            mnuMain.Padding = new System.Windows.Forms.Padding(8, 3, 0, 3);
+            mnuMain.Size = new System.Drawing.Size(1439, 30);
             mnuMain.TabIndex = 0;
             mnuMain.Text = "menuStrip1";
             // 
@@ -93,14 +102,14 @@ namespace VehicleList
             // 
             itemsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { addItemToolStripMenuItem, copyItemToolStripMenuItem, deleteItemToolStripMenuItem });
             itemsToolStripMenuItem.Name = "itemsToolStripMenuItem";
-            itemsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
+            itemsToolStripMenuItem.Size = new System.Drawing.Size(57, 24);
             itemsToolStripMenuItem.Text = "Items";
             // 
             // addItemToolStripMenuItem
             // 
             addItemToolStripMenuItem.Image = Properties.Resources.AddTableHS;
             addItemToolStripMenuItem.Name = "addItemToolStripMenuItem";
-            addItemToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            addItemToolStripMenuItem.Size = new System.Drawing.Size(156, 24);
             addItemToolStripMenuItem.Text = "Add Item";
             addItemToolStripMenuItem.Click += addItemToolStripMenuItem_Click;
             // 
@@ -109,7 +118,7 @@ namespace VehicleList
             copyItemToolStripMenuItem.Enabled = false;
             copyItemToolStripMenuItem.Image = Properties.Resources.CopyHS;
             copyItemToolStripMenuItem.Name = "copyItemToolStripMenuItem";
-            copyItemToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            copyItemToolStripMenuItem.Size = new System.Drawing.Size(156, 24);
             copyItemToolStripMenuItem.Text = "Copy Item";
             copyItemToolStripMenuItem.Click += copyItemToolStripMenuItem_Click;
             // 
@@ -118,7 +127,7 @@ namespace VehicleList
             deleteItemToolStripMenuItem.Enabled = false;
             deleteItemToolStripMenuItem.Image = Properties.Resources.remove_xform;
             deleteItemToolStripMenuItem.Name = "deleteItemToolStripMenuItem";
-            deleteItemToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            deleteItemToolStripMenuItem.Size = new System.Drawing.Size(156, 24);
             deleteItemToolStripMenuItem.Text = "Delete Item";
             deleteItemToolStripMenuItem.Click += deleteItemToolStripMenuItem_Click;
             // 
@@ -128,10 +137,10 @@ namespace VehicleList
             lstVehicles.Dock = System.Windows.Forms.DockStyle.Fill;
             lstVehicles.FullRowSelect = true;
             lstVehicles.GridLines = true;
-            lstVehicles.Location = new System.Drawing.Point(0, 49);
-            lstVehicles.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            lstVehicles.Location = new System.Drawing.Point(0, 57);
+            lstVehicles.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             lstVehicles.Name = "lstVehicles";
-            lstVehicles.Size = new System.Drawing.Size(1259, 491);
+            lstVehicles.Size = new System.Drawing.Size(1439, 670);
             lstVehicles.TabIndex = 1;
             lstVehicles.UseCompatibleStateImageBehavior = false;
             lstVehicles.View = System.Windows.Forms.View.Details;
@@ -289,10 +298,10 @@ namespace VehicleList
             // stsMain
             // 
             stsMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { stlStatusLabel });
-            stsMain.Location = new System.Drawing.Point(0, 540);
+            stsMain.Location = new System.Drawing.Point(0, 727);
             stsMain.Name = "stsMain";
-            stsMain.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
-            stsMain.Size = new System.Drawing.Size(1259, 22);
+            stsMain.Padding = new System.Windows.Forms.Padding(1, 0, 18, 0);
+            stsMain.Size = new System.Drawing.Size(1439, 22);
             stsMain.TabIndex = 2;
             stsMain.Text = "statusStrip1";
             // 
@@ -303,10 +312,10 @@ namespace VehicleList
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsbAddItem, tsbCopyItem, tsbDeleteItem });
-            toolStrip1.Location = new System.Drawing.Point(0, 24);
+            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsbAddItem, tsbCopyItem, tsbDeleteItem, tstbSearchItem, tsbSearchItem });
+            toolStrip1.Location = new System.Drawing.Point(0, 30);
             toolStrip1.Name = "toolStrip1";
-            toolStrip1.Size = new System.Drawing.Size(1259, 25);
+            toolStrip1.Size = new System.Drawing.Size(1439, 27);
             toolStrip1.TabIndex = 3;
             toolStrip1.Text = "toolStrip1";
             // 
@@ -316,7 +325,7 @@ namespace VehicleList
             tsbAddItem.Image = Properties.Resources.AddTableHS;
             tsbAddItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             tsbAddItem.Name = "tsbAddItem";
-            tsbAddItem.Size = new System.Drawing.Size(23, 22);
+            tsbAddItem.Size = new System.Drawing.Size(23, 24);
             tsbAddItem.Text = "Add Item";
             tsbAddItem.Click += tsbAddItem_Click;
             // 
@@ -327,7 +336,7 @@ namespace VehicleList
             tsbCopyItem.Image = Properties.Resources.CopyHS;
             tsbCopyItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             tsbCopyItem.Name = "tsbCopyItem";
-            tsbCopyItem.Size = new System.Drawing.Size(23, 22);
+            tsbCopyItem.Size = new System.Drawing.Size(23, 24);
             tsbCopyItem.Text = "Copy Item";
             tsbCopyItem.Click += tsbCopyItem_Click;
             // 
@@ -338,21 +347,38 @@ namespace VehicleList
             tsbDeleteItem.Image = Properties.Resources.remove_xform;
             tsbDeleteItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             tsbDeleteItem.Name = "tsbDeleteItem";
-            tsbDeleteItem.Size = new System.Drawing.Size(23, 22);
+            tsbDeleteItem.Size = new System.Drawing.Size(23, 24);
             tsbDeleteItem.Text = "Delete Item";
             tsbDeleteItem.Click += tsbDeleteItem_Click;
             // 
+            // tstbSearchItem
+            // 
+            tstbSearchItem.Name = "tstbSearchItem";
+            tstbSearchItem.Size = new System.Drawing.Size(250, 27);
+            tstbSearchItem.KeyPress += tstbSearchItem_KeyPress;
+            tstbSearchItem.TextChanged += tstbSearchItem_TextChanged;
+            // 
+            // tsbSearchItem
+            // 
+            tsbSearchItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            tsbSearchItem.Image = (System.Drawing.Image)resources.GetObject("tsbSearchItem.Image");
+            tsbSearchItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsbSearchItem.Name = "tsbSearchItem";
+            tsbSearchItem.Size = new System.Drawing.Size(23, 24);
+            tsbSearchItem.Text = "toolStripButton1";
+            tsbSearchItem.Click += tsbSearchItem_Click;
+            // 
             // VehicleListForm
             // 
-            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(1259, 562);
+            ClientSize = new System.Drawing.Size(1439, 749);
             Controls.Add(lstVehicles);
             Controls.Add(toolStrip1);
             Controls.Add(stsMain);
             Controls.Add(mnuMain);
             MainMenuStrip = mnuMain;
-            Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             Name = "VehicleListForm";
             Text = "Vehicle List Viewer";
             mnuMain.ResumeLayout(false);
@@ -413,6 +439,10 @@ namespace VehicleList
         private System.Windows.Forms.ToolStripMenuItem copyItemToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem deleteItemToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton tsbDeleteItem;
+        private System.Windows.Forms.ToolStripTextBox tstbSearchItem;
+        private System.Windows.Forms.ToolStripButton tsbSearchItem;
+        private System.Windows.Forms.Timer timer1;
+
     }
 }
 
