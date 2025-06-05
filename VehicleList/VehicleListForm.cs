@@ -1,9 +1,11 @@
-using System;
-using System.Collections;
-using System.Globalization;
-using System.Windows.Forms;
 using BundleUtilities;
 using PluginAPI;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace VehicleList
 {
@@ -13,6 +15,8 @@ namespace VehicleList
         public event OnEdit Edit;
 
         private VehicleListData _list;
+        private System.Windows.Forms.Timer _searchTimer;
+
         public VehicleListData List
         {
             get => _list;
@@ -26,19 +30,29 @@ namespace VehicleList
         public VehicleListForm()
         {
             InitializeComponent();
+            _searchTimer = new System.Windows.Forms.Timer();
+            _searchTimer.Interval = 300;
+            _searchTimer.Tick += SearchTimer_Tick;
+
+            tstbSearchItem.Text = "Search by ID, Parent ID, Vehicle or Manufacturer";
+            tstbSearchItem.ForeColor = System.Drawing.SystemColors.GrayText;
         }
 
-        private void UpdateDisplay()
+        private void UpdateDisplay(IEnumerable<Vehicle> vehiclesToDisplay = null)
         {
             lstVehicles.Items.Clear();
 
             if (List == null)
-                return;
-
-            for (int i = 0; i < List.Entries.Count; i++)
             {
-                Vehicle vehicle = List.Entries[i];
+                return;
+            }
 
+            // Use provided list for filtered results, otherwise use the full list.
+            IEnumerable<Vehicle> sourceList = vehiclesToDisplay ?? List.Entries;
+
+            foreach (Vehicle vehicle in sourceList)
+            {
+                // The order of these strings must match the order of ColumnHeaders in your ListView.
                 string[] value = {
                     vehicle.Index.ToString(),
                     vehicle.ID.Value,
@@ -78,27 +92,65 @@ namespace VehicleList
                 lstVehicles.Items.Add(new ListViewItem(value));
             }
 
-            lstVehicles.ListViewItemSorter = new VehicleSorter(0);
-            lstVehicles.Sort();
+            // Reapply sorting if a sorter is active.
+            if (lstVehicles.ListViewItemSorter is VehicleSorter sorter)
+            {
+                lstVehicles.Sort();
+            }
 
-            stlStatusLabel.Text = "";
+            stlStatusLabel.Text = $"{lstVehicles.Items.Count} Item(s) Displayed";
+
+            // Disable copy/delete buttons as no items are selected after a fresh display/filter.
             copyItemToolStripMenuItem.Enabled = false;
             deleteItemToolStripMenuItem.Enabled = false;
             tsbCopyItem.Enabled = false;
             tsbDeleteItem.Enabled = false;
         }
 
+        private void PerformSearch(string searchText)
+        {
+            if (string.IsNullOrWhiteSpace(searchText) || searchText == "Search by ID, Parent ID, Vehicle or Manufacturer")
+            {
+                UpdateDisplay();
+                return;
+            }
+
+            string lowerSearchText = searchText.ToLowerInvariant();
+
+            var filteredVehicles = List.Entries.Where(vehicle =>
+            {
+                string[] searchableData = {
+                    vehicle.ID.Value,
+                    vehicle.ParentID.Value,
+                    vehicle.CarName,
+                    vehicle.CarBrand
+                };
+
+                return searchableData.Any(data => data != null && data.ToLowerInvariant().Contains(lowerSearchText));
+            }).ToList();
+
+            UpdateDisplay(filteredVehicles);
+        }
+
+        private void SearchTimer_Tick(object sender, EventArgs e)
+        {
+            _searchTimer.Stop();
+            PerformSearch(tstbSearchItem.Text);
+        }
+
         private void EditSelectedEntry()
         {
-            if (lstVehicles.SelectedItems.Count > 1)
+            if (lstVehicles.SelectedItems.Count > 1 || List == null || lstVehicles.SelectedIndices.Count <= 0)
+            {
                 return;
-            if (List == null || lstVehicles.SelectedIndices.Count <= 0)
-                return;
+            }
 
             if (!int.TryParse(lstVehicles.SelectedItems[0].Text, out int index))
+            {
                 return;
-            Vehicle vehicle = List.Entries[index];
+            }
 
+            Vehicle vehicle = List.Entries[index];
             VehicleEditor editor = new VehicleEditor(List.Entries.Count - 1);
             editor.Vehicle = vehicle;
             editor.OnDone += Editor_OnDone;
@@ -108,7 +160,10 @@ namespace VehicleList
         private void AddItem()
         {
             if (List == null)
+            {
                 return;
+            }
+
             Vehicle vehicle = new Vehicle();
             vehicle.Index = List.Entries.Count;
             vehicle.ID = new EncryptedString("");
@@ -118,18 +173,22 @@ namespace VehicleList
 
             VehicleEditor editor = new VehicleEditor(List.Entries.Count);
             editor.Vehicle = vehicle;
-            editor.OnDone += Editor_OnDone1; ;
+            editor.OnDone += Editor_OnDone1;
             editor.ShowDialog(this);
         }
 
         private void CopyItem()
         {
-            if (List == null || lstVehicles.SelectedItems.Count != 1
-                || lstVehicles.SelectedIndices.Count <= 0)
+            if (List == null || lstVehicles.SelectedItems.Count != 1 || lstVehicles.SelectedIndices.Count <= 0)
+            {
                 return;
+            }
 
             if (!int.TryParse(lstVehicles.SelectedItems[0].Text, out int index))
+            {
                 return;
+            }
+
             Vehicle vehicle = new Vehicle(List.Entries[index]);
             vehicle.Index = List.Entries.Count;
 
@@ -141,29 +200,37 @@ namespace VehicleList
 
         private void DeleteItem()
         {
-            if (List == null || lstVehicles.SelectedItems.Count != 1
-                || lstVehicles.SelectedIndices.Count <= 0)
+            if (List == null || lstVehicles.SelectedItems.Count != 1 || lstVehicles.SelectedIndices.Count <= 0)
+            {
                 return;
+            }
 
             if (!int.TryParse(lstVehicles.SelectedItems[0].Text, out int index))
+            {
                 return;
+            }
+
             List.Entries.RemoveAt(index);
+
             for (int i = index; i < List.Entries.Count; ++i)
+            {
                 List.Entries[i].Index--;
+            }
 
             Edit?.Invoke();
-            UpdateDisplay();
+            PerformSearch(tstbSearchItem.Text);
         }
 
         private void Editor_OnDone1(Vehicle vehicle)
         {
-            // Insert if not at end, else add
             if (vehicle.Index != List.Entries.Count)
             {
                 List.Entries.Insert(vehicle.Index, vehicle);
 
                 for (int i = 0; i < List.Entries.Count; ++i)
+                {
                     List.Entries[i].Index = i;
+                }
             }
             else
             {
@@ -171,13 +238,13 @@ namespace VehicleList
             }
 
             Edit?.Invoke();
-            UpdateDisplay();
+            PerformSearch(tstbSearchItem.Text);
         }
 
         private void Editor_OnDone(Vehicle vehicle)
         {
-            // If the index has changed, edit the list
-            int oldIndex = int.Parse(lstVehicles.SelectedItems[0].Text); // Tried in EditSelectedEntry()
+            int oldIndex = int.Parse(lstVehicles.SelectedItems[0].Text);
+
             if (oldIndex != vehicle.Index)
             {
                 Vehicle old = List.Entries[oldIndex];
@@ -185,13 +252,14 @@ namespace VehicleList
                 List.Entries.Insert(vehicle.Index, old);
 
                 for (int i = 0; i < List.Entries.Count; ++i)
+                {
                     List.Entries[i].Index = i;
+                }
             }
 
-            // Edit the vehicle
             List.Entries[vehicle.Index] = vehicle;
             Edit?.Invoke();
-            UpdateDisplay();
+            PerformSearch(tstbSearchItem.Text);
         }
 
         private void lstVehicles_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -211,7 +279,6 @@ namespace VehicleList
         private void lstVehicles_ColumnClick(object sender, ColumnClickEventArgs e)
         {
             int column = e.Column;
-
             bool direction = false;
 
             if (lstVehicles.ListViewItemSorter is VehicleSorter sorter)
@@ -229,6 +296,7 @@ namespace VehicleList
             {
                 Direction = !direction
             };
+
             lstVehicles.ListViewItemSorter = newSorter;
             lstVehicles.Sort();
         }
@@ -252,13 +320,14 @@ namespace VehicleList
                 if (Column > itemX.SubItems.Count || Column > itemY.SubItems.Count)
                 {
                     if (Direction)
+                    {
                         return -1;
+                    }
                     return 1;
                 }
 
                 string iX = itemX.SubItems[Column].Text;
                 string iY = itemY.SubItems[Column].Text;
-
 
                 if (int.TryParse(iX, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out int iXint))
                 {
@@ -266,14 +335,18 @@ namespace VehicleList
                     {
                         int val2 = iXint.CompareTo(iYint);
                         if (this.Direction)
+                        {
                             return val2 * -1;
+                        }
                         return val2;
                     }
                 }
 
                 int val = string.CompareOrdinal(iX, iY);
                 if (Direction)
+                {
                     return val * -1;
+                }
                 return val;
             }
 
@@ -311,6 +384,58 @@ namespace VehicleList
         private void tsbDeleteItem_Click(object sender, EventArgs e)
         {
             DeleteItem();
+        }
+
+        private void tsbSearchItem_Click(object sender, EventArgs e)
+        {
+            PerformSearch(tstbSearchItem.Text);
+        }
+
+        private void tstbSearchItem_TextChanged(object sender, EventArgs e)
+        {
+            if (tstbSearchItem.Text == "Search by ID, Parent ID, Vehicle or Manufacturer")
+            {
+                return;
+            }
+
+            _searchTimer.Stop();
+            _searchTimer.Start();
+        }
+
+        private void tstbSearchItem_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Enter)
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void tstbSearchItem_Enter(object sender, EventArgs e)
+        {
+            if (tstbSearchItem.Text == "Search by ID, Parent ID, Vehicle or Manufacturer")
+            {
+                tstbSearchItem.Text = "";
+                tstbSearchItem.ForeColor = System.Drawing.SystemColors.WindowText;
+
+                _searchTimer.Stop();
+            }
+        }
+
+        private void tstbSearchItem_Leave(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(tstbSearchItem.Text))
+            {
+                tstbSearchItem.Text = "Search by ID, Parent ID, Vehicle or Manufacturer";
+                tstbSearchItem.ForeColor = System.Drawing.SystemColors.GrayText;
+            }
+        }
+
+        private void tsbClearSearch_Click(object sender, EventArgs e)
+        {
+            tstbSearchItem.Text = "Search by ID, Parent ID, Vehicle or Manufacturer";
+            tstbSearchItem.ForeColor = System.Drawing.SystemColors.GrayText;
+
+            UpdateDisplay();
         }
     }
 }
