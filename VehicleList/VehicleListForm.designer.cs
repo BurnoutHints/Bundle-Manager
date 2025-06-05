@@ -29,7 +29,7 @@ namespace VehicleList
         /// Required method for Designer support - do not modify
         /// the contents of this method with the code editor.
         /// </summary>
-        
+
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
@@ -83,6 +83,7 @@ namespace VehicleList
             tstbSearchItem = new System.Windows.Forms.ToolStripTextBox();
             tsbSearchItem = new System.Windows.Forms.ToolStripButton();
             timer1 = new System.Windows.Forms.Timer(components);
+            tsbClearSearch = new System.Windows.Forms.ToolStripButton();
             mnuMain.SuspendLayout();
             stsMain.SuspendLayout();
             toolStrip1.SuspendLayout();
@@ -312,7 +313,7 @@ namespace VehicleList
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsbAddItem, tsbCopyItem, tsbDeleteItem, tstbSearchItem, tsbSearchItem });
+            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsbAddItem, tsbCopyItem, tsbDeleteItem, tstbSearchItem, tsbSearchItem, tsbClearSearch });
             toolStrip1.Location = new System.Drawing.Point(0, 30);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new System.Drawing.Size(1439, 27);
@@ -354,7 +355,9 @@ namespace VehicleList
             // tstbSearchItem
             // 
             tstbSearchItem.Name = "tstbSearchItem";
-            tstbSearchItem.Size = new System.Drawing.Size(250, 27);
+            tstbSearchItem.Size = new System.Drawing.Size(350, 27);
+            tstbSearchItem.Enter += tstbSearchItem_Enter;
+            tstbSearchItem.Leave += tstbSearchItem_Leave;
             tstbSearchItem.KeyPress += tstbSearchItem_KeyPress;
             tstbSearchItem.TextChanged += tstbSearchItem_TextChanged;
             // 
@@ -367,6 +370,16 @@ namespace VehicleList
             tsbSearchItem.Size = new System.Drawing.Size(23, 24);
             tsbSearchItem.Text = "toolStripButton1";
             tsbSearchItem.Click += tsbSearchItem_Click;
+            // 
+            // tsbClearSearch
+            // 
+            tsbClearSearch.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            tsbClearSearch.Image = (System.Drawing.Image)resources.GetObject("tsbClearSearch.Image");
+            tsbClearSearch.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsbClearSearch.Name = "tsbClearSearch";
+            tsbClearSearch.Size = new System.Drawing.Size(23, 24);
+            tsbClearSearch.Text = "toolStripButton1";
+            tsbClearSearch.Click += tsbClearSearch_Click;
             // 
             // VehicleListForm
             // 
@@ -442,7 +455,7 @@ namespace VehicleList
         private System.Windows.Forms.ToolStripTextBox tstbSearchItem;
         private System.Windows.Forms.ToolStripButton tsbSearchItem;
         private System.Windows.Forms.Timer timer1;
-
+        private System.Windows.Forms.ToolStripButton tsbClearSearch;
     }
 }
 

@@ -137,6 +137,15 @@
         f3wKlwF8/VU+fd45AExJDuL3i/ALkhVOAh8dNroAAAAASUVORK5CYII=
 </value>
   </data>
+  <data name="tsbClearSearch.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACGSURBVDhPY2CgFjjOLq6ALoYNYFUHEjzKKfrqMLe4A7oc
+        MgDJg9RhNeQwj6jNYU7Rl0e5xZ3Q5UDgCI+ILT55MMBlCC5xrABdMTqfKADyK1gTl2gJiCYUNlgBSPNR
+        bvH/IBpdjiCgyAXofkbn4wW4ooooQ3BphgG8hlAlJWIVxAKIVUc/AABwqlfaZ9t5pQAAAABJRU5ErkJg
+        gg==
+</value>
+  </data>
   <metadata name="timer1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>337, 17</value>
   </metadata>
