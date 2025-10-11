@@ -1,8 +1,12 @@
 using PluginSystem;
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Numerics;
 using System.Windows.Forms;
+
+using BundleManager.TypeConverters;
 
 namespace BundleManager
 {
@@ -18,6 +22,8 @@ namespace BundleManager
         public static void Main(string[] args)
         {
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+
+            TypeDescriptor.AddAttributes(typeof(Vector4), new TypeConverterAttribute(typeof(Vector4Converter)));
 
             Application.EnableVisualStyles();
             Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
