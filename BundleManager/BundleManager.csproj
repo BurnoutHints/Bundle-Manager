@@ -69,7 +69,7 @@
   <ItemGroup>
     <PackageReference Include="DebugHelper" Version="1.0.0" />
     <PackageReference Include="ScottPlot.WinForms" Version="5.0.54" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.10" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.12" />
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="xcopy &quot;$(SolutionDir)libs\*&quot; &quot;$(ProjectDir)$(OutDir)&quot; /s /e /y&#xD;&#xA;xcopy &quot;$(SolutionDir)resources\*&quot; &quot;$(ProjectDir)$(OutDir)&quot; /s /e /y" />
