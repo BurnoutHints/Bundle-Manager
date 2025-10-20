@@ -32,7 +32,6 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="FastCloner" Version="3.3.16" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
-		<PackageReference Include="Svg.Controls.Avalonia" Version="11.3.6.2" />
 		<PackageReference Include="Xaml.Behaviors" Version="11.3.6.5" />
 	</ItemGroup>
 
