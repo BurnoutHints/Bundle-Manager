@@ -1,77 +1,57 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <OutputType>WinExe</OutputType>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <UseWindowsForms>true</UseWindowsForms>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject>BundleManager.Program</StartupObject>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationIcon>icon.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationManifest>App.manifest</ApplicationManifest>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Update="BetterListView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <None Update="App.manifest">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\BundleFormat\BundleFormat.csproj" />
-    <ProjectReference Include="..\BundleUtilities\BundleUtilities.csproj" />
-    <ProjectReference Include="..\BurnoutImage\BurnoutImage.csproj" />
-    <ProjectReference Include="..\HexEditor\HexEditor.csproj" />
-    <ProjectReference Include="..\IconLibrary\IconLibrary.csproj" />
-    <ProjectReference Include="..\LangEditor\LangEditor.csproj" />
-    <ProjectReference Include="..\MathLib\MathLib.csproj" />
-    <ProjectReference Include="..\ModelViewer\ModelViewer.csproj" />
-    <ProjectReference Include="..\PluginAPI\PluginAPI.csproj" />
-    <ProjectReference Include="..\PluginSystem\PluginSystem.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="icon.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.5.2 %28x86 und x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="DebugHelper" Version="1.0.0" />
-    <PackageReference Include="ScottPlot.WinForms" Version="5.0.54" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.10" />
-  </ItemGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy &quot;$(SolutionDir)libs\*&quot; &quot;$(ProjectDir)$(OutDir)&quot; /s /e /y&#xD;&#xA;xcopy &quot;$(SolutionDir)resources\*&quot; &quot;$(ProjectDir)$(OutDir)&quot; /s /e /y" />
-  </Target>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<AvaloniaResource Include="Assets\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AssemblyAttribute Include="BundleManager.ViewModels.AboutWindow.BuildDateAttribute">
+			<_Parameter1>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="11.3.6" />
+		<PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.6" />
+		<PackageReference Include="Avalonia.Desktop" Version="11.3.6" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.6" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.6" />
+		<!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+		<PackageReference Include="Avalonia.Diagnostics" Version="11.3.6">
+			<IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+			<PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<PackageReference Include="FastCloner" Version="3.3.16" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
+		<PackageReference Include="Svg.Controls.Avalonia" Version="11.3.6.2" />
+		<PackageReference Include="Xaml.Behaviors" Version="11.3.6.5" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\BundleFormat\BundleFormat.csproj" />
+		<ProjectReference Include="..\Configuration\Configuration.csproj" />
+		<ProjectReference Include="..\Information\Information.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Views\ObjectList.axaml.cs">
+			<DependentUpon>ObjectList.axaml</DependentUpon>
+		</Compile>
+		<Compile Update="Views\SimpleList.axaml.cs">
+			<DependentUpon>SimpleList.axaml</DependentUpon>
+		</Compile>
+		<Compile Update="Views\YesNoDialog.axaml.cs">
+			<DependentUpon>YesNoDialog.axaml</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
 </Project>

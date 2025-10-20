@@ -1,0 +1,41 @@
+<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:viewmodels="using:BundleManager.ViewModels"
+		Width="420" Height="200"
+		x:Class="BundleManager.Views.AboutWindow"
+		x:DataType="viewmodels:AboutWindow"
+		Icon="/Assets/icon.ico"
+		Title="AboutWindow"
+		WindowStartupLocation="CenterOwner">
+
+	<Design.DataContext>
+		<viewmodels:AboutWindow/>
+	</Design.DataContext>
+
+	<Grid ColumnDefinitions="*"
+		  RowDefinitions="*, 0.5*, 30"
+		  Margin="10">
+		<TextBlock TextAlignment="Center"
+				   HorizontalAlignment="Center"
+				   VerticalAlignment="Center"
+				   Grid.Row="0">
+			Bundle Manager Neo<LineBreak/>
+			Proof of concept<LineBreak/>
+			Built 
+			<Run Text="{Binding BuildDate}"/>
+		</TextBlock>
+		<HyperlinkButton NavigateUri="https://github.com/BurnoutHints/Bundle-Manager/tree/neo"
+						 HorizontalAlignment="Center"
+						 VerticalAlignment="Top"
+						 Grid.Row="1">
+			GitHub project page
+		</HyperlinkButton>
+		<Button Content="OK"
+				Command="{Binding CloseAboutWindowCommand}"
+				HorizontalAlignment="Center"
+				Grid.Row="2"/>
+	</Grid>
+	
+</Window>

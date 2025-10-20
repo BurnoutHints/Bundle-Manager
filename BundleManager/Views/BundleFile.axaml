@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:controls="using:BundleManager.Controls"
+			 xmlns:models="using:BundleManager.Models"
+			 xmlns:viewmodels="using:BundleManager.ViewModels"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="BundleManager.Views.BundleFile"
+			 x:DataType="viewmodels:BundleFile">
+
+	<!-- Bundle resource tabs. Per-bundle. Bound to a collection of BundleResources.
+	This is where opened resources are viewed.
+	The first tab's content is a list of the resources present in the bundle. It is
+	added when the bundle is opened and cannot be closed.
+	Each subsequent tab is where opened resources are viewed. Their content is a
+	tabular editor for that resource's data structure. -->
+	<TabControl ItemsSource="{Binding ResourceTabs}"
+				SelectedItem="{Binding SelectedResourceTab}">
+		<TabControl.ItemTemplate>
+			<DataTemplate>
+				<controls:CloseableTabItem Header="{Binding ShortId}"
+										   ToolTip.Tip="{Binding Id}"
+										   IsSaveButtonVisible="{Binding ContentContainer.CanSave}"
+										   IsSaveButtonEnabled="{Binding ContentContainer.IsDirty}"
+										   SaveCommand="{Binding $parent[TabControl].DataContext.SaveResourceCommand}"
+										   CloseCommand="{Binding $parent[TabControl].DataContext.CloseResourceCommand}"
+										   IsCloseButtonVisible="{Binding IsCloseButtonVisible}"/>
+			</DataTemplate>
+		</TabControl.ItemTemplate>
+		<!-- Each tab's content is dynamically set to a view via the model. -->
+		<TabControl.ContentTemplate>
+			<DataTemplate DataType="models:BundleResourceTab">
+				<ContentControl Content="{Binding ContentContainer.Content, Mode=TwoWay}"/>
+			</DataTemplate>
+		</TabControl.ContentTemplate>
+		<!-- These styles, in combination, add borders above the header area and content
+		area. By styling them here instead of in the MainWindow, they are only visible
+		when at least one bundle has been opened. -->
+		<TabControl.Styles>
+			<Style Selector="TabControl">
+				<Setter Property="BorderBrush" Value="DimGray"/>
+				<Setter Property="BorderThickness" Value="0,1,0,0"/>
+			</Style>
+			<Style Selector="TabControl /template/ ContentPresenter#PART_SelectedContentHost">
+				<Setter Property="BorderBrush" Value="DimGray"/>
+				<Setter Property="BorderThickness" Value="0,1,0,0"/>
+			</Style>
+		</TabControl.Styles>
+	</TabControl>
+	
+</UserControl>

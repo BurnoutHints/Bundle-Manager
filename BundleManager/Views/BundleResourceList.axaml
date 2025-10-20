@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:viewmodels="using:BundleManager.ViewModels"
+			 mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="450"
+			 x:Class="BundleManager.Views.BundleResourceList"
+			 x:DataType="viewmodels:BundleResourceList">
+
+	<DataGrid ItemsSource="{Binding Resources}"
+			  SelectedItem="{Binding SelectedResource}"
+			  CanUserResizeColumns="True"
+			  GridLinesVisibility="All"
+			  IsReadOnly="True">
+		<DataGrid.Columns>
+			<DataGridTextColumn Header="ID"
+								Binding="{Binding Name}"
+								Width="600"/>
+			<DataGridTextColumn Header="Type"
+								Binding="{Binding TypeName}"/>
+			<DataGridTextColumn Header="Size"
+								Binding="{Binding Size}"/>
+			<DataGridTextColumn Header="Stream"
+								Binding="{Binding StreamName}"
+								IsVisible="{Binding $parent[UserControl].DataContext.IsMultiStream}"/>
+		</DataGrid.Columns>
+		<DataGrid.RowTheme>
+			<ControlTheme TargetType="DataGridRow"
+						  BasedOn="{StaticResource {x:Type DataGridRow}}">
+				<Setter Property="Interaction.Behaviors">
+					<BehaviorCollectionTemplate>
+						<BehaviorCollection>
+							<EventTriggerBehavior EventName="DoubleTapped">
+								<InvokeCommandAction Command="{Binding $parent[DataGrid].DataContext.OpenResourceCommand}"/>
+							</EventTriggerBehavior>
+						</BehaviorCollection>
+					</BehaviorCollectionTemplate>
+				</Setter>
+			</ControlTheme>
+		</DataGrid.RowTheme>
+	</DataGrid>
+	
+</UserControl>

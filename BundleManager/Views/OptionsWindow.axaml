@@ -1,0 +1,147 @@
+<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:info="using:Information"
+		xmlns:viewmodels="using:BundleManager.ViewModels"
+		Width="500" Height="270"
+		x:Class="BundleManager.Views.OptionsWindow"
+		x:DataType="viewmodels:OptionsWindow"
+		Icon="/Assets/icon.ico"
+		Title="OptionsWindow"
+		WindowStartupLocation="CenterOwner">
+
+	<Design.DataContext>
+		<viewmodels:OptionsWindow/>
+	</Design.DataContext>
+
+	<Grid RowDefinitions="*, Auto"
+		  ColumnDefinitions="*">
+		<TabControl>
+			<TabControl.Styles>
+				<Style Selector="TabItem">
+					<Setter Property="FontSize" Value="16"/>
+					<Setter Property="MinHeight" Value="32"/>
+				</Style>
+			</TabControl.Styles>
+			<TabItem Header="Game">
+				<Grid ColumnDefinitions="Auto, *"
+					  RowDefinitions="Auto, Auto, Auto, Auto, Auto"
+					  HorizontalAlignment="Center"
+					  VerticalAlignment="Top"
+					  ColumnSpacing="4"
+					  RowSpacing="4"
+					  Margin="15">
+					<TextBlock Text="{Binding WarningText}"
+							   Foreground="Orange"
+							   Grid.Row="0"
+							   Grid.Column="1"/>
+					<TextBlock Text="Game Location"
+							   HorizontalAlignment="Right"
+							   VerticalAlignment="Center"
+							   Grid.Row="1"
+							   Grid.Column="0">
+					</TextBlock>
+					<TextBox Text="{Binding GameLocation}"
+							 IsReadOnly="True"
+							 Width="308"
+							 HorizontalAlignment="Left"
+							 Grid.Row="1"
+							 Grid.Column="1"/>
+					<Button Content="..."
+							Command="{Binding ChooseGameLocationCommand}"
+							HorizontalAlignment="Right"
+							Grid.Row="1"
+							Grid.Column="1"/>
+					<TextBlock Text="Game"
+							   HorizontalAlignment="Right"
+							   VerticalAlignment="Center"
+							   Grid.Row="2"
+							   Grid.Column="0"/>
+					<ComboBox ItemsSource="{Binding Source={x:Static info:GameInfo.Info}}"
+							  SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
+							  Width="340"
+							  Grid.Row="2"
+							  Grid.Column="1">
+						<ComboBox.ItemTemplate>
+							<DataTemplate x:DataType="info:GameInfo+Entry">
+								<TextBlock Text="{Binding Name}"/>
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+					<TextBlock Text="Platform"
+							   HorizontalAlignment="Right"
+							   VerticalAlignment="Center"
+							   Grid.Row="3"
+							   Grid.Column="0"/>
+					<ComboBox ItemsSource="{Binding SelectedGame.Platforms}"
+							  SelectedItem="{Binding SelectedPlatform, Mode=TwoWay}"
+							  Width="340"
+							  Grid.Row="3"
+							  Grid.Column="1">
+						<ComboBox.ItemTemplate>
+							<DataTemplate x:DataType="info:PlatformInfo">
+								<TextBlock Text="{Binding Name}"/>
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+					<TextBlock Text="Version"
+							   HorizontalAlignment="Right"
+							   VerticalAlignment="Center"
+							   Grid.Row="4"
+							   Grid.Column="0"/>
+					<ComboBox ItemsSource="{Binding SelectedPlatform.Versions}"
+							  SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
+							  Width="340"
+							  Grid.Row="4"
+							  Grid.Column="1">
+						<ComboBox.ItemTemplate>
+							<DataTemplate x:DataType="info:VersionInfo">
+								<TextBlock Text="{Binding Name}"/>
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+				</Grid>
+			</TabItem>
+			<TabItem Header="Appearance">
+				<Grid ColumnDefinitions="Auto, *"
+					  RowDefinitions="Auto"
+					  HorizontalAlignment="Center"
+					  VerticalAlignment="Top"
+					  ColumnSpacing="4"
+					  RowSpacing="4"
+					  Margin="15">
+					<TextBlock Text="Theme"
+							   HorizontalAlignment="Right"
+							   VerticalAlignment="Center"/>
+					<ComboBox ItemsSource="{Binding Themes}"
+							  SelectedIndex="{Binding SelectedThemeIndex}"
+							  Width="340"
+							  Grid.Column="1">
+						<Interaction.Behaviors>
+							<EventTriggerBehavior EventName="SelectionChanged">
+								<InvokeCommandAction Command="{Binding SetSelectedThemeCommand}"/>
+							</EventTriggerBehavior>
+						</Interaction.Behaviors>
+					</ComboBox>
+				</Grid>
+			</TabItem>
+		</TabControl>
+		<StackPanel Orientation="Horizontal"
+					HorizontalAlignment="Right"
+					Spacing="4"
+					Margin="0,0,8,8"
+					Grid.Row="1">
+			<Button Content="Save"
+					Command="{Binding SaveUserSettingsCommand}"
+					IsEnabled="{Binding IsSavingEnabled}"
+					Width="70"
+					HorizontalContentAlignment="Center"/>
+			<Button Content="Cancel"
+					Command="{Binding CloseOptionsWindowCommand}"
+					Width="70"
+					HorizontalContentAlignment="Center"/>
+		</StackPanel>
+	</Grid>
+	
+</Window>

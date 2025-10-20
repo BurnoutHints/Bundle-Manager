@@ -1,0 +1,74 @@
+<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:info="using:Information"
+		xmlns:viewmodels="using:BundleManager.ViewModels"
+		Width="500" Height="150"
+		x:Class="BundleManager.Views.OpenFileWindow"
+		x:DataType="viewmodels:OpenFileWindow"
+		Title="Open File"
+		Icon="/Assets/icon.ico"
+		WindowStartupLocation="CenterOwner">
+
+	<Grid ColumnDefinitions="*"
+		  RowDefinitions="*, Auto">
+		<Grid ColumnDefinitions="Auto, *"
+			  RowDefinitions="Auto, Auto"
+			  HorizontalAlignment="Center"
+			  VerticalAlignment="Center"
+			  ColumnSpacing="4"
+			  RowSpacing="4"
+			  Margin="15"
+			  Grid.Row="0">
+			<TextBlock Text="File type"
+					   HorizontalAlignment="Right"
+					   VerticalAlignment="Center"
+					   Grid.Row="0"
+					   Grid.Column="0"/>
+			<ComboBox ItemsSource="{Binding FileTypes}"
+					  SelectedItem="{Binding SelectedFileType}"
+					  Width="340"
+					  Grid.Row="0"
+					  Grid.Column="1">
+				<ComboBox.ItemTemplate>
+					<DataTemplate x:DataType="info:FileTypeInfo">
+						<TextBlock Text="{Binding Name}"/>
+					</DataTemplate>
+				</ComboBox.ItemTemplate>
+			</ComboBox>
+			<TextBlock Text="File"
+					   HorizontalAlignment="Right"
+					   VerticalAlignment="Center"
+					   Grid.Row="1"
+					   Grid.Column="0"/>
+			<TextBox Text="{Binding FileLocation}"
+					 IsReadOnly="True"
+					 Width="308"
+					 HorizontalAlignment="Left"
+					 Grid.Row="1"
+					 Grid.Column="1"/>
+			<Button Content="..."
+					Command="{Binding ChooseFileCommand}"
+					HorizontalAlignment="Right"
+					Grid.Row="1"
+					Grid.Column="1"/>
+		</Grid>
+		<StackPanel Orientation="Horizontal"
+					HorizontalAlignment="Right"
+					Spacing="4"
+					Margin="0,0,8,8"
+					Grid.Row="1">
+			<Button Content="Open"
+					Command="{Binding OpenFileCommand}"
+					IsEnabled="{Binding IsOpenEnabled}"
+					Width="70"
+					HorizontalContentAlignment="Center"/>
+			<Button Content="Cancel"
+					Command="{Binding CancelOpenFileCommand}"
+					Width="70"
+					HorizontalContentAlignment="Center"/>
+		</StackPanel>
+	</Grid>
+	
+</Window>

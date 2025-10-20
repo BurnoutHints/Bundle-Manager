@@ -1,15 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <OutputType>Library</OutputType>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <UseWindowsForms>true</UseWindowsForms>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>0169;0649;1701;1702</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>0169;0649;1701;1702</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="LibDeflate.NET" Version="1.19.0" />
+    <PackageReference Include="System.IO.Hashing" Version="9.0.10" />
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\BundleUtilities\BundleUtilities.csproj" />
+    <ProjectReference Include="..\Information\Information.csproj" />
+    <ProjectReference Include="..\Serialization\Serialization.csproj" />
   </ItemGroup>
+
 </Project>

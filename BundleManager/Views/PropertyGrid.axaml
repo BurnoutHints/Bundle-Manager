@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:datatemplates="using:BundleManager.DataTemplates"
+			 xmlns:viewmodels="using:BundleManager.ViewModels"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="BundleManager.Views.PropertyGrid"
+			 x:DataType="viewmodels:PropertyGrid">
+	
+	<UserControl.Resources>
+		<datatemplates:PropertyTemplateSelector x:Key="PropertyTemplateSelector"/>
+	</UserControl.Resources>
+	
+	<Grid>
+		<Button Content="X"
+				Command="{Binding CloseViewCommand}"
+				IsEnabled="{Binding IsChild}"
+				FontSize="16"
+				Padding="8,4,8,4"
+				HorizontalAlignment="Right"
+				VerticalAlignment="Top"
+				ZIndex="1"/>
+		<ScrollViewer>
+			<ItemsControl ItemsSource="{Binding Properties}"
+						  Grid.IsSharedSizeScope="True">
+				<ItemsControl.ItemTemplate>
+					<DataTemplate>
+						<Grid RowDefinitions="*"
+							  Margin="8,4,8,4"
+							  ColumnSpacing="8">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition SharedSizeGroup="Label"/>
+								<ColumnDefinition SharedSizeGroup="Content"/>
+							</Grid.ColumnDefinitions>
+							
+							<TextBlock Text="{Binding Name}"
+									   ToolTip.Tip="{Binding Tooltip}"
+									   VerticalAlignment="Center"
+									   HorizontalAlignment="Right"
+									   Grid.Row="0"
+									   Grid.Column="0"/>
+							<ContentPresenter Content="{Binding}"
+											  ContentTemplate="{StaticResource PropertyTemplateSelector}"
+											  Grid.Row="0"
+											  Grid.Column="1"/>
+						</Grid>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
+		</ScrollViewer>
+	</Grid>
+	
+</UserControl>

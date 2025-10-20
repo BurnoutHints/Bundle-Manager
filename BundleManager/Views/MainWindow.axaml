@@ -1,0 +1,146 @@
+<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:controls="using:BundleManager.Controls"
+		xmlns:base="using:BundleManager"
+		xmlns:models="using:BundleManager.Models"
+		xmlns:views="using:BundleManager.Views"
+		xmlns:viewmodels="using:BundleManager.ViewModels"
+		x:Class="BundleManager.Views.MainWindow"
+		x:DataType="viewmodels:MainWindow"
+		Icon="/Assets/icon.ico"
+		Title="Bundle Manager">
+
+	<Design.DataContext>
+		<viewmodels:MainWindow/>
+	</Design.DataContext>
+	<Window.DataTemplates>
+		<DataTemplate DataType="viewmodels:BundleFile">
+			<views:BundleFile/>
+		</DataTemplate>
+	</Window.DataTemplates>
+
+	<Interaction.Behaviors>
+		<EventTriggerBehavior EventName="Closing">
+			<InvokeCommandAction Command="{Binding ClosingCommand}"
+								 PassEventArgsToCommand="True"/>
+		</EventTriggerBehavior>
+		<EventTriggerBehavior EventName="Loaded">
+			<InvokeCommandAction Command="{Binding LoadedCommand}"/>
+		</EventTriggerBehavior>
+	</Interaction.Behaviors>
+	
+	<DockPanel>
+		<!-- The application's menu bar. -->
+		<Menu DockPanel.Dock="Top">
+			<MenuItem Header="_File">
+				<MenuItem Header="_Open Bundle..."
+						  Command="{Binding OpenBundleCommand}"
+						  InputGesture="Ctrl+O"
+						  HotKey="Ctrl+O"/>
+				<MenuItem Header="Open File"
+						  Command="{Binding OpenFileCommand}"/>
+				<MenuItem Header="_Save"
+						  Command="{Binding SaveFileCommand}"
+						  CommandParameter="{Binding SelectedFileTab}"
+						  IsEnabled="{Binding CanSave}"
+						  InputGesture="Ctrl+S"
+						  HotKey="Ctrl+S"/>
+				<MenuItem Header="Save As"
+						  Command="{Binding SaveFileAsCommand}"
+						  CommandParameter="{Binding SelectedFileTab}"
+						  IsEnabled="{Binding CanSaveAs}"
+						  InputGesture="Ctrl+Shift+S"
+						  HotKey="Ctrl+Shift+S"/>
+				<MenuItem Header="_Exit"
+						  Command="{Binding ExitApplicationCommand}"
+						  InputGesture="Alt+F4"/>
+			</MenuItem>
+			<MenuItem Header="_Tools">
+				<MenuItem Header="_Options"
+						  Command="{Binding OpenOptionsWindowCommand}"/>
+			</MenuItem>
+			<MenuItem Header="_Help">
+				<MenuItem Header="_About"
+						  Command="{Binding OpenAboutWindowCommand}"/>
+			</MenuItem>
+			<Menu.Styles>
+				<Style Selector="Menu">
+					<Setter Property="BorderBrush" Value="DimGray"/>
+					<Setter Property="BorderThickness" Value="0,0,0,1"/>
+				</Style>
+			</Menu.Styles>
+		</Menu>
+
+		<!-- 3-part grid: TreeView, GridSplitter, TabControl.
+		SplitView was considered but ultimately not used due to a lack of native
+		resizing support.
+		In the future, it may be worth implementing collapsibility of the TreeView:
+		ideally, the user would be able to have their main focus, the TabControl, use
+		that space without having to manually resize the TreeView. -->
+		<Grid Name="TreeContentGrid"
+			  RowDefinitions="*">
+			<!-- Full column definitions are needed to bind widths. -->
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="{Binding TreeColumnWidth, Mode=TwoWay}"/>
+				<ColumnDefinition Width="0"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<!-- The game's filesystem tree. Bound to a collection of FileSystemEntryNodes.
+			This is where the user selects bundle files for viewing.
+			No filtering is performed; all the directory's contents are visible. -->
+			<TreeView ItemsSource="{Binding GameDirectoryContents}"
+					  SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
+					  Background="DimGray"
+					  Grid.Column="0">
+				<TreeView.ItemTemplate>
+					<TreeDataTemplate ItemsSource="{Binding Entries}">
+						<TextBlock Text="{Binding Info.Name}"/>
+					</TreeDataTemplate>
+				</TreeView.ItemTemplate>
+				<Interaction.Behaviors>
+					<EventTriggerBehavior EventName="DoubleTapped">
+						<InvokeCommandAction Command="{Binding OpenFileFromTreeCommand}"/>
+					</EventTriggerBehavior>
+				</Interaction.Behaviors>
+			</TreeView>
+			
+			<GridSplitter Grid.Column="1"/>
+
+			<!-- File tabs. Each have their own content. Content instances have their FileTab as
+			a member for FS node and config access. -->
+			<TabControl ItemsSource="{Binding FileTabs}"
+						SelectedItem="{Binding SelectedFileTab, Mode=TwoWay}"
+						Grid.Column="2">
+				<TabControl.ItemTemplate>
+					<DataTemplate>
+						<controls:CloseableTabItem Header="{Binding Node.ShortName}"
+												   IsSaveButtonEnabled="{Binding IsDirty}"
+												   SaveCommand="{Binding $parent[Window].DataContext.SaveFileCommand}"
+												   CloseCommand="{Binding $parent[Window].DataContext.CloseFileCommand}"
+												   ToolTip.Tip="{Binding Node.Info.Name}"/>
+					</DataTemplate>
+				</TabControl.ItemTemplate>
+				<TabControl.ContentTemplate>
+					<DataTemplate DataType="models:FileTab">
+						<ContentControl Content="{Binding Content}"/>
+					</DataTemplate>
+				</TabControl.ContentTemplate>
+				<TabControl.Styles>
+					<!-- Removes the default 12,0,12,0 padding from the content area. -->
+					<Style Selector="TabControl">
+						<Setter Property="Padding" Value="0"/>
+					</Style>
+					<!-- Decreases the size of the TabItems. They are enormous by default. -->
+					<Style Selector="TabItem">
+						<Setter Property="FontSize" Value="16"/>
+						<Setter Property="MinHeight" Value="30"/>
+						<Setter Property="Padding" Value="6,0,6,0"/>
+					</Style>
+				</TabControl.Styles>
+			</TabControl>
+		</Grid>
+	</DockPanel>
+	
+</Window>

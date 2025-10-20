@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:datatemplates="using:BundleManager.DataTemplates"
+			 xmlns:viewmodels="using:BundleManager.ViewModels"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="BundleManager.Views.ObjectList"
+			 x:DataType="viewmodels:ObjectList">
+	
+	<UserControl.Resources>
+		<datatemplates:PropertyTemplateSelector x:Key="PropertyTemplateSelector"/>
+	</UserControl.Resources>
+	
+	<Grid>
+		<Grid ColumnDefinitions="Auto, Auto"
+			  HorizontalAlignment="Right"
+			  ZIndex="1">
+			<Button Content="+"
+					Command="{Binding AddItemCommand}"
+					IsEnabled="{Binding CanAddItems}"
+					IsVisible="{Binding DisplayAddRemoveItems}"
+					FontSize="16"
+					Padding="8,4,8,4"
+					HorizontalAlignment="Right"
+					VerticalAlignment="Top"
+					Grid.Column="0"/>
+			<Button Content="X"
+					Command="{Binding CloseViewCommand}"
+					IsEnabled="{Binding IsChild}"
+					FontSize="16"
+					Padding="8,4,8,4"
+					HorizontalAlignment="Right"
+					VerticalAlignment="Top"
+					Grid.Column="1"/>
+		</Grid>
+		<DataGrid ItemsSource="{Binding Objects}"
+				  HeadersVisibility="All">
+			<Interaction.Behaviors>
+				<EventTriggerBehavior EventName="Loaded">
+					<InvokeCommandAction Command="{Binding LoadedCommand}"
+										 PassEventArgsToCommand="True"/>
+				</EventTriggerBehavior>
+				<EventTriggerBehavior EventName="LoadingRow">
+					<InvokeCommandAction Command="{Binding LoadingRowCommand}"
+										 PassEventArgsToCommand="True"/>
+				</EventTriggerBehavior>
+			</Interaction.Behaviors>
+		</DataGrid>
+	</Grid>
+	
+</UserControl>

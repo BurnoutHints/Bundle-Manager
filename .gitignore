@@ -1,6 +1,6 @@
-.vs
-/packages/
-*.sdf
+.idea/
+.vs/
+.vscode/
+**/bin/
+**/obj/
 *.user
-bin
-obj
