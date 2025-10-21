@@ -59,6 +59,7 @@ internal class ProgressionData : ISerializableResourceType
 
 	public static object Deserialize(Type type, IResource resource)
 	{
+		resource.Memory.Seek(0, SeekOrigin.Begin);
 		return Deserializer.Deserialize(type, resource.Memory, resource.Config);
 	}
 

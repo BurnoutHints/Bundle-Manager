@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 
 namespace Serialization.Types;
 
-
+// Contains a list with metadata used to determine whether it is fixed-length.
 public class CollectionDescriptor<T> : ICollectionDescriptor
 {
 	// The underlying list.
