@@ -15,7 +15,6 @@ public static class Deserializer
 
 	public static T Deserialize<T>(Stream stream, FileConfig config) where T : new()
 	{
-		stream.Seek(0, SeekOrigin.Begin);
 		EndianAwareBinaryReader reader = new(stream, config.Platform.Endianness, config.Platform.Is64Bit);
 		T instance = (T)DeserializeObject(typeof(T), reader);
 		objectDictionary.Clear();
@@ -24,7 +23,6 @@ public static class Deserializer
 
 	public static object Deserialize(Type type, Stream stream, FileConfig config)
 	{
-		stream.Seek(0, SeekOrigin.Begin);
 		EndianAwareBinaryReader reader = new(stream, config.Platform.Endianness, config.Platform.Is64Bit);
 		object instance = DeserializeObject(type, reader);
 		objectDictionary.Clear();
