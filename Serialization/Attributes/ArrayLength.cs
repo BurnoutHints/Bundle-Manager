@@ -1,11 +1,9 @@
 namespace Serialization.Attributes;
 
-// In C++, arrays are fixed-size. Their datatype is, for example, int[3].
-// In C#, arrays are also fixed-size, but a single type, for example, int[].
-// Their size is set upon instantiation.
-// It is therefore not possible to retrieve the length via reflection. This is a
-// problem for Bundle Manager's reflection-based serialization.
-// This attribute is used to annotate the array with size information.
+// Adds fixed-length information to a list.
+// Necessary when the original model uses fixed-length arrays because the editor
+// is not set up to handle arrays, only lists. This may be removed in future
+// versions in favor of another technique.
 [AttributeUsage(AttributeTargets.Field)]
 public class ArrayLengthAttribute : Attribute
 {
