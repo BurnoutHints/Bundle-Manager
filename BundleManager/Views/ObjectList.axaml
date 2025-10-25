@@ -16,6 +16,7 @@
 		<Grid ColumnDefinitions="Auto, Auto"
 			  HorizontalAlignment="Left"
 			  VerticalAlignment="Top"
+			  Margin="2"
 			  ZIndex="1">
 			<Button Content="&#x2190;"
 					Command="{Binding CloseViewCommand}"
