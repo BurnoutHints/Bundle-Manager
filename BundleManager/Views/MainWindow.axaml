@@ -84,7 +84,7 @@
 			<!-- Full column definitions are needed to bind widths. -->
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="{Binding TreeColumnWidth, Mode=TwoWay}"/>
-				<ColumnDefinition Width="0"/>
+				<ColumnDefinition Width="Auto"/>
 				<ColumnDefinition Width="*"/>
 			</Grid.ColumnDefinitions>
 			<!-- The game's filesystem tree. Bound to a collection of FileSystemEntryNodes.
