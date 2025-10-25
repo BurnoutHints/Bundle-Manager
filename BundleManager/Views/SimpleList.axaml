@@ -12,11 +12,11 @@
 		<datatemplates:SimpleTemplateSelector x:Key="SimpleTemplateSelector"/>
 	</UserControl.Resources>
 
-	<Grid>
+	<Grid RowDefinitions="Auto, *">
 		<Grid ColumnDefinitions="Auto, Auto"
 			  HorizontalAlignment="Left"
 			  VerticalAlignment="Top"
-			  ZIndex="1">
+			  Grid.Row="0">
 			<Button Content="&#x2190;"
 					Command="{Binding CloseViewCommand}"
 					IsEnabled="{Binding IsChild}"
@@ -31,7 +31,8 @@
 					Padding="8,4,8,4"
 					Grid.Column="1"/>
 		</Grid>
-		<ScrollViewer AllowAutoHide="False">
+		<ScrollViewer AllowAutoHide="False"
+					  Grid.Row="1">
 			<ItemsControl ItemsSource="{Binding SimpleObjects}"
 					 Grid.IsSharedSizeScope="True">
 				<ItemsControl.ItemTemplate>
