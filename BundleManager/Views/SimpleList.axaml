@@ -12,29 +12,27 @@
 		<datatemplates:SimpleTemplateSelector x:Key="SimpleTemplateSelector"/>
 	</UserControl.Resources>
 
-	<Grid>
+	<Grid RowDefinitions="Auto, *">
 		<Grid ColumnDefinitions="Auto, Auto"
-			  HorizontalAlignment="Right"
-			  ZIndex="1">
+			  HorizontalAlignment="Left"
+			  VerticalAlignment="Top"
+			  Grid.Row="0">
+			<Button Content="&#x2190;"
+					Command="{Binding CloseViewCommand}"
+					IsEnabled="{Binding IsChild}"
+					FontSize="16"
+					Padding="6,4,6,4"
+					Grid.Column="0"/>
 			<Button Content="+"
 					Command="{Binding AddItemCommand}"
 					IsEnabled="{Binding CanAddItems}"
 					IsVisible="{Binding DisplayAddRemoveItems}"
 					FontSize="16"
 					Padding="8,4,8,4"
-					HorizontalAlignment="Right"
-					VerticalAlignment="Top"
-					Grid.Column="0"/>
-			<Button Content="X"
-					Command="{Binding CloseViewCommand}"
-					IsEnabled="{Binding IsChild}"
-					FontSize="16"
-					Padding="8,4,8,4"
-					HorizontalAlignment="Right"
-					VerticalAlignment="Top"
 					Grid.Column="1"/>
 		</Grid>
-		<ScrollViewer>
+		<ScrollViewer AllowAutoHide="False"
+					  Grid.Row="1">
 			<ItemsControl ItemsSource="{Binding SimpleObjects}"
 					 Grid.IsSharedSizeScope="True">
 				<ItemsControl.ItemTemplate>

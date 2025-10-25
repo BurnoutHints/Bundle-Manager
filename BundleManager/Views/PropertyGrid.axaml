@@ -12,16 +12,17 @@
 		<datatemplates:PropertyTemplateSelector x:Key="PropertyTemplateSelector"/>
 	</UserControl.Resources>
 	
-	<Grid>
-		<Button Content="X"
+	<Grid RowDefinitions="Auto, *">
+		<Button Content="&#x2190;"
 				Command="{Binding CloseViewCommand}"
 				IsEnabled="{Binding IsChild}"
 				FontSize="16"
-				Padding="8,4,8,4"
-				HorizontalAlignment="Right"
+				Padding="6,4,6,4"
+				HorizontalAlignment="Left"
 				VerticalAlignment="Top"
-				ZIndex="1"/>
-		<ScrollViewer>
+				Grid.Row="0"/>
+		<ScrollViewer AllowAutoHide="False"
+					  Grid.Row="1">
 			<ItemsControl ItemsSource="{Binding Properties}"
 						  Grid.IsSharedSizeScope="True">
 				<ItemsControl.ItemTemplate>

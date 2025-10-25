@@ -14,24 +14,22 @@
 	
 	<Grid>
 		<Grid ColumnDefinitions="Auto, Auto"
-			  HorizontalAlignment="Right"
+			  HorizontalAlignment="Left"
+			  VerticalAlignment="Top"
+			  Margin="2"
 			  ZIndex="1">
+			<Button Content="&#x2190;"
+					Command="{Binding CloseViewCommand}"
+					IsEnabled="{Binding IsChild}"
+					FontSize="16"
+					Padding="6,4,6,4"
+					Grid.Column="0"/>
 			<Button Content="+"
 					Command="{Binding AddItemCommand}"
 					IsEnabled="{Binding CanAddItems}"
 					IsVisible="{Binding DisplayAddRemoveItems}"
 					FontSize="16"
 					Padding="8,4,8,4"
-					HorizontalAlignment="Right"
-					VerticalAlignment="Top"
-					Grid.Column="0"/>
-			<Button Content="X"
-					Command="{Binding CloseViewCommand}"
-					IsEnabled="{Binding IsChild}"
-					FontSize="16"
-					Padding="8,4,8,4"
-					HorizontalAlignment="Right"
-					VerticalAlignment="Top"
 					Grid.Column="1"/>
 		</Grid>
 		<DataGrid ItemsSource="{Binding Objects}"
@@ -46,6 +44,14 @@
 										 PassEventArgsToCommand="True"/>
 				</EventTriggerBehavior>
 			</Interaction.Behaviors>
+			<DataGrid.Styles>
+				<Style Selector="DataGrid /template/ ScrollBar#PART_VerticalScrollbar">
+					<Setter Property="AllowAutoHide" Value="False"/>
+				</Style>
+				<Style Selector="DataGrid /template/ ScrollBar#PART_HorizontalScrollbar">
+					<Setter Property="AllowAutoHide" Value="False"/>
+				</Style>
+			</DataGrid.Styles>
 		</DataGrid>
 	</Grid>
 	
