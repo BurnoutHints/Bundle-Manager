@@ -43,6 +43,14 @@
 										 PassEventArgsToCommand="True"/>
 				</EventTriggerBehavior>
 			</Interaction.Behaviors>
+			<DataGrid.Styles>
+				<Style Selector="DataGrid /template/ ScrollBar#PART_VerticalScrollbar">
+					<Setter Property="AllowAutoHide" Value="False"/>
+				</Style>
+				<Style Selector="DataGrid /template/ ScrollBar#PART_HorizontalScrollbar">
+					<Setter Property="AllowAutoHide" Value="False"/>
+				</Style>
+			</DataGrid.Styles>
 		</DataGrid>
 	</Grid>
 	

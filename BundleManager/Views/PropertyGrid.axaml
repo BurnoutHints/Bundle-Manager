@@ -21,7 +21,7 @@
 				HorizontalAlignment="Left"
 				VerticalAlignment="Top"
 				ZIndex="1"/>
-		<ScrollViewer>
+		<ScrollViewer AllowAutoHide="False">
 			<ItemsControl ItemsSource="{Binding Properties}"
 						  Grid.IsSharedSizeScope="True">
 				<ItemsControl.ItemTemplate>

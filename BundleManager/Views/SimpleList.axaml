@@ -31,7 +31,7 @@
 					Padding="8,4,8,4"
 					Grid.Column="1"/>
 		</Grid>
-		<ScrollViewer>
+		<ScrollViewer AllowAutoHide="False">
 			<ItemsControl ItemsSource="{Binding SimpleObjects}"
 					 Grid.IsSharedSizeScope="True">
 				<ItemsControl.ItemTemplate>

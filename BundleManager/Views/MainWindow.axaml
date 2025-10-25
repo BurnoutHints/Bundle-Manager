@@ -93,6 +93,7 @@
 			<TreeView ItemsSource="{Binding GameDirectoryContents}"
 					  SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
 					  Background="DimGray"
+					  ScrollViewer.AllowAutoHide="False"
 					  Grid.Column="0">
 				<TreeView.ItemTemplate>
 					<TreeDataTemplate ItemsSource="{Binding Entries}">
