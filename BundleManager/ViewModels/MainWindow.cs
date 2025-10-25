@@ -128,9 +128,8 @@ public partial class MainWindow : ObservableObject
 
 	private void OnAddTreeNode(object sender, FileSystemEventArgs e)
 	{
-		Dispatcher.UIThread.Post(async () =>
+		Dispatcher.UIThread.Post(() =>
 		{
-			await Task.Delay(5000);
 			AddTreeNode(e.FullPath);
 		});
 	}
