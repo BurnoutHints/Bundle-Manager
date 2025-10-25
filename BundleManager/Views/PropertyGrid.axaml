@@ -13,12 +13,12 @@
 	</UserControl.Resources>
 	
 	<Grid>
-		<Button Content="X"
+		<Button Content="&#x2190;"
 				Command="{Binding CloseViewCommand}"
 				IsEnabled="{Binding IsChild}"
 				FontSize="16"
 				Padding="8,4,8,4"
-				HorizontalAlignment="Right"
+				HorizontalAlignment="Left"
 				VerticalAlignment="Top"
 				ZIndex="1"/>
 		<ScrollViewer>
