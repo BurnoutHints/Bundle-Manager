@@ -249,9 +249,8 @@ public partial class OptionsWindow : ObservableObject
 						executableName = "Burnout_External_Xbox_One.exe";
 						break;
 					case Game.HotPursuitRemastered:
-						// TODO: Dump game and get executable name
-						WarningText = string.Empty;
-						return;
+						executableName = "Alaska_Unity_External.exe";
+						break;
 				}
 			}
 			foreach (FileInfo fileInfo in dirInfo.GetFiles())
