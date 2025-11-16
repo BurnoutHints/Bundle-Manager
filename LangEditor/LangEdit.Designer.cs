@@ -50,14 +50,17 @@ namespace LangEditor
             // dgvMain
             // 
             dgvMain.AllowUserToOrderColumns = true;
+            dgvMain.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             dgvMain.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvMain.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { colID, colString });
             dgvMain.Dock = System.Windows.Forms.DockStyle.Fill;
             dgvMain.Location = new System.Drawing.Point(0, 24);
             dgvMain.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            dgvMain.MinimumSize = new System.Drawing.Size(70, 0);
             dgvMain.MultiSelect = false;
             dgvMain.Name = "dgvMain";
-            dgvMain.Size = new System.Drawing.Size(484, 382);
+            dgvMain.RowHeadersWidth = 30;
+            dgvMain.Size = new System.Drawing.Size(648, 384);
             dgvMain.TabIndex = 0;
             dgvMain.RowsAdded += dgvMain_RowsAdded;
             // 
@@ -73,10 +76,10 @@ namespace LangEditor
             // 
             // statusStrip1
             // 
-            statusStrip1.Location = new System.Drawing.Point(0, 406);
+            statusStrip1.Location = new System.Drawing.Point(0, 408);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
-            statusStrip1.Size = new System.Drawing.Size(484, 22);
+            statusStrip1.Size = new System.Drawing.Size(648, 22);
             statusStrip1.TabIndex = 1;
             statusStrip1.Text = "statusStrip1";
             // 
@@ -86,7 +89,7 @@ namespace LangEditor
             menuStrip1.Location = new System.Drawing.Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Padding = new System.Windows.Forms.Padding(7, 2, 0, 2);
-            menuStrip1.Size = new System.Drawing.Size(484, 24);
+            menuStrip1.Size = new System.Drawing.Size(648, 24);
             menuStrip1.TabIndex = 2;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -165,7 +168,7 @@ namespace LangEditor
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(484, 428);
+            ClientSize = new System.Drawing.Size(648, 430);
             Controls.Add(dgvMain);
             Controls.Add(statusStrip1);
             Controls.Add(menuStrip1);
