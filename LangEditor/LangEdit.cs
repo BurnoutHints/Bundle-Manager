@@ -231,12 +231,20 @@ namespace LangEditor
                 languageContent += tempValue + "\r\n";
             }
 
-            FileStream file = (FileStream)saveDialog.OpenFile();
-            file.Write(Encoding.UTF8.GetBytes(languageContent));
-            file.Flush();
-            file.Close();
+            try
+            {
+                FileStream file = (FileStream)saveDialog.OpenFile();
+                file.Write(Encoding.UTF8.GetBytes(languageContent));
+                file.Flush();
+                file.Close();
 
-            MessageBox.Show("Export successful.", "Information", MessageBoxButtons.OK);
+                MessageBox.Show("Export successful.", "Information", MessageBoxButtons.OK);
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show($"There was an issue exporting: {ex.Message}", "Error", MessageBoxButtons.OK);
+
+            }
         }
 
         private void applyChangesToolStripMenuItem_Click(object sender, EventArgs e)
