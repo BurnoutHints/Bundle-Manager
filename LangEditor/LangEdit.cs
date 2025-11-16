@@ -14,6 +14,8 @@ namespace LangEditor
         public event OnChanged Changed;
 
         private bool _ignoreChanges;
+        private bool _suppressHandlers;
+        private object _originalCellValue;
 
         private string searchVal;
         private Dictionary<uint, string> dict;
@@ -24,8 +26,12 @@ namespace LangEditor
             set
             {
                 _ignoreChanges = true;
+                _suppressHandlers = true;
+                
                 _lang = value;
                 UpdateDisplay();
+
+                _suppressHandlers = false;
                 _ignoreChanges = false;
             }
         }
@@ -33,9 +39,111 @@ namespace LangEditor
         public LangEdit()
         {
             _ignoreChanges = true;
+            _suppressHandlers = true;
+            
             InitializeComponent();
             GenerateDictionary();
+            
+            dgvMain.CellBeginEdit += dgvMain_CellBeginEdit;
+            dgvMain.CellEndEdit += dgvMain_CellEndEdit;
+            
+            _suppressHandlers = false;
             _ignoreChanges = false;
+        }
+
+        private void dgvMain_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
+        {
+            var grid = (DataGridView)sender;
+            _originalCellValue = grid[e.ColumnIndex, e.RowIndex].Value;
+        }
+
+        private void dgvMain_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            if (_suppressHandlers)
+                return;
+
+            var grid = (DataGridView)sender;
+            var column = grid.Columns[e.ColumnIndex];
+
+            if (column.Name != "colID" && column.Name != "colName")
+                return;
+
+            DataGridViewCell cell = grid[e.ColumnIndex, e.RowIndex];
+            var newValue = cell.Value;
+
+            if (Equals(_originalCellValue, newValue))
+                return;
+
+            string associated = column.Name == "colName" ? "ID" : "Name";
+            var result = MessageBox.Show(
+                this,
+                $"Are you sure you want to apply this change to this {column.HeaderText}?" +
+                $"\nThis will update the associated {associated} field!" +
+                $"\n\nNew: {newValue}\nOriginal: {_originalCellValue}",
+                "Confirm change",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            );
+
+            if (result == DialogResult.No)
+            {
+                _suppressHandlers = true;
+                cell.Value = _originalCellValue;
+                _suppressHandlers = false;
+                _originalCellValue = null;
+                return;
+            }
+
+            _suppressHandlers = true;
+            try
+            {
+                var row = grid.Rows[e.RowIndex];
+
+                if (column.Name == "colName")
+                {
+                    var name = Convert.ToString(newValue) ?? string.Empty;
+                    if (name.Length > 0)
+                    {
+                        var id = Language.HashID(name);
+                        row.Cells["colID"].Value = "0x" + id.ToString("X8");
+                    }
+                }
+                else if (column.Name == "colID")
+                {
+                    var idText = Convert.ToString(newValue) ?? string.Empty;
+                    idText = idText.Trim();
+
+                    if (idText.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                        idText = idText.Substring(2);
+
+                    if (!uint.TryParse(idText, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var id))
+                    {
+                        MessageBox.Show(
+                            this,
+                            "ID must be a valid 32-bit hexadecimal value, for example 0x00000001.",
+                            "Invalid ID",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning
+                        );
+
+                        cell.Value = _originalCellValue;
+                        _originalCellValue = null;
+                        return;
+                    }
+
+                    row.Cells["colID"].Value = "0x" + id.ToString("X8");
+
+                    if (dict.TryGetValue(id, out var resolvedName))
+                        row.Cells["colName"].Value = resolvedName;
+                    else
+                        row.Cells["colName"].Value = string.Empty;
+                }
+            }
+            finally
+            {
+                _suppressHandlers = false;
+                _originalCellValue = null;
+            }
         }
 
         public void GenerateDictionary()
