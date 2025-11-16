@@ -99,13 +99,13 @@ namespace LangEditor
             {
                 if (dict.ContainsKey(entry.Key))
                 {
-                    dgvMain.Rows.Add(dict[entry.Key], entry.Value);
+                    dgvMain.Rows.Add("0x" + entry.Key.ToString("X8"), dict[entry.Key], entry.Value);
                     total++;
                     resolved++;
                 }
                 else
                 {
-                    dgvMain.Rows.Add("0x" + entry.Key.ToString("X8"), entry.Value);
+                    dgvMain.Rows.Add("0x" + entry.Key.ToString("X8"), "", entry.Value);
                     total++;
                 }
             }
@@ -146,7 +146,7 @@ namespace LangEditor
                     id = Language.HashID(idString);
                 }
 
-                string value = (string)dgvMain.Rows[i].Cells[1].Value;
+                string value = (string)dgvMain.Rows[i].Cells[2].Value;
                 if (data.ContainsKey(id))
                 {
                     MessageBox.Show(this, "ID " + idString + " already in use", "Warning",
@@ -175,7 +175,7 @@ namespace LangEditor
             string line;
             while ((line = file.ReadLine()) != null)
             {
-                string[] pair = line.Split(',', 2);
+                string[] pair = line.Split(',', 3);
                 pair[0] = pair[0].Remove(0, 1).Remove(pair[0].Length - 2, 1); // Remove quotes
                 uint key;
                 if (pair[0].StartsWith("0x") && pair[0].Length == 10)
@@ -189,14 +189,14 @@ namespace LangEditor
                 else
                     key = Language.HashID(pair[0]);
 
-                if (pair[1].Length != 0) // Non-empty value
+                if (pair[2].Length != 0) // Non-empty value
                 {
-                    pair[1] = pair[1].Substring(1, pair[1].Length - 2); // Remove enclosing double quotes
-                    pair[1] = pair[1].Replace("\"\"", "\""); // Convert double quotes
-                    pair[1] = pair[1].Replace("\\r", "\xD").Replace("\\n", "\xA"); // Convert newlines
+                    pair[2] = pair[2].Substring(1, pair[2].Length - 2); // Remove enclosing double quotes
+                    pair[2] = pair[2].Replace("\"\"", "\""); // Convert double quotes
+                    pair[2] = pair[2].Replace("\\r", "\xD").Replace("\\n", "\xA"); // Convert newlines
                 }
 
-                data.Add(key, pair[1]);
+                data.Add(key, pair[2]);
             }
 
             _lang.mpEntries = data;
@@ -219,8 +219,14 @@ namespace LangEditor
             string languageContent = "";
             for (int i = 0; i < dgvMain.Rows.Count - 1; ++i)
             {
-                languageContent += "\"" + (string)(dgvMain.Rows[i].Cells[0].Value) + "\",";
-                string tempValue = (string)dgvMain.Rows[i].Cells[1].Value;
+                languageContent 
+                    += "\"" 
+                    + (string)(dgvMain.Rows[i].Cells[0].Value) 
+                    + "\",\""
+                    + ((string)dgvMain.Rows[i].Cells[1].Value != null ? (string)dgvMain.Rows[i].Cells[1].Value : "") 
+                    + "\",";
+
+                string tempValue = (string)dgvMain.Rows[i].Cells[2].Value;
                 tempValue = tempValue.Replace("\xD", "\\r").Replace("\xA", "\\n"); // Convert newlines
                 tempValue = tempValue.Replace("\"", "\"\""); // Convert double quotes
                 if (tempValue.Length != 0) // Enclose non-empty strings in double quotes
@@ -266,7 +272,7 @@ namespace LangEditor
             foreach (DataGridViewRow row in dgvMain.Rows)
             {
                 if ((row.Cells[0].Value != null && ((string)row.Cells[0].Value).Contains(value, StringComparison.CurrentCultureIgnoreCase))
-                    || (row.Cells[1].Value != null && ((string)row.Cells[1].Value).Contains(value, StringComparison.CurrentCultureIgnoreCase)))
+                    || (row.Cells[2].Value != null && ((string)row.Cells[2].Value).Contains(value, StringComparison.CurrentCultureIgnoreCase)))
                 {
                     dgvMain.ClearSelection();
                     dgvMain.CurrentCell = row.Cells[0];
@@ -291,7 +297,7 @@ namespace LangEditor
             for (int i = start; i < dgvMain.Rows.Count - 1; ++i)
             {
                 if (((string)dgvMain.Rows[i].Cells[0].Value).Contains(searchVal, StringComparison.CurrentCultureIgnoreCase)
-                    || ((string)dgvMain.Rows[i].Cells[1].Value).Contains(searchVal, StringComparison.CurrentCultureIgnoreCase))
+                    || ((string)dgvMain.Rows[i].Cells[2].Value).Contains(searchVal, StringComparison.CurrentCultureIgnoreCase))
                 {
                     dgvMain.ClearSelection();
                     dgvMain.CurrentCell = dgvMain.Rows[i].Cells[0];

@@ -30,6 +30,7 @@ namespace LangEditor
         {
             dgvMain = new System.Windows.Forms.DataGridView();
             colID = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            colName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             colString = new System.Windows.Forms.DataGridViewTextBoxColumn();
             statusStrip1 = new System.Windows.Forms.StatusStrip();
             menuStrip1 = new System.Windows.Forms.MenuStrip();
@@ -52,7 +53,7 @@ namespace LangEditor
             dgvMain.AllowUserToOrderColumns = true;
             dgvMain.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             dgvMain.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvMain.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { colID, colString });
+            dgvMain.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { colID, colName, colString });
             dgvMain.Dock = System.Windows.Forms.DockStyle.Fill;
             dgvMain.Location = new System.Drawing.Point(0, 24);
             dgvMain.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -68,6 +69,11 @@ namespace LangEditor
             // 
             colID.HeaderText = "ID";
             colID.Name = "colID";
+            // 
+            // colName
+            // 
+            colName.HeaderText = "Name";
+            colName.Name = "colName";
             // 
             // colString
             // 
@@ -198,6 +204,7 @@ namespace LangEditor
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem applyChangesToolStripMenuItem;
         private System.Windows.Forms.DataGridViewTextBoxColumn colID;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colString;
         private System.Windows.Forms.ToolStripMenuItem findNextToolStripMenuItem;
     }
