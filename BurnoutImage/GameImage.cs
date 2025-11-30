@@ -292,7 +292,7 @@ namespace BurnoutImage
                     {
                         CompressionType.DXT1 => ImageUtil.DecompressImage(extraData, header.Width, header.Height, CompressionFormat.Bc1),
                         CompressionType.DXT5 => ImageUtil.DecompressImage(extraData, header.Width, header.Height, CompressionFormat.Bc3),
-                        _ => throw new NotImplementedException()
+                        _ => extraData
                     };
 
                     DirectBitmap bitmap = new(header.Width, header.Height);
