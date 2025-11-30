@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Numerics;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 using BundleManager.TypeConverters;
 
@@ -15,6 +16,10 @@ namespace BundleManager
     {
         public static MainForm fileModeForm;
         public static FileView folderModeForm;
+
+        private const string RegistryKeyPath = @"Software\BurnoutHints\BundleManager";
+        private const string RegistryValueName = "PreferredMode"; // 1 = Studio, 0 = Bundle
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -36,19 +41,49 @@ namespace BundleManager
 
             if (args.Length == 0)
             {
-                /*DialogResult result =
-                    MessageBox.Show(
-                        "This program has 2 modes, Folder mode and File mode. Would you like to use folder mode?",
-                        "Question", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-                if (result == DialogResult.Yes)
-                {
-                    Application.Run(new FileView());
-                } else if (result == DialogResult.No)
-                {
-                    Application.Run(new MainForm());
-                }*/
+                bool? preferFolderMode = null;
 
-                Application.Run(folderModeForm);
+                object? value = Registry.GetValue(
+                    $@"HKEY_CURRENT_USER\{RegistryKeyPath}",
+                    RegistryValueName,
+                    null);
+
+                if (value is int i)
+                    preferFolderMode = i == 1;
+
+                if (preferFolderMode is null)
+                {
+                    DialogResult result = MessageBox.Show(
+                        "Welcome to Bundle Manager!" +
+                        "\n\nThis program has 2 interchangable modes, Studio mode and Single Bundle mode." +
+                        "\n\nSingle Bundle mode is better for quicker, individual edits, while Studio mode is designed to easily access many bundles." +
+                        "\n\nWould you like to start in Studio mode?" +
+                        "\n\nThis setting can be changed at any time by clicking the \"Switch to (Bundle/Studio) Mode\" at the top of the main window.",
+                        "Question",
+                        MessageBoxButtons.YesNoCancel,
+                        MessageBoxIcon.Question);
+
+                    if (result == DialogResult.Cancel)
+                        return;
+
+                    bool useFolderMode = result == DialogResult.Yes;
+
+                    SavePreferredMode(useFolderMode ? true : false);
+
+                    if (useFolderMode)
+                        Application.Run(new FileView());
+                    else
+                        Application.Run(new MainForm());
+                }
+                else
+                {
+                    if (preferFolderMode.Value)
+                        Application.Run(new FileView());
+                    else
+                        Application.Run(new MainForm());
+                }
+
+                return;
             }
             else
             {
@@ -77,6 +112,15 @@ namespace BundleManager
                 }
             }
 
+        }
+
+        public static void SavePreferredMode(bool useFolderMode)
+        {
+            Registry.SetValue(
+                $@"HKEY_CURRENT_USER\{RegistryKeyPath}",
+                RegistryValueName,
+                useFolderMode ? 1 : 0,
+                RegistryValueKind.DWord);
         }
     }
 }

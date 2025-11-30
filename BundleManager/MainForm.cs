@@ -671,6 +671,7 @@ namespace BundleManager
             UpdateDisplay();
 
             Hide();
+            Program.SavePreferredMode(true);
             Program.folderModeForm.Show();
         }
 

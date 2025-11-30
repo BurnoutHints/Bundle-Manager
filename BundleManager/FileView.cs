@@ -382,6 +382,7 @@ namespace BundleManager
             Clear();
 
             Hide();
+            Program.SavePreferredMode(false);
             Program.fileModeForm.Show();
         }
 
