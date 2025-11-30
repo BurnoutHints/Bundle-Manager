@@ -38,39 +38,81 @@ namespace BurnoutImage
 
     public static class GameImage
     {
-        public static ImageInfo SetImage(string path, int width, int height, CompressionType compression, PlatformType platform = PlatformType.Remaster)
+        public static ImageInfo SetImage(string path, CompressionType compression, PlatformType platform = PlatformType.Remaster)
         {
             byte[] data;
+            int width = 0, height = 0, numMips = 1;
 
-            if (compression == CompressionType.BGRA)
+            // Process body block
+
+            // Use direct DDS contents if provided (no extra processing)
+            if (string.Equals(Path.GetExtension(path), ".dds", StringComparison.OrdinalIgnoreCase))
             {
-                Bitmap image = new(Image.FromFile(path));
-                MemoryStream mspixels = new();
+                using FileStream fs = File.OpenRead(path);
+                using BinaryReader br = new(fs);
 
-                for (int i = 0; i < height; i++)
-                {
-                    for (int j = 0; j < width; j++)
-                    {
-                        Color pixel = image.GetPixel(j, i);
-                        mspixels.WriteByte(pixel.B);
-                        mspixels.WriteByte(pixel.G);
-                        mspixels.WriteByte(pixel.R);
-                        mspixels.WriteByte(pixel.A);
-                    }
-                }
+                uint magic = br.ReadUInt32();
+                if (magic != 0x20534444)
+                    throw new InvalidDataException("The provided DDS file is unsupported or corrupted.");
 
-                data = mspixels.ToArray();
+                fs.Seek(0xC, SeekOrigin.Begin);
+                height = br.ReadInt32();
+                width = br.ReadInt32();
+
+                fs.Seek(0x1C, SeekOrigin.Begin);
+                numMips = br.ReadInt32();
+                if (numMips <= 0)
+                    numMips = 1;
+
+                const int ddsHeaderSize = 0x80;
+                fs.Seek(ddsHeaderSize, SeekOrigin.Begin);
+                data = br.ReadBytes((int)(fs.Length - ddsHeaderSize));
+
+                br.Close();
             }
+            // Process non-DDS textures
             else
             {
-                CompressionFormat dxt = CompressionFormat.Unknown;
-                if (compression == CompressionType.DXT1)
-                    dxt = CompressionFormat.Bc1;
-                else if (compression == CompressionType.DXT5)
-                    dxt = CompressionFormat.Bc3;
-                data = ImageUtil.CompressImage(path, dxt);
+                Bitmap image = new(Image.FromFile(path));
+
+                width = image.Width;
+                height = image.Height;
+
+                if (compression == CompressionType.BGRA)
+                {
+                    MemoryStream mspixels = new();
+
+                    for (int i = 0; i < height; i++)
+                    {
+                        for (int j = 0; j < width; j++)
+                        {
+                            Color pixel = image.GetPixel(j, i);
+                            mspixels.WriteByte(pixel.B);
+                            mspixels.WriteByte(pixel.G);
+                            mspixels.WriteByte(pixel.R);
+                            mspixels.WriteByte(pixel.A);
+                        }
+                    }
+
+                    data = mspixels.ToArray();
+
+                    mspixels.Close();
+                }
+                else
+                {
+                    CompressionFormat dxt = compression switch
+                    {
+                        CompressionType.DXT1 => CompressionFormat.Bc1,
+                        CompressionType.DXT5 => CompressionFormat.Bc3,
+                        _ => CompressionFormat.Unknown
+                    };
+
+                    data = ImageUtil.CompressImage(path, dxt);
+                }
             }
 
+
+            // Process header block
             MemoryStream msx = new();
             BinaryWriter2 bw = new(msx);
 
@@ -84,19 +126,20 @@ namespace BurnoutImage
                 bw.Write(0); // Shader resource view interface pointer 1
                 bw.Write(0); // Shader resource view interface pointer 2
                 bw.Write(0); // ?
-                if (compression == CompressionType.ARGB) // Format
-                    bw.Write(0x1C); // R8G8B8A8_UNORM
-                else if (compression == CompressionType.DXT1)
-                    bw.Write(0x47); // BC1_UNORM
-                else if (compression == CompressionType.DXT5)
-                    bw.Write(0x4D); // BC3_UNORM
+                int format = compression switch
+                {
+                    CompressionType.ARGB => 0x1C,
+                    CompressionType.DXT1 => 0x47,
+                    CompressionType.DXT5 => 0x4D,
+                };
+                bw.Write(format);
                 bw.Write(0); // Flags
                 bw.Write((ushort)width); // Width
                 bw.Write((ushort)height); // Height
                 bw.Write((ushort)1); // Depth
                 bw.Write((ushort)1); // Array size
                 bw.Write((byte)0); // Most detailed mip
-                bw.Write((byte)1); // Mip levels (TODO: Support mipmapping)
+                bw.Write((byte)numMips); // Mip levels
                 bw.Write((ushort)0); // ?
                 bw.Write(0); // ? pointer
                 bw.Write(0); // Array index (unused)
@@ -119,7 +162,7 @@ namespace BurnoutImage
                 bw.Write((ushort)width); // Width
                 bw.Write((short)height); // Height
                 bw.Write((byte)1); // Depth
-                bw.Write(1); // MipLevels (TODO: Support mipmapping)
+                bw.Write(numMips); // MipLevels
                 bw.Write((byte)0); // Texture type
                 bw.Write((byte)0); // Flags
             }

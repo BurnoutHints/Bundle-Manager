@@ -506,7 +506,7 @@ namespace BundleManager
         private void importToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "Image Files(*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp)|*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp|All files (*.*)|*.*";
+            ofd.Filter = "Image Files(*.dds,*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp)|*.dds;*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp|All files (*.*)|*.*";
             ofd.FileOk += Ofd_FileOk;
             ofd.ShowDialog(this);
         }
@@ -525,7 +525,6 @@ namespace BundleManager
         private void ImportImage(string path)
         {
             _entry.Dirty = true;
-            Image newImage = Image.FromFile(path);
 
             ImageVisible = false;
             TabsVisible = false;
@@ -534,7 +533,7 @@ namespace BundleManager
 
             ImageHeader header = GameImage.GetImageHeader(_entry.EntryBlocks[0].Data);
 
-            ImageInfo info = GameImage.SetImage(path, newImage.Width, newImage.Height, header.CompressionType, header.Platform);
+            ImageInfo info = GameImage.SetImage(path, header.CompressionType, header.Platform);
 
             Entry.EntryBlocks[0].Data = info.Header;
             Entry.EntryBlocks[1].Data = info.Data;
