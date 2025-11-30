@@ -56,7 +56,7 @@ namespace BundleManager
                     DialogResult result = MessageBox.Show(
                         "Welcome to Bundle Manager!" +
                         "\n\nThis program has 2 interchangable modes, Studio mode and Single Bundle mode." +
-                        "\n\nSingle Bundle mode is better for quicker, individual edits, while Studio mode is designed to easily access many bundles." +
+                        "\n\nSingle Bundle mode is better for quicker, individual edits, while Studio mode is designed to allow editing of more complex resources (i.e. models) since these require dependent resources found in other bundles." +
                         "\n\nWould you like to start in Studio mode?" +
                         "\n\nThis setting can be changed at any time by clicking the \"Switch to (Bundle/Studio) Mode\" at the top of the main window.",
                         "Question",
