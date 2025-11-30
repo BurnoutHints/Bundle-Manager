@@ -463,10 +463,7 @@ namespace BundleManager
             }
             else if (_entry.Type == EntryType.Texture)
             {
-                if (_entry.Console)
-                    Image = GameImage.GetImagePS3(_entry.EntryBlocks[0].Data, _entry.EntryBlocks[1].Data);
-                else
-                    Image = GameImage.GetImage(_entry.EntryBlocks[0].Data, _entry.EntryBlocks[1].Data);
+                Image = GameImage.GetImage(_entry.EntryBlocks[0].Data, _entry.EntryBlocks[1].Data);
 
                 ImageVisible = Image != null;
 
@@ -537,7 +534,7 @@ namespace BundleManager
 
             ImageHeader header = GameImage.GetImageHeader(_entry.EntryBlocks[0].Data);
 
-            ImageInfo info = GameImage.SetImage(path, newImage.Width, newImage.Height, header.CompressionType);
+            ImageInfo info = GameImage.SetImage(path, newImage.Width, newImage.Height, header.CompressionType, header.Platform);
 
             Entry.EntryBlocks[0].Data = info.Header;
             Entry.EntryBlocks[1].Data = info.Data;

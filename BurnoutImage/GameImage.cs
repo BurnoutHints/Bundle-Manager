@@ -5,6 +5,7 @@ using System.IO;
 using System.Windows.Forms;
 using BCnEncoder.Shared;
 using BundleUtilities;
+using Microsoft.Toolkit.HighPerformance;
 
 namespace BurnoutImage
 {
@@ -22,27 +23,29 @@ namespace BurnoutImage
 
     public class ImageHeader
     {
+        public readonly PlatformType Platform;
         public readonly CompressionType CompressionType;
         public readonly int Width, Height;
 
-        public ImageHeader(CompressionType compression, int width, int height)
+        public ImageHeader(CompressionType compression, int width, int height, PlatformType platform = PlatformType.Remaster)
         {
             CompressionType = compression;
             Width = width;
             Height = height;
+            Platform = platform;
         }
     }
 
     public static class GameImage
     {
-        public static ImageInfo SetImage(string path, int width, int height, CompressionType compression)
+        public static ImageInfo SetImage(string path, int width, int height, CompressionType compression, PlatformType platform = PlatformType.Remaster)
         {
             byte[] data;
 
             if (compression == CompressionType.BGRA)
             {
-                Bitmap image = new Bitmap(Image.FromFile(path));
-                MemoryStream mspixels = new MemoryStream();
+                Bitmap image = new(Image.FromFile(path));
+                MemoryStream mspixels = new();
 
                 for (int i = 0; i < height; i++)
                 {
@@ -68,54 +71,58 @@ namespace BurnoutImage
                 data = ImageUtil.CompressImage(path, dxt);
             }
 
-            MemoryStream msx = new MemoryStream();
-            BinaryWriter2 bw = new BinaryWriter2(msx);
+            MemoryStream msx = new();
+            BinaryWriter2 bw = new(msx);
 
-            // Original game header: https://burnout.wiki/wiki/Texture/PC
-            // TODO: Implement as separate option
-            //bw.Write(0); // Data pointer
-            //bw.Write(0); // Texture interface pointer
-            //bw.Write(0); // Padding
-            //bw.Write((short)1); // Pool
-            //bw.Write((byte)0); // ?
-            //bw.Write((byte)0); // ?
-            //if (compression == CompressionType.DXT1 || compression == CompressionType.DXT5) // Format
-            //    bw.Write(Encoding.ASCII.GetBytes(compression.ToString()));
-            //else
-            //    bw.Write(0x15); // A8R8G8B8
-            //bw.Write((short)width); // Width
-            //bw.Write((short)height); // Height
-            //bw.Write((byte)1); // Depth
-            //bw.Write(1); // MipLevels (TODO: Support mipmapping)
-            //bw.Write((byte)0); // Texture type
-            //bw.Write((byte)0); // Flags
-
-            // Remastered Texture header: https://burnout.wiki/wiki/Texture/Remastered
-            bw.Write(0); // Texture interface pointer
-            bw.Write(0); // Usage
-            bw.Write(7); // Dimension
-            bw.Write(0); // Pixel data pointer
-            bw.Write(0); // Shader resource view interface pointer 1
-            bw.Write(0); // Shader resource view interface pointer 2
-            bw.Write(0); // ?
-            if (compression == CompressionType.ARGB) // Format
-                bw.Write(0x1C); // R8G8B8A8_UNORM
-            else if (compression == CompressionType.DXT1)
-                bw.Write(0x47); // BC1_UNORM
-            else if (compression == CompressionType.DXT5)
-                bw.Write(0x4D); // BC3_UNORM
-            bw.Write(0); // Flags
-            bw.Write((short)width); // Width
-            bw.Write((short)height); // Height
-            bw.Write((short)1); // Depth
-            bw.Write((short)1); // Array size
-            bw.Write((byte)0); // Most detailed mip
-            bw.Write((byte)1); // Mip levels (TODO: Support mipmapping)
-            bw.Write((short)0); // ?
-            bw.Write(0); // ? pointer
-            bw.Write(0); // Array index (unused)
-            bw.Write(0); // Contents size (unused)
-            bw.Write(0); // Texture data (unused)
+            if (platform == PlatformType.Remaster)
+            {
+                // Remastered Texture header: https://burnout.wiki/wiki/Texture/Remastered
+                bw.Write(0); // Texture interface pointer
+                bw.Write(0); // Usage
+                bw.Write(7); // Dimension
+                bw.Write(0); // Pixel data pointer
+                bw.Write(0); // Shader resource view interface pointer 1
+                bw.Write(0); // Shader resource view interface pointer 2
+                bw.Write(0); // ?
+                if (compression == CompressionType.ARGB) // Format
+                    bw.Write(0x1C); // R8G8B8A8_UNORM
+                else if (compression == CompressionType.DXT1)
+                    bw.Write(0x47); // BC1_UNORM
+                else if (compression == CompressionType.DXT5)
+                    bw.Write(0x4D); // BC3_UNORM
+                bw.Write(0); // Flags
+                bw.Write((ushort)width); // Width
+                bw.Write((ushort)height); // Height
+                bw.Write((ushort)1); // Depth
+                bw.Write((ushort)1); // Array size
+                bw.Write((byte)0); // Most detailed mip
+                bw.Write((byte)1); // Mip levels (TODO: Support mipmapping)
+                bw.Write((ushort)0); // ?
+                bw.Write(0); // ? pointer
+                bw.Write(0); // Array index (unused)
+                bw.Write(0); // Contents size (unused)
+                bw.Write(0); // Texture data (unused)
+            }
+            else if (platform == PlatformType.PC)
+            {
+                // Original game header: https://burnout.wiki/wiki/Texture/PC
+                bw.Write(0); // Data pointer
+                bw.Write(0); // Texture interface pointer
+                bw.Write(0); // Padding
+                bw.Write((ushort)1); // Pool
+                bw.Write((byte)0); // ?
+                bw.Write((byte)0); // ?
+                if (compression == CompressionType.DXT1 || compression == CompressionType.DXT5) // Format
+                    bw.Write(Encoding.ASCII.GetBytes(compression.ToString()));
+                else
+                    bw.Write(0x15); // A8R8G8B8
+                bw.Write((ushort)width); // Width
+                bw.Write((short)height); // Height
+                bw.Write((byte)1); // Depth
+                bw.Write(1); // MipLevels (TODO: Support mipmapping)
+                bw.Write((byte)0); // Texture type
+                bw.Write((byte)0); // Flags
+            }
 
             bw.Flush();
             bw.Close();
@@ -127,82 +134,92 @@ namespace BurnoutImage
         {
             try
             {
-                MemoryStream ms = new MemoryStream(data);
-                BinaryReader2 br = new BinaryReader2(ms);
-                if (data.Length == 0x40 || data.Length == 0x30)
+                MemoryStream ms = new(data);
+                BinaryReader2 br = new(ms);
+                if (data.Length == 0x40 || data.Length == 0x60) // Remaster OR X360
                 {
-                    // Remaster
-                    br.BaseStream.Seek(8, SeekOrigin.Begin);
-                    uint unk1 = br.ReadUInt32();
-                    uint unk2 = br.ReadUInt32();
+                    if (data.Length == 0x40)
+                    {
+                        br.BaseStream.Seek(0x00, SeekOrigin.Begin);
 
-                    br.BaseStream.Seek(0x1C, SeekOrigin.Begin);
-
-                    CompressionType type = CompressionType.UNKNOWN;
-                    byte[] compression = br.ReadBytes(4);
-                    string compressionString = Encoding.ASCII.GetString(compression);
-                    if (compression.Matches(new byte[] { 0x15, 0x00, 0x00, 0x00 }))
-                    {
-                        type = CompressionType.BGRA;
-                    }
-                    else if (compression.Matches(new byte[] { 0x1C, 0x00, 0x00, 0x00 }))
-                    {
-                        type = CompressionType.RGBA;
-                    }
-                    else if (compression.Matches(new byte[] { 0xFF, 0x00, 0x00, 0x00 }))
-                    {
-                        type = CompressionType.ARGB;
-                    }
-                    else if (compression.Matches(new byte[] { 0x47, 0x00, 0x00, 0x00 }))
-                    {
-                        type = CompressionType.DXT1;
-                    }
-                    else if (compression.Matches(new byte[] { 0x4D, 0x00, 0x00, 0x00 }))
-                    {
-                        type = CompressionType.DXT5;
-                    }
-
-                    uint unk3 = br.ReadUInt32();
-
-                    int width = br.ReadInt16();
-                    int height = br.ReadInt16();
-                    br.Close();
-
-                    return new ImageHeader(type, width, height);
-                }
-                else
-                {
-                    // OLD PC
-                    br.BaseStream.Seek(0x10, SeekOrigin.Begin);
-                    CompressionType type = CompressionType.UNKNOWN;
-                    byte[] compression = br.ReadBytes(4);
-                    string compressionString = Encoding.ASCII.GetString(compression);
-                    if (compression.Matches(new byte[] { 0x15, 0x00, 0x00, 0x00 }))
-                    {
-                        type = CompressionType.BGRA;
-                    }
-                    else if (compression.Matches(new byte[] { 0xFF, 0x00, 0x00, 0x00 }))
-                    {
-                        type = CompressionType.ARGB;
-                    }
-                    else if (compressionString.StartsWith("DXT"))
-                    {
-                        switch (compressionString[3])
+                        if (br.ReadUInt32() != 0x00) // nullptr mpTextureInterface in Remastered, Common in X360
                         {
-                            case '1':
-                                type = CompressionType.DXT1;
-                                break;
-                            case '5':
-                                type = CompressionType.DXT5;
-                                break;
+                            throw new Exception("Xbox 360 textures are not supported yet.");
                         }
                     }
 
+                    // Remaster
+                    br.BaseStream.Seek(0x00, SeekOrigin.Begin);
+
+                    // 32/64 bit offsets
+                    var (oFormat, oSize) = data.Length switch
+                    {
+                        0x40 => (0x1C, 0x24),
+                        0x60 => (0x24, 0x34),
+                        _ => throw new InvalidDataException()
+                    };
+
+                    br.BaseStream.Seek(oFormat, SeekOrigin.Begin);
+
+                    // DXGI_Format
+                    CompressionType type = br.ReadUInt32() switch
+                    {
+                        0x00000015  => CompressionType.BGRA,
+                        0x0000001C  => CompressionType.RGBA,
+                        0x000000FF  => CompressionType.ARGB,
+                        0x00000047  => CompressionType.DXT1,
+                        0x0000004D  => CompressionType.DXT5,
+                        _           => CompressionType.UNKNOWN
+                    };
+
+                    br.BaseStream.Seek(oSize, SeekOrigin.Begin);
+
                     int width = br.ReadInt16();
                     int height = br.ReadInt16();
+
                     br.Close();
 
-                    return new ImageHeader(type, width, height);
+                    return new ImageHeader(type, width, height, PlatformType.Remaster);
+                }
+                else if (data.Length == 0x20) // OLD PC
+                {
+                    br.BaseStream.Seek(0x10, SeekOrigin.Begin);
+
+                    // D3DFORMAT
+                    CompressionType type = br.ReadInt32() switch
+                    {
+                        0x00000015  => CompressionType.BGRA,
+                        0x000000FF  => CompressionType.ARGB,
+                        0x31545844  => CompressionType.DXT1, // "DXT1"
+                        0x35545844  => CompressionType.DXT5, // "DXT5"
+                        _           => CompressionType.UNKNOWN
+                    };
+
+                    int width = br.ReadInt16();
+                    int height = br.ReadInt16();
+
+                    br.Close();
+
+                    return new ImageHeader(type, width, height, PlatformType.PC);
+                }
+                else if (data.Length == 0x30) // PS3
+                {
+                    CompressionType type = br.ReadByte() switch
+                    {
+                        0x85 => CompressionType.ARGB,
+                        0x86 => CompressionType.DXT1,
+                        0x88 => CompressionType.DXT5,
+                        _ => CompressionType.UNKNOWN
+                    };
+
+                    br.BaseStream.Seek(0x08, SeekOrigin.Begin);
+
+                    ushort width = Util.ReverseBytes(br.ReadUInt16());
+                    ushort height = Util.ReverseBytes(br.ReadUInt16());
+
+                    br.Close();
+
+                    return new ImageHeader(type, width, height, PlatformType.PS3);
                 }
             }
             catch (Exception ex)
@@ -215,146 +232,83 @@ namespace BurnoutImage
 
         public static Image GetImage(byte[] data, byte[] extraData)
         {
+            if (extraData == null) // ¯\_(ツ)_/¯
+                return null;
+
             try
             {
                 ImageHeader header = GetImageHeader(data);
-                byte[] pixels = extraData;
 
-                if (header.CompressionType == CompressionType.DXT1)
+                if (header.Platform == PlatformType.X360)
                 {
-                    pixels = ImageUtil.DecompressImage(pixels, header.Width, header.Height, CompressionFormat.Bc1);
+                    throw new Exception("Xbox 360 textures are not supported yet.");
                 }
-                else if (header.CompressionType == CompressionType.DXT5)
+                else
                 {
-                    pixels = ImageUtil.DecompressImage(pixels, header.Width, header.Height, CompressionFormat.Bc3);
-                }
-
-                DirectBitmap bitmap = new DirectBitmap(header.Width, header.Height);
-
-                int index = 0;
-                for (int y = 0; y < header.Height; y++)
-                {
-                    for (int x = 0; x < header.Width; x++)
+                    byte[] pixels = header.CompressionType switch
                     {
-                        byte red;
-                        byte green;
-                        byte blue;
-                        byte alpha;
-                        if (header.CompressionType == CompressionType.BGRA)
-                        {
-                            blue = pixels[index + 0];
-                            green = pixels[index + 1];
-                            red = pixels[index + 2];
-                            alpha = pixels[index + 3];
-                        }
-                        else
-                        {
-                            red = pixels[index + 0];
-                            green = pixels[index + 1];
-                            blue = pixels[index + 2];
-                            alpha = pixels[index + 3];
-                        }
+                        CompressionType.DXT1 => ImageUtil.DecompressImage(extraData, header.Width, header.Height, CompressionFormat.Bc1),
+                        CompressionType.DXT5 => ImageUtil.DecompressImage(extraData, header.Width, header.Height, CompressionFormat.Bc3),
+                        _ => throw new NotImplementedException()
+                    };
 
-                        Color color = Color.FromArgb(alpha, red, green, blue);
-                        bitmap.Bits[x + y * header.Width] = color.ToArgb();
-                        index += 4;
-                    }
-                }
+                    DirectBitmap bitmap = new(header.Width, header.Height);
 
-                return bitmap.Bitmap;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message + "\r\n" + ex.StackTrace);
-                return null;
-            }
-        }
-
-        public static Image GetImagePS3(byte[] data, byte[] extraData)
-        {
-            if (extraData != null && data.Length == 48)
-            {
-                try
-                {
-                    MemoryStream ms = new MemoryStream(data);
-                    BinaryReader2 br = new BinaryReader2(ms);
-
-                    byte compression = br.ReadByte();
-                    byte[] unknown1 = br.ReadBytes(3);
-                    CompressionType type = CompressionType.UNKNOWN;
-                    if (compression == 0x85)
-                    {
-                        type = CompressionType.ARGB;
-                    }
-                    else if (compression == 0x86)
-                    {
-                        type = CompressionType.DXT1;
-                    }
-                    else if (compression == 0x88)
-                    {
-                        type = CompressionType.DXT5;
-                    }
-                    int unknown2 = Util.ReverseBytes(br.ReadInt32());
-                    int width = Util.ReverseBytes(br.ReadInt16());
-                    int height = Util.ReverseBytes(br.ReadInt16());
-                    
-                    br.Close();
-
-                    byte[] pixels = extraData;
-
-                    if (type == CompressionType.DXT1)
-                    {
-                        pixels = ImageUtil.DecompressImage(pixels, width, height, CompressionFormat.Bc1);
-                    }
-                    else if (type == CompressionType.DXT5)
-                    {
-                        pixels = ImageUtil.DecompressImage(pixels, width, height, CompressionFormat.Bc3);
-                    }
-
-                    DirectBitmap bitmap = new DirectBitmap(width, height);
+                    byte red;
+                    byte green;
+                    byte blue;
+                    byte alpha;
 
                     int index = 0;
-                    for (int y = 0; y < height; y++)
+
+                    // This is purposely formatted to prevent 4 compression type checks in the hot path.
+                    if (header.CompressionType == CompressionType.BGRA) 
                     {
-                        for (int x = 0; x < width; x++)
+                        for (int y = 0; y < header.Height; y++)
                         {
-                            byte red;
-                            byte green;
-                            byte blue;
-                            byte alpha;
-                            if (type == CompressionType.BGRA)
+                            int rowOffset = y * header.Width;
+                            for (int x = 0; x < header.Width; x++)
                             {
                                 blue = pixels[index + 0];
                                 green = pixels[index + 1];
                                 red = pixels[index + 2];
                                 alpha = pixels[index + 3];
-                            }
-                            else
-                            {
 
-                                alpha = pixels[index + 0];
-                                red = pixels[index + 1];
-                                green = pixels[index + 2];
-                                blue = pixels[index + 3];
+                                Color color = Color.FromArgb(alpha, red, green, blue);
+                                bitmap.Bits[x + rowOffset] = color.ToArgb();
+                                if (header.Platform == PlatformType.PS3)
+                                    bitmap.SetPixel(x, y, color);
+                                index += 4;
                             }
-
-                            Color color = Color.FromArgb(alpha, red, green, blue);
-                            bitmap.Bits[x + y * width] = color.ToArgb();
-                            bitmap.SetPixel(x, y, color);
-                            index += 4;
                         }
                     }
-                    
-                    return bitmap.Bitmap;
+                    else 
+                    {
+                        for (int y = 0; y < header.Height; y++)
+                        {
+                            int rowOffset = y * header.Width;
+                            for (int x = 0; x < header.Width; x++)
+                            {
+                                red = pixels[index + 0];
+                                green = pixels[index + 1];
+                                blue = pixels[index + 2];
+                                alpha = pixels[index + 3];
 
-                }
-                catch
-                {
-                    return null;
+                                Color color = Color.FromArgb(alpha, red, green, blue);
+                                bitmap.Bits[x + rowOffset] = color.ToArgb();
+                                if (header.Platform == PlatformType.PS3)
+                                    bitmap.SetPixel(x, y, color);
+                                index += 4;
+                            }
+                        }
+                    }
+
+                    return bitmap.Bitmap;
                 }
             }
-            else
+            catch (Exception ex)
             {
+                MessageBox.Show(ex.Message + "\r\n" + ex.StackTrace);
                 return null;
             }
         }
@@ -368,5 +322,13 @@ namespace BurnoutImage
         BGRA,
         DXT1,
         DXT5
+    }
+
+    public enum PlatformType
+    {
+        Remaster,
+        PC,
+        PS3,
+        X360
     }
 }
