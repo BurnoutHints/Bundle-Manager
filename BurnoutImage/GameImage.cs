@@ -60,9 +60,16 @@ namespace BurnoutImage
                 width = br.ReadInt32();
 
                 fs.Seek(0x1C, SeekOrigin.Begin);
-                numMips = br.ReadInt32();
-                if (numMips <= 0)
-                    numMips = 1;
+                numMips = br.ReadInt32() + 1;
+
+                fs.Seek(0x54, SeekOrigin.Begin);
+                compression = br.ReadInt32() switch
+                {
+                    0x31545844 => CompressionType.DXT1, // "DXT1"
+                    0x35545844 => CompressionType.DXT5, // "DXT5"
+                    0x00000000 => CompressionType.RGBA,
+                    _ => CompressionType.RGBA
+                };
 
                 const int ddsHeaderSize = 0x80;
                 fs.Seek(ddsHeaderSize, SeekOrigin.Begin);
