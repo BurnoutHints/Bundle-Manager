@@ -5,7 +5,6 @@ using System.IO;
 using System.Windows.Forms;
 using BCnEncoder.Shared;
 using BundleUtilities;
-using Microsoft.Toolkit.HighPerformance;
 
 namespace BurnoutImage
 {
@@ -27,7 +26,7 @@ namespace BurnoutImage
         public readonly CompressionType CompressionType;
         public readonly int Width, Height;
 
-        public ImageHeader(CompressionType compression, int width, int height, PlatformType platform = PlatformType.Remaster)
+        public ImageHeader(CompressionType compression, int width, int height, PlatformType platform = PlatformType.Remastered)
         {
             CompressionType = compression;
             Width = width;
@@ -38,7 +37,7 @@ namespace BurnoutImage
 
     public static class GameImage
     {
-        public static ImageInfo SetImage(string path, CompressionType compression, PlatformType platform = PlatformType.Remaster)
+        public static ImageInfo SetImage(string path, CompressionType compression, PlatformType platform = PlatformType.Remastered)
         {
             byte[] data;
             int width = 0, height = 0, numMips = 1;
@@ -137,7 +136,7 @@ namespace BurnoutImage
             MemoryStream msx = new();
             BinaryWriter2 bw = new(msx);
 
-            if (platform == PlatformType.Remaster)
+            if (platform == PlatformType.Remastered)
             {
                 // Remastered Texture header: https://burnout.wiki/wiki/Texture/Remastered
                 bw.Write(0); // Texture interface pointer
@@ -245,7 +244,7 @@ namespace BurnoutImage
 
                     br.Close();
 
-                    return new ImageHeader(type, width, height, PlatformType.Remaster);
+                    return new ImageHeader(type, width, height, PlatformType.Remastered);
                 }
                 else if (data.Length == 0x20) // OLD PC
                 {
@@ -394,7 +393,7 @@ namespace BurnoutImage
 
     public enum PlatformType
     {
-        Remaster,
+        Remastered,
         PC,
         PS3,
         X360

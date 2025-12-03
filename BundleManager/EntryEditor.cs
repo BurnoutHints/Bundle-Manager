@@ -12,6 +12,7 @@ using BundleFormat;
 using BundleUtilities;
 using BurnoutImage;
 using LangEditor;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BundleManager
 {
@@ -72,6 +73,7 @@ namespace BundleManager
             ImageMenuVisible = false;
             BinaryMenuVisible = false;
             ImageVisible = false;
+            ImageStatusPanelVisible = false;
             TabsVisible = false;
 
             //txtData.MaxLength = int.MaxValue;
@@ -290,6 +292,40 @@ namespace BundleManager
             }
         }
 
+        private bool ImageStatusPanelVisible
+        {
+            get
+            {
+                if (mnuBar.InvokeRequired)
+                {
+                    GetBool method = () =>
+                    {
+                        return imageStatusLabel.Visible;
+                    };
+                    return (bool)Invoke(method);
+                }
+                else
+                {
+                    return imageStatusLabel.Visible;
+                }
+            }
+            set
+            {
+                if (mnuBar.InvokeRequired)
+                {
+                    SetBool method = (bool enabled) =>
+                    {
+                        imageStatusLabel.Visible = enabled;
+                    };
+                    Invoke(method, value);
+                }
+                else
+                {
+                    imageStatusLabel.Visible = value;
+                }
+            }
+        }
+
         private bool ImageMenuVisible
         {
             get
@@ -470,7 +506,17 @@ namespace BundleManager
             }
             TabsVisible = !ImageVisible;
             ImageMenuVisible = ImageVisible;
+            ImageStatusPanelVisible = ImageVisible;
             BinaryMenuVisible = TabsVisible;
+
+            if (ImageStatusPanelVisible)
+            {
+                ImageHeader header = GameImage.GetImageHeader(_entry.EntryBlocks[0].Data);
+                imageStatusLabel.Text = 
+                    $"Platform: {header.Platform}    " +
+                    $"Size: {header.Width}x{header.Height}    " +
+                    $"Format: {header.CompressionType}";
+            }
 
             if (TabsVisible)
             {
