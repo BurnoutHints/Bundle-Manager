@@ -59,7 +59,9 @@ namespace BurnoutImage
                 width = br.ReadInt32();
 
                 fs.Seek(0x1C, SeekOrigin.Begin);
-                numMips = br.ReadInt32() + 1;
+                numMips = br.ReadInt32();
+                if (numMips <= 0)
+                    numMips = 1;
 
                 fs.Seek(0x4C, SeekOrigin.Begin);
                 uint pfSize = br.ReadUInt32();
