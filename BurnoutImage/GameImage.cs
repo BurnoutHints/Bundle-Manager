@@ -62,14 +62,28 @@ namespace BurnoutImage
                 fs.Seek(0x1C, SeekOrigin.Begin);
                 numMips = br.ReadInt32() + 1;
 
-                fs.Seek(0x54, SeekOrigin.Begin);
-                compression = br.ReadInt32() switch
-                {
-                    0x31545844 => CompressionType.DXT1, // "DXT1"
-                    0x35545844 => CompressionType.DXT5, // "DXT5"
-                    0x00000000 => CompressionType.RGBA,
-                    _ => CompressionType.RGBA
-                };
+                fs.Seek(0x4C, SeekOrigin.Begin);
+                uint pfSize = br.ReadUInt32();
+                uint pfFlags = br.ReadUInt32();
+                uint pfFourCC = br.ReadUInt32();
+                uint pfRGBBits = br.ReadUInt32();
+                uint pfRMask = br.ReadUInt32();
+                uint pfGMask = br.ReadUInt32();
+                uint pfBMask = br.ReadUInt32();
+                uint pfAMask = br.ReadUInt32();
+
+                compression = ImageUtil.DetectDdsFormat(
+                    pfFlags,
+                    pfFourCC,
+                    pfRGBBits,
+                    pfRMask,
+                    pfGMask,
+                    pfBMask,
+                    pfAMask
+                );
+
+                if (compression == CompressionType.UNKNOWN)
+                    compression = CompressionType.RGBA;
 
                 const int ddsHeaderSize = 0x80;
                 fs.Seek(ddsHeaderSize, SeekOrigin.Begin);
@@ -135,7 +149,9 @@ namespace BurnoutImage
                 bw.Write(0); // ?
                 int format = compression switch
                 {
-                    CompressionType.ARGB => 0x1C,
+                    CompressionType.ARGB => 0x1C, // v One of these may be incorrect
+                    CompressionType.RGBA => 0x1C, // ^
+                    CompressionType.BGRA => 0x57,
                     CompressionType.DXT1 => 0x47,
                     CompressionType.DXT5 => 0x4D,
                 };
@@ -254,6 +270,8 @@ namespace BurnoutImage
                 }
                 else if (data.Length == 0x30) // PS3
                 {
+                    br.BaseStream.Seek(0x00, SeekOrigin.Begin);
+
                     CompressionType type = br.ReadByte() switch
                     {
                         0x85 => CompressionType.ARGB,
