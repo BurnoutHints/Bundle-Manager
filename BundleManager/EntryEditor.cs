@@ -552,7 +552,7 @@ namespace BundleManager
         private void importDataToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
-            ofd.FileName = $"{((uint)_entry.ID).ToString("X")}_primary";
+            ofd.FileName = $"{_entry.ID.ToString("X8")}_primary";
             ofd.DefaultExt = "bin";
             ofd.Filter = "Binary Files|*.dat;*.bin|YAP Binary Files|*.dat";
             ofd.FileOk += Ofd_FileOk1;
@@ -582,7 +582,7 @@ namespace BundleManager
         private void exportDataToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveFileDialog sfd = new SaveFileDialog();
-            sfd.FileName = $"{((uint)_entry.ID).ToString("X")}_primary";
+            sfd.FileName = $"{_entry.ID.ToString("X8")}_primary";
             sfd.DefaultExt = "bin";
             sfd.Filter = "Binary Files|*.dat;*.bin|YAP Binary Files|*.dat";
             sfd.FileOk += Sfd_FileOk1;
@@ -607,7 +607,7 @@ namespace BundleManager
         private void importExtraToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
-            ofd.FileName = $"{((uint)_entry.ID).ToString("X")}_secondary";
+            ofd.FileName = $"{_entry.ID.ToString("X8")}_secondary";
             ofd.DefaultExt = "bin";
             ofd.Filter = "Binary Files|*.dat;*.bin|YAP Binary Files|*.dat";
             ofd.FileOk += Ofd_FileOk2;
@@ -637,7 +637,7 @@ namespace BundleManager
         private void exportExtraToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveFileDialog sfd = new SaveFileDialog();
-            sfd.FileName = $"{((uint)_entry.ID).ToString("X")}_secondary";
+            sfd.FileName = $"{_entry.ID.ToString("X8")}_secondary";
             sfd.DefaultExt = "bin";
             sfd.Filter = "Binary Files|*.dat;*.bin|YAP Binary Files|*.dat";
             sfd.FileOk += Sfd_FileOk2;
