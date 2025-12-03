@@ -201,19 +201,14 @@ namespace BurnoutImage
             {
                 MemoryStream ms = new(data);
                 BinaryReader2 br = new(ms);
-                if (data.Length == 0x40 || data.Length == 0x60) // Remaster OR X360
+
+                PlatformType type = DetectPlatform(data);
+                if (type == PlatformType.X360)
                 {
-                    if (data.Length == 0x40)
-                    {
-                        br.BaseStream.Seek(0x00, SeekOrigin.Begin);
-
-                        if (br.ReadUInt32() != 0x00) // nullptr mpTextureInterface in Remastered, Common in X360
-                        {
-                            throw new Exception("Xbox 360 textures are not supported yet.");
-                        }
-                    }
-
-                    // Remaster
+                    throw new Exception("Xbox 360 textures are not supported yet.");
+                }
+                else if (type == PlatformType.Remastered)
+                {
                     br.BaseStream.Seek(0x00, SeekOrigin.Begin);
 
                     // 32/64 bit offsets
@@ -246,7 +241,7 @@ namespace BurnoutImage
 
                     return new ImageHeader(type, width, height, PlatformType.Remastered);
                 }
-                else if (data.Length == 0x20) // OLD PC
+                else if (type == PlatformType.PC)
                 {
                     br.BaseStream.Seek(0x10, SeekOrigin.Begin);
 
@@ -267,7 +262,7 @@ namespace BurnoutImage
 
                     return new ImageHeader(type, width, height, PlatformType.PC);
                 }
-                else if (data.Length == 0x30) // PS3
+                else if (type == PlatformType.PS3) // PS3
                 {
                     br.BaseStream.Seek(0x00, SeekOrigin.Begin);
 
@@ -378,6 +373,37 @@ namespace BurnoutImage
                 MessageBox.Show(ex.Message + "\r\n" + ex.StackTrace);
                 return null;
             }
+        }
+
+        public static PlatformType DetectPlatform(byte[] data)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+
+            int len = data.Length;
+
+            if (len == 0x40 || len == 0x60)
+            {
+                if (len == 0x40)
+                {
+                    using (MemoryStream ms = new(data))
+                    using (BinaryReader2 br = new(ms))
+                    {
+                        uint ptr = br.ReadUInt32();
+                        if (ptr != 0)
+                            return PlatformType.X360;
+                    }
+                }
+
+                return PlatformType.Remastered;
+            }
+
+            if (len == 0x20)
+                return PlatformType.PC;
+
+            if (len == 0x30)
+                return PlatformType.PS3;
+
+            throw new InvalidDataException($"Unknown image header size: 0x{len:X}.");
         }
     }
 
