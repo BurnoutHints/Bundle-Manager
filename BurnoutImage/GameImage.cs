@@ -204,12 +204,12 @@ namespace BurnoutImage
                 MemoryStream ms = new(data);
                 BinaryReader2 br = new(ms);
 
-                PlatformType type = DetectPlatform(data);
-                if (type == PlatformType.X360)
+                PlatformType platform = DetectPlatform(data);
+                if (platform == PlatformType.X360)
                 {
                     throw new Exception("Xbox 360 textures are not supported yet.");
                 }
-                else if (type == PlatformType.Remastered)
+                else if (platform == PlatformType.Remastered)
                 {
                     br.BaseStream.Seek(0x00, SeekOrigin.Begin);
 
@@ -243,7 +243,7 @@ namespace BurnoutImage
 
                     return new ImageHeader(type, width, height, PlatformType.Remastered);
                 }
-                else if (type == PlatformType.PC)
+                else if (platform == PlatformType.PC)
                 {
                     br.BaseStream.Seek(0x10, SeekOrigin.Begin);
 
@@ -264,7 +264,7 @@ namespace BurnoutImage
 
                     return new ImageHeader(type, width, height, PlatformType.PC);
                 }
-                else if (type == PlatformType.PS3) // PS3
+                else if (platform == PlatformType.PS3) // PS3
                 {
                     br.BaseStream.Seek(0x00, SeekOrigin.Begin);
 
