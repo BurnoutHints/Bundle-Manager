@@ -552,7 +552,9 @@ namespace BundleManager
         private void importDataToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "Binary Files|*.bin";
+            ofd.FileName = $"{((uint)_entry.ID).ToString("X")}_primary";
+            ofd.DefaultExt = "bin";
+            ofd.Filter = "Binary Files|*.dat;*.bin|YAP Binary Files|*.dat";
             ofd.FileOk += Ofd_FileOk1;
             ofd.ShowDialog(this);
         }
@@ -580,7 +582,9 @@ namespace BundleManager
         private void exportDataToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveFileDialog sfd = new SaveFileDialog();
-            sfd.Filter = "Binary Files|*.bin";
+            sfd.FileName = $"{((uint)_entry.ID).ToString("X")}_primary";
+            sfd.DefaultExt = "bin";
+            sfd.Filter = "Binary Files|*.dat;*.bin|YAP Binary Files|*.dat";
             sfd.FileOk += Sfd_FileOk1;
             sfd.ShowDialog(this);
         }
@@ -603,7 +607,9 @@ namespace BundleManager
         private void importExtraToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "Binary Files|*.bin";
+            ofd.FileName = $"{((uint)_entry.ID).ToString("X")}_secondary";
+            ofd.DefaultExt = "bin";
+            ofd.Filter = "Binary Files|*.dat;*.bin|YAP Binary Files|*.dat";
             ofd.FileOk += Ofd_FileOk2;
             ofd.ShowDialog(this);
         }
@@ -631,7 +637,9 @@ namespace BundleManager
         private void exportExtraToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveFileDialog sfd = new SaveFileDialog();
-            sfd.Filter = "Binary Files|*.bin";
+            sfd.FileName = $"{((uint)_entry.ID).ToString("X")}_secondary";
+            sfd.DefaultExt = "bin";
+            sfd.Filter = "Binary Files|*.dat;*.bin|YAP Binary Files|*.dat";
             sfd.FileOk += Sfd_FileOk2;
             sfd.ShowDialog(this);
         }
