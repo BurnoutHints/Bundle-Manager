@@ -12,7 +12,6 @@ using BundleFormat;
 using BundleUtilities;
 using BurnoutImage;
 using LangEditor;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BundleManager
 {
