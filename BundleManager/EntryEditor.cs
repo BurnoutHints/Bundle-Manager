@@ -72,6 +72,7 @@ namespace BundleManager
             ImageMenuVisible = false;
             BinaryMenuVisible = false;
             ImageVisible = false;
+            ImageStatusPanelVisible = false;
             TabsVisible = false;
 
             //txtData.MaxLength = int.MaxValue;
@@ -290,6 +291,40 @@ namespace BundleManager
             }
         }
 
+        private bool ImageStatusPanelVisible
+        {
+            get
+            {
+                if (mnuBar.InvokeRequired)
+                {
+                    GetBool method = () =>
+                    {
+                        return imageStatusLabel.Visible;
+                    };
+                    return (bool)Invoke(method);
+                }
+                else
+                {
+                    return imageStatusLabel.Visible;
+                }
+            }
+            set
+            {
+                if (mnuBar.InvokeRequired)
+                {
+                    SetBool method = (bool enabled) =>
+                    {
+                        imageStatusLabel.Visible = enabled;
+                    };
+                    Invoke(method, value);
+                }
+                else
+                {
+                    imageStatusLabel.Visible = value;
+                }
+            }
+        }
+
         private bool ImageMenuVisible
         {
             get
@@ -463,17 +498,24 @@ namespace BundleManager
             }
             else if (_entry.Type == EntryType.Texture)
             {
-                if (_entry.Console)
-                    Image = GameImage.GetImagePS3(_entry.EntryBlocks[0].Data, _entry.EntryBlocks[1].Data);
-                else
-                    Image = GameImage.GetImage(_entry.EntryBlocks[0].Data, _entry.EntryBlocks[1].Data);
+                Image = GameImage.GetImage(_entry.EntryBlocks[0].Data, _entry.EntryBlocks[1].Data);
 
                 ImageVisible = Image != null;
 
             }
             TabsVisible = !ImageVisible;
             ImageMenuVisible = ImageVisible;
+            ImageStatusPanelVisible = ImageVisible;
             BinaryMenuVisible = TabsVisible;
+
+            if (ImageStatusPanelVisible)
+            {
+                ImageHeader header = GameImage.GetImageHeader(_entry.EntryBlocks[0].Data);
+                imageStatusLabel.Text = 
+                    $"Platform: {header.Platform}    " +
+                    $"Size: {header.Width}x{header.Height}    " +
+                    $"Format: {header.CompressionType}";
+            }
 
             if (TabsVisible)
             {
@@ -509,7 +551,7 @@ namespace BundleManager
         private void importToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "Image Files(*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp)|*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp|All files (*.*)|*.*";
+            ofd.Filter = "Image Files(*.dds,*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp)|*.dds;*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp|All files (*.*)|*.*";
             ofd.FileOk += Ofd_FileOk;
             ofd.ShowDialog(this);
         }
@@ -528,7 +570,6 @@ namespace BundleManager
         private void ImportImage(string path)
         {
             _entry.Dirty = true;
-            Image newImage = Image.FromFile(path);
 
             ImageVisible = false;
             TabsVisible = false;
@@ -537,7 +578,7 @@ namespace BundleManager
 
             ImageHeader header = GameImage.GetImageHeader(_entry.EntryBlocks[0].Data);
 
-            ImageInfo info = GameImage.SetImage(path, newImage.Width, newImage.Height, header.CompressionType);
+            ImageInfo info = GameImage.SetImage(path, header.CompressionType, header.Platform);
 
             Entry.EntryBlocks[0].Data = info.Header;
             Entry.EntryBlocks[1].Data = info.Data;
