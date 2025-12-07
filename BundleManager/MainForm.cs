@@ -1,5 +1,8 @@
 using System;
 using System.Collections;
+using System.ComponentModel;
+using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -55,7 +58,7 @@ namespace BundleManager
                     {
                         return _archive;
                     };
-                    return (BundleArchive) Invoke(method);
+                    return (BundleArchive)Invoke(method);
                 }
                 else
                 {
@@ -95,7 +98,7 @@ namespace BundleManager
                     {
                         return _currentFileName;
                     };
-                    return (string) Invoke(method);
+                    return (string)Invoke(method);
                 }
                 else
                 {
@@ -181,7 +184,7 @@ namespace BundleManager
                 };
 
                 ListViewItem item = new ListViewItem(values);
-                item.BackColor = entry.GetColor();
+                item.BackColor = BundleEntry.GetColor(entry.Type);
                 lstEntries.Items.Add(item);
             }
 
@@ -193,7 +196,7 @@ namespace BundleManager
         {
             int index = toolsToolStripMenuItem.DropDownItems.IndexOf(pluginToolsSeparatorItem) + 1;
 
-            while(true)
+            while (true)
             {
                 if (index >= toolsToolStripMenuItem.DropDownItems.Count)
                     break;
@@ -282,25 +285,25 @@ namespace BundleManager
             }
             else
             {
-                object[] values = (object[]) value;
-                CurrentArchive = (BundleArchive) values[0];
+                object[] values = (object[])value;
+                CurrentArchive = (BundleArchive)values[0];
 
                 if (CurrentArchive == null)
                 {
-                    MessageBox.Show(this, "There was an error opening archive: " + (string) values[1], "Error",
+                    MessageBox.Show(this, "There was an error opening archive: " + (string)values[1], "Error",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                     CurrentFileName = null;
                     Text = "Bundle Manager";
                 }
                 else
                 {
-                    CurrentFileName = (string) values[1];
+                    CurrentFileName = (string)values[1];
                     Text = "Bundle Manager - " + CurrentFileName;
                 }
             }
             UpdateDisplay();
         }
-        
+
         public void DoOpenBundle(LoadingDialog loader, string path)
         {
             BundleArchive archive = BundleArchive.Read(path);
@@ -366,7 +369,8 @@ namespace BundleManager
             if (cancelled)
             {
                 _openSaveThread?.Interrupt();
-            } else
+            }
+            else
             {
                 CurrentArchive.Dirty = false;
             }
@@ -391,7 +395,8 @@ namespace BundleManager
             {
                 GetEntryDelegate del = GetEntry;
                 return (BundleEntry)Invoke(del, index);
-            } else
+            }
+            else
             {
                 return CurrentArchive.Entries[index];
             }
@@ -439,7 +444,8 @@ namespace BundleManager
                         else
                         {
                             loader.Hide();
-                            if (forceDebug) {
+                            if (forceDebug)
+                            {
                                 DebugUtil.ShowDebug(this, data);
                             }
                             IEntryEditor editor = data.GetEditor(entry);

@@ -333,30 +333,28 @@ namespace BundleFormat
             return "";
         }
 
-        public Color GetColor()
+        public static Color GetColor(EntryType type) => type switch
         {
-            switch (Type)
-            {
-                case EntryType.Texture:
-                    return Color.Orange;
-                case EntryType.Material:
-                    return Color.HotPink;
-                case EntryType.Renderable:
-                    return Color.Aquamarine;
-                case EntryType.InstanceList:
-                    return Color.BlueViolet;
-                case EntryType.EntryList:
-                    return Color.Tomato;
-                case EntryType.Model:
-                    return Color.Yellow;
-                case EntryType.PolygonSoupList:
-                    return Color.Goldenrod;
-                case EntryType.GraphicsSpec:
-                    return Color.SeaGreen;
-                default:
-                    break;
-            }
-            return Color.Transparent;
-        }
+            EntryType.Texture => Color.Orange,
+            EntryType.Material => Color.HotPink,
+            EntryType.Renderable => Color.Aquamarine,
+            EntryType.InstanceList => Color.BlueViolet,
+            EntryType.EntryList => Color.Tomato,
+            EntryType.Model => Color.Yellow,
+            EntryType.PolygonSoupList => Color.Goldenrod,
+            EntryType.GraphicsSpec => Color.SeaGreen,
+            _ => Color.Transparent
+        };
+
+        public static byte GetMemoryChunkCount(EntryType type) => type switch
+        {
+            EntryType.Texture => 2,
+            EntryType.IndexBuffer => 2,
+            EntryType.VertexBuffer => 2,
+            EntryType.Renderable => 2,
+            EntryType.ShaderProgramBuffer => 2,
+            EntryType.VFXMeshCollection => 2,
+            _ => 1,
+        };
     }
 }
