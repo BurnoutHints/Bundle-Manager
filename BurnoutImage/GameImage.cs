@@ -226,7 +226,7 @@ namespace BurnoutImage
                     // DXGI_Format
                     CompressionType type = br.ReadUInt32() switch
                     {
-                        0x00000015  => CompressionType.BGRA,
+                        0x00000057  => CompressionType.BGRA,
                         0x0000001C  => CompressionType.RGBA,
                         0x000000FF  => CompressionType.ARGB,
                         0x00000047  => CompressionType.DXT1,
