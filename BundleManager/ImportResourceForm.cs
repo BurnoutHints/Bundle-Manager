@@ -10,7 +10,7 @@ namespace BundleManager
     public partial class ImportResourceForm : Form
     {
         MemoryStream ms;
-        DataBlockImportProperties Properties = new();
+        DataChunkImportProperties Properties = new();
         public bool AutoUpdateID;
 
         string ImportName
@@ -140,8 +140,8 @@ namespace BundleManager
         {
             importPathsLabel.Text =
                 $"Primary data path:\r\n{Properties.Entries[0].Path}" +
-                (Properties.DataBlockCount > 1 ? $"\r\n\r\nSecondary data path:\r\n{Properties.Entries[1].Path}" : string.Empty) +
-                (Properties.DataBlockCount > 2 ? $"\r\n\r\nTertiary data path:\r\n{Properties.Entries[2].Path}" : string.Empty);
+                (Properties.DataChunkCount > 1 ? $"\r\n\r\nSecondary data path:\r\n{Properties.Entries[1].Path}" : string.Empty) +
+                (Properties.DataChunkCount > 2 ? $"\r\n\r\nTertiary data path:\r\n{Properties.Entries[2].Path}" : string.Empty);
         }
 
         private static bool IsValidHex(string s)
@@ -187,7 +187,7 @@ namespace BundleManager
 
         private void button1_Click(object sender, EventArgs e)
         {
-            for (int i = 1; i < Properties.DataBlockCount; i++)
+            for (int i = 1; i < Properties.DataChunkCount; i++)
             {
                 if (!File.Exists(Properties.Entries[i].Path))
                 {
@@ -196,9 +196,9 @@ namespace BundleManager
                 }
             }
 
-            byte[][] dataBlocks = new byte[Properties.DataBlockCount][];
+            byte[][] dataBlocks = new byte[Properties.DataChunkCount][];
 
-            for (int i = 0; i < Properties.DataBlockCount; i++)
+            for (int i = 0; i < Properties.DataChunkCount; i++)
             {
                 dataBlocks[i] = File.ReadAllBytes(Properties.Entries[i].Path);
             }
@@ -220,10 +220,10 @@ namespace BundleManager
             "tertiary"
         };
 
-        struct DataBlockImportProperties
+        struct DataChunkImportProperties
         {
-            public byte DataBlockCount { get; private set; }
-            public DataBlockImportEntry[] Entries;
+            public byte DataChunkCount { get; private set; }
+            public DataChunkImportEntry[] Entries;
 
             public EntryType EntryType
             {
@@ -231,37 +231,31 @@ namespace BundleManager
                 set
                 {
                     _currentEntryType = value;
-                    UpdateDataBlockCount();
+                    UpdateDataChunkCount();
                     UpdateEntryVisibilities();
                 }
             }
             private EntryType _currentEntryType = EntryType.Invalid;
 
-            public DataBlockImportProperties()
+            public DataChunkImportProperties()
             {
-                UpdateDataBlockCount();
-                Entries = new DataBlockImportEntry[3];
+                UpdateDataChunkCount();
+                Entries = new DataChunkImportEntry[3];
             }
 
-            void UpdateDataBlockCount()
+            void UpdateDataChunkCount()
             {
-                DataBlockCount = _currentEntryType switch
-                {
-                    EntryType.AptData => 1,
-                    EntryType.Texture => 2,
-                    EntryType.Renderable => 3,
-                    _ => 1,
-                };
+                DataChunkCount = BundleEntry.GetMemoryChunkCount(_currentEntryType);
             }
 
             void UpdateEntryVisibilities()
             {
                 for (byte i = 0; i < Entries.Length; i++)
-                    Entries[i].Visible = DataBlockCount > i;
+                    Entries[i].Visible = DataChunkCount > i;
             }
         }
 
-        struct DataBlockImportEntry
+        struct DataChunkImportEntry
         {
             public bool Visible
             {
