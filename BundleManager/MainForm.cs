@@ -184,7 +184,7 @@ namespace BundleManager
                 };
 
                 ListViewItem item = new ListViewItem(values);
-                item.BackColor = entry.GetColor();
+                item.BackColor = BundleEntry.GetColor(entry.Type);
                 lstEntries.Items.Add(item);
             }
 
