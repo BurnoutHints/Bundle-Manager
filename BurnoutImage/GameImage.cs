@@ -285,6 +285,10 @@ namespace BurnoutImage
 
                     return new ImageHeader(type, width, height, PlatformType.PS3);
                 }
+                else
+                {
+                    throw new InvalidDataException($"Unknown image header platform.");
+                }
             }
             catch (Exception ex)
             {
@@ -318,53 +322,53 @@ namespace BurnoutImage
 
                     DirectBitmap bitmap = new(header.Width, header.Height);
 
-                    byte red;
-                    byte green;
-                    byte blue;
-                    byte alpha;
+                    int rO, gO, bO, aO;
 
-                    int index = 0;
-
-                    // This is purposely formatted to prevent 4 compression type checks in the hot path.
-                    if (header.CompressionType == CompressionType.BGRA) 
+                    if (header.CompressionType == CompressionType.DXT1
+                     || header.CompressionType == CompressionType.DXT5)
                     {
-                        for (int y = 0; y < header.Height; y++)
+                        if (header.Platform == PlatformType.PS3)
                         {
-                            int rowOffset = y * header.Width;
-                            for (int x = 0; x < header.Width; x++)
-                            {
-                                blue = pixels[index + 0];
-                                green = pixels[index + 1];
-                                red = pixels[index + 2];
-                                alpha = pixels[index + 3];
-
-                                Color color = Color.FromArgb(alpha, red, green, blue);
-                                bitmap.Bits[x + rowOffset] = color.ToArgb();
-                                if (header.Platform == PlatformType.PS3)
-                                    bitmap.SetPixel(x, y, color);
-                                index += 4;
-                            }
+                            rO = 1; gO = 2; bO = 3; aO = 0; // ARGB
+                        }
+                        else
+                        {
+                            rO = 0; gO = 1; bO = 2; aO = 3; // RGBA
                         }
                     }
-                    else 
+                    else
                     {
-                        for (int y = 0; y < header.Height; y++)
+                        switch (header.CompressionType)
                         {
-                            int rowOffset = y * header.Width;
-                            for (int x = 0; x < header.Width; x++)
-                            {
-                                red = pixels[index + 0];
-                                green = pixels[index + 1];
-                                blue = pixels[index + 2];
-                                alpha = pixels[index + 3];
-
-                                Color color = Color.FromArgb(alpha, red, green, blue);
-                                bitmap.Bits[x + rowOffset] = color.ToArgb();
-                                if (header.Platform == PlatformType.PS3)
-                                    bitmap.SetPixel(x, y, color);
-                                index += 4;
-                            }
+                            case CompressionType.BGRA:
+                                rO = 2; gO = 1; bO = 0; aO = 3;
+                                break;
+                            case CompressionType.ARGB:
+                                rO = 1; gO = 2; bO = 3; aO = 0;
+                                break;
+                            default:
+                                rO = 0; gO = 1; bO = 2; aO = 3;
+                                break;
                         }
+                    }
+
+                    int srcIndex = 0;
+                    int dstIndex = 0;
+                    int pixelCount = header.Width * header.Height;
+
+                    for (int i = 0; i < pixelCount; i++)
+                    {
+                        byte r = pixels[srcIndex + rO];
+                        byte g = pixels[srcIndex + gO];
+                        byte b = pixels[srcIndex + bO];
+                        byte a = pixels[srcIndex + aO];
+
+                        int argb = (a << 24) | (r << 16) | (g << 8) | b;
+
+                        bitmap.Bits[dstIndex] = argb;
+
+                        srcIndex += 4;
+                        dstIndex++;
                     }
 
                     return bitmap.Bitmap;
@@ -405,13 +409,14 @@ namespace BurnoutImage
             if (len == 0x30)
                 return PlatformType.PS3;
 
-            throw new InvalidDataException($"Unknown image header size: 0x{len:X}.");
+            return PlatformType.Invalid;
         }
     }
 
     public enum CompressionType
     {
-        UNKNOWN,
+        UNKNOWN = -1,
+
         RGBA,
         ARGB,
         BGRA,
@@ -421,6 +426,8 @@ namespace BurnoutImage
 
     public enum PlatformType
     {
+        Invalid = -1,
+
         Remastered,
         PC,
         PS3,
