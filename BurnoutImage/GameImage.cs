@@ -387,24 +387,29 @@ namespace BurnoutImage
 
             int len = data.Length;
 
+            using MemoryStream ms = new(data);
+            using BinaryReader2 br = new(ms);
+
             if (len == 0x40 || len == 0x60)
             {
                 if (len == 0x40)
                 {
-                    using (MemoryStream ms = new(data))
-                    using (BinaryReader2 br = new(ms))
-                    {
-                        uint ptr = br.ReadUInt32();
-                        if (ptr != 0)
-                            return PlatformType.X360;
-                    }
+                    ms.Seek(0x0, SeekOrigin.Begin);
+
+                    if (br.ReadUInt32() != 0)
+                        return PlatformType.X360;
                 }
 
                 return PlatformType.Remastered;
             }
 
             if (len == 0x20)
-                return PlatformType.PC;
+            {
+                ms.Seek(0x4, SeekOrigin.Begin);
+
+                if (br.ReadUInt32() == 0) // Texture interface ptr
+                    return PlatformType.PC;
+            }
 
             if (len == 0x30)
                 return PlatformType.PS3;
