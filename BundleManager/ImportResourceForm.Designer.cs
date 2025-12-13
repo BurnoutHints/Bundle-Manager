@@ -52,7 +52,7 @@ namespace BundleManager
             importButton.TabIndex = 0;
             importButton.Text = "Import";
             importButton.UseVisualStyleBackColor = true;
-            importButton.Click += button1_Click;
+            importButton.Click += importButton_Click;
             // 
             // resourceIDTextBox
             // 

@@ -783,9 +783,13 @@ namespace BundleManager
                     uint id = Convert.ToUInt32(hex, 16);
                 }
 
-                using (var importResourceForm = new ImportResourceForm(path))
+                using (ImportResourceForm importResourceForm = new(CurrentArchive, path))
                 {
-                    importResourceForm.ShowDialog(this);
+                    if (importResourceForm.ShowDialog(this) == DialogResult.OK)
+                    {
+                        CurrentArchive = importResourceForm.ResultArchive;
+                        UpdateDisplay();
+                    }
                 }
             }
         }

@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Reflection;
+using System.Globalization;
 
 namespace BundleUtilities
 {
@@ -96,6 +97,60 @@ namespace BundleUtilities
                 s = "0x" + s;
             TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
             value = (T)converter.ConvertFromString(s);
+        }
+
+        public static bool TryParseHexUInt(string s, out uint value)
+        {
+            try
+            {
+                Parse<uint>(s, true, out value);
+                return true;
+            }
+            catch
+            {
+                value = 0;
+                return false;
+            }
+        }
+
+        public static ushort ReadUInt16LE(byte[] data, int offset)
+        {
+            return (ushort)(data[offset]
+                | (data[offset + 1] << 8));
+        }
+
+        public static ushort ReadUInt16BE(byte[] data, int offset)
+        {
+            return (ushort)((data[offset] << 8)
+                | data[offset + 1]);
+        }
+
+        public static uint ReadUInt32LE(byte[] data, int offset)
+        {
+            return (uint)(data[offset]
+                | (data[offset + 1] << 8)
+                | (data[offset + 2] << 16)
+                | (data[offset + 3] << 24));
+        }
+
+        public static uint ReadUInt32BE(byte[] data, int offset)
+        {
+            return (uint)((data[offset] << 24)
+                | (data[offset + 1] << 16)
+                | (data[offset + 2] << 8)
+                | data[offset + 3]);
+        }
+
+        public static bool IsValidHex(string s)
+        {
+            if (string.IsNullOrWhiteSpace(s))
+                return false;
+
+            foreach (char c in s)
+                if (!Uri.IsHexDigit(c))
+                    return false;
+
+            return true;
         }
     }
 }
