@@ -1,0 +1,64 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore BundleManager.sln
+
+      - name: Build solution
+        run: msbuild BundleManager.sln /m /p:Configuration=Release
+
+      - name: Remove debug symbols and non-Windows binaries
+        shell: pwsh
+        run: |
+          $patterns = @('*.pdb', '*.dylib', '*.so')
+          foreach ($pattern in $patterns) {
+            Get-ChildItem -Path . -Recurse -File -Filter $pattern |
+              Where-Object { $_.FullName -match '\\(bin|obj)\\Release\\' } |
+              Remove-Item -Force -ErrorAction SilentlyContinue
+          }
+
+      - name: Remove empty folders recursively
+        shell: pwsh
+        run: |
+          $roots = Get-ChildItem -Path . -Directory -Recurse |
+            Where-Object { $_.FullName -match '\\(bin|obj)\\Release(\\|$)' }
+
+          do {
+            $removed = 0
+            $emptyDirs = $roots |
+              Sort-Object { $_.FullName.Length } -Descending |
+              Where-Object { $_.Exists } |
+              Where-Object { (Get-ChildItem -Path $_.FullName -Force | Measure-Object).Count -eq 0 }
+
+            foreach ($dir in $emptyDirs) {
+              Remove-Item -Path $dir.FullName -Force -ErrorAction SilentlyContinue
+              $removed++
+            }
+          } while ($removed -gt 0)
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: BundleManager-Release
+          if-no-files-found: warn
+          path: |
+            **/bin/Release/**
+            **/obj/Release/**
