@@ -160,6 +160,45 @@ namespace BundleFormat
             }
         }
 
+        private void RebuildRST()
+        {
+            XmlDocument doc = new XmlDocument();
+            XmlElement root = doc.CreateElement("ResourceStringTable");
+            doc.AppendChild(root);
+
+            bool hasNamedResources = false;
+
+            foreach (BundleEntry entry in Entries)
+            {
+                string name = entry.DebugInfo.Name?.Trim();
+                if (string.IsNullOrEmpty(name))
+                    continue;
+
+                XmlElement resource = doc.CreateElement("Resource");
+                resource.SetAttribute("id", entry.ID.ToString("X8"));
+                resource.SetAttribute("name", name);
+                resource.SetAttribute(
+                    "type",
+                    string.IsNullOrWhiteSpace(entry.DebugInfo.TypeName)
+                        ? entry.Type.ToString()
+                        : entry.DebugInfo.TypeName
+                );
+
+                root.AppendChild(resource);
+                hasNamedResources = true;
+            }
+
+            if (!hasNamedResources)
+            {
+                ResourceStringTable = null;
+                Flags &= ~Flags.HasResourceStringTable;
+                return;
+            }
+
+            ResourceStringTable = doc.OuterXml;
+            Flags |= Flags.HasResourceStringTable;
+        }
+
         public static BundleArchive Read(string path)
         {
             using (Stream s = File.OpenRead(path))
@@ -580,6 +619,8 @@ namespace BundleFormat
 
         public void Write(BinaryWriter2 bw)
         {
+            RebuildRST();
+
             bw.Write(BND2Magic);
             bw.Write(Version);
             bw.Write((int)Platform);
