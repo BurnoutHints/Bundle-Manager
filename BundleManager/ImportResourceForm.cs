@@ -51,6 +51,7 @@ namespace BundleManager
             ResolveDependencies();
 
             Properties.EntryType = InferEntryType(ref ms);
+            _newEntry.Type = Properties.EntryType;
 
             if (Properties.EntryType == EntryType.Invalid)
                 selectTypeLabel.Text = "Unable to auto detect resource type, please select it from the box below:";
@@ -89,6 +90,7 @@ namespace BundleManager
             if (resourceTypeComboBox.SelectedItem is EntryType entryType)
             {
                 Properties.EntryType = entryType;
+                _newEntry.Type = entryType;
             }
         }
 
@@ -311,7 +313,8 @@ namespace BundleManager
             ];
             
             _newEntry.Dirty = true;
-            
+            _newEntry.Type = Properties.EntryType;
+
             _newEntry.ID = Convert.ToUInt32(resourceIDTextBox.Text, 16);
             _newEntry.Index = _workingArchive.Entries.Count;
             _newEntry.DebugInfo = new()
