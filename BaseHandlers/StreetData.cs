@@ -726,7 +726,10 @@ namespace BaseHandlers
 
         public IEntryEditor GetEditor(BundleEntry entry)
         {
-            return null;
+            StreetDataEditor editor = new StreetDataEditor();
+            editor.Model = this;
+            editor.EditEvent += () => Write(entry);
+            return editor;
         }
     }
 }
