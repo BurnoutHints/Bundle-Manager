@@ -204,12 +204,16 @@ namespace BaseHandlers
     public class Junction
     {
         public SpanBase super_SpanBase { get; set; } = new SpanBase(); // 0x0 0xC
+        // mpaExits / miExitCount are written as 0 by the writer because the
+        // game's StreetData::FixUp() corrupts the per-junction exit arrays
+        // (see Write() for details), so the on-disk values are unreliable.
+        // Kept on the type so the reader can still inspect the original
+        // pointer if a tool wants to.
         [Browsable(false)]
         public int mpaExits { get; set; }                              // 0xC 0x4 (32-bit)
+        [Browsable(false)]
         public int miExitCount { get; set; }                           // 0x10 0x4
         public string macName { get; set; }                            // 0x14 0x10
-
-        public List<Exit> exits { get; set; } = new List<Exit>();
 
         public int RoadIndex
         {
@@ -238,24 +242,21 @@ namespace BaseHandlers
             mpaExits = br.ReadInt32();
             miExitCount = br.ReadInt32();
             macName = Encoding.ASCII.GetString(br.ReadBytes(16));
-
-            long savedPosition = br.BaseStream.Position;
-            br.BaseStream.Position = mpaExits;
-            exits.Clear();
-            for (int j = 0; j < miExitCount; j++)
-            {
-                Exit exit = new Exit();
-                exit.Read(br);
-                exits.Add(exit);
-            }
-            br.BaseStream.Position = savedPosition;
+            // Intentionally NOT reading the exit array. StreetData::FixUp()
+            // in retail Burnout Paradise overwrites large parts of that
+            // region (see StreetData.Write for the writeup), so the on-disk
+            // bytes are not reliable Exit structs.
         }
 
         public void Write(BinaryWriter2 bw)
         {
             super_SpanBase.Write(bw);
-            bw.Write(mpaExits);
-            bw.Write(miExitCount);
+            // Always emit zeroed pointer + count. The game ignores these
+            // (the responsibilities live in AI Sections / Traffic Data /
+            // Trigger Data / collision resources) and Burnout's FixUp bug
+            // means the original on-disk values point at corrupt memory.
+            bw.Write(0);
+            bw.Write(0);
             bw.Write(PadName(macName, 16));
         }
 
@@ -281,12 +282,12 @@ namespace BaseHandlers
         public long miRoadLimitId1 { get; set; }        // 0x20 0x8
         public string macDebugName { get; set; }        // 0x28 0x10
         public int mChallenge { get; set; }             // 0x38 0x4
+        // miSpanCount is written as 0; see Write() for the rationale.
+        [Browsable(false)]
         public int miSpanCount { get; set; }            // 0x3C 0x4
         public int unknown { get; set; }                // 0x40 0x4  (spec: uint32, always 1)
         [Browsable(false)]
         public byte[] padding { get; set; } = new byte[4]; // 0x44 0x4
-
-        public List<int> spans { get; set; } = new List<int>();
 
         public string DebugName
         {
@@ -336,13 +337,8 @@ namespace BaseHandlers
             miSpanCount = br.ReadInt32();
             unknown = br.ReadInt32();
             padding = br.ReadBytes(4);
-
-            long savedPosition = br.BaseStream.Position;
-            br.BaseStream.Position = mpaSpans;
-            spans.Clear();
-            for (int j = 0; j < miSpanCount; j++)
-                spans.Add(br.ReadInt32());
-            br.BaseStream.Position = savedPosition;
+            // Intentionally NOT reading the per-road span array. See
+            // StreetData.Write for the FixUp corruption details.
         }
 
         public void Write(BinaryWriter2 bw)
@@ -350,13 +346,14 @@ namespace BaseHandlers
             bw.Write(mReferencePosition.X);
             bw.Write(mReferencePosition.Y);
             bw.Write(mReferencePosition.Z);
-            bw.Write(mpaSpans);
+            // Always emit zeroed pointer + count; see Junction.Write.
+            bw.Write(0);
             bw.Write(mId);
             bw.Write(miRoadLimitId0);
             bw.Write(miRoadLimitId1);
             bw.Write(Junction.PadName(macDebugName, 16));
             bw.Write(mChallenge);
-            bw.Write(miSpanCount);
+            bw.Write(0);
             bw.Write(unknown);
             bw.Write(padding != null && padding.Length == 4 ? padding : new byte[4]);
         }
@@ -416,21 +413,7 @@ namespace BaseHandlers
         public List<Road> roads = new List<Road>();
         public List<ChallengeParScores> challenges = new List<ChallengeParScores>();
 
-        // Captured during Read so the writer can reproduce the spans + exits
-        // tail verbatim, preserving shared span arrays.
-        private byte[] _rawTail;
-        private int _tailOffset;
-
-        // Paradise stores miSize excluding trailing 16-byte alignment padding,
-        // so we keep the original value rather than recompute it.
-        private int _origMiSize;
-
-        // Counts captured at Read time so the writer can detect a list edit
-        // and force a tail rebuild.
-        private int[] _origJunctionExitCounts;
-        private int[] _origRoadSpanCounts;
-
-        private const int SIZEOF_CHALLENGE = 0x28;
+        private const int SIZEOF_CHALLENGE_PAR_SCORES_ENTRY = 0x28;
 
         private void Clear()
         {
@@ -443,24 +426,18 @@ namespace BaseHandlers
             junctions.Clear();
             roads.Clear();
             challenges.Clear();
-            _rawTail = null;
-            _tailOffset = 0;
-            _origMiSize = 0;
-            _origJunctionExitCounts = null;
-            _origRoadSpanCounts = null;
         }
 
         public bool Read(BundleEntry entry, ILoader loader = null)
         {
             Clear();
 
-            byte[] raw = entry.EntryBlocks[0].Data;
-            MemoryStream ms = new MemoryStream(raw);
+            MemoryStream ms = new MemoryStream(entry.EntryBlocks[0].Data);
             BinaryReader2 br = new BinaryReader2(ms);
             br.BigEndian = entry.Console;
 
             miVersion = br.ReadInt32();
-            _origMiSize = br.ReadInt32();
+            br.ReadInt32(); // miSize, recomputed on write
             mpaStreets = br.ReadInt32();
             mpaJunctions = br.ReadInt32();
             mpaRoads = br.ReadInt32();
@@ -493,8 +470,12 @@ namespace BaseHandlers
                 roads.Add(r);
             }
 
-            // No explicit miChallengeCount in the spec; the count matches
-            // miRoadCount on every real file we've seen.
+            // The header has no miChallengeCount; FixUp() in retail Burnout
+            // Paradise constructs miJunctionCount BitArrays here even though
+            // there are only miRoadCount real entries (this is a game bug -
+            // it should iterate miRoadCount times). The on-disk allocation
+            // matches the game allocation, so the file holds miRoadCount
+            // entries here followed by partially-corrupt bytes.
             br.BaseStream.Position = mpaChallengeParScores;
             for (int i = 0; i < miRoadCount; i++)
             {
@@ -503,49 +484,15 @@ namespace BaseHandlers
                 challenges.Add(c);
             }
 
-            _origJunctionExitCounts = new int[junctions.Count];
-            for (int i = 0; i < junctions.Count; i++)
-                _origJunctionExitCounts[i] = junctions[i].exits.Count;
-            _origRoadSpanCounts = new int[roads.Count];
-            for (int i = 0; i < roads.Count; i++)
-                _origRoadSpanCounts[i] = roads[i].spans.Count;
-
-            int tailStart = ComputeTailStart();
-            if (tailStart >= 0 && tailStart < raw.Length)
-            {
-                _tailOffset = tailStart;
-                _rawTail = new byte[raw.Length - tailStart];
-                Array.Copy(raw, tailStart, _rawTail, 0, _rawTail.Length);
-            }
-            else
-            {
-                _tailOffset = mpaChallengeParScores + challenges.Count * SIZEOF_CHALLENGE;
-                _rawTail = new byte[0];
-            }
-
             br.Close();
             ms.Close();
             return true;
         }
 
-        // The tail starts at the lowest referenced offset across mpaSpans and
-        // mpaExits, clamped to the end of the challenge section.
-        private int ComputeTailStart()
-        {
-            int lower = int.MaxValue;
-            for (int i = 0; i < roads.Count; i++)
-                if (roads[i].mpaSpans > 0 && roads[i].mpaSpans < lower) lower = roads[i].mpaSpans;
-            for (int i = 0; i < junctions.Count; i++)
-                if (junctions[i].mpaExits > 0 && junctions[i].mpaExits < lower) lower = junctions[i].mpaExits;
-            int minTail = mpaChallengeParScores + challenges.Count * SIZEOF_CHALLENGE;
-            if (lower == int.MaxValue) return minTail;
-            return Math.Max(lower, minTail);
-        }
-
         public bool Write(BundleEntry entry)
         {
-            // The spec has no explicit challenge count; the reader derives it
-            // from miRoadCount, so an unbalanced model would silently corrupt.
+            // The spec has no explicit challenge count and the reader uses
+            // miRoadCount, so an unbalanced model would silently corrupt.
             if (challenges.Count != roads.Count)
                 throw new InvalidOperationException(
                     "StreetData.Write: challenges.Count (" + challenges.Count +
@@ -555,7 +502,6 @@ namespace BaseHandlers
             BinaryWriter2 bw = new BinaryWriter2(ms);
             bw.BigEndian = entry.Console;
 
-            // Header is written with placeholders and patched at the end.
             long headerPos = ms.Position;
             bw.Write(miVersion);
             bw.Write(0); // miSize
@@ -567,134 +513,42 @@ namespace BaseHandlers
             bw.Write(junctions.Count);
             bw.Write(roads.Count);
 
-            PadTo(bw, 16);
+            bw.WritePadding();
             int streetsOffset = (int)ms.Position;
             for (int i = 0; i < streets.Count; i++) streets[i].Write(bw);
 
-            // Junction.mpaExits lives at offset 0xC; track the absolute
-            // stream position for each junction so it can be patched later.
-            PadTo(bw, 16);
+            bw.WritePadding();
             int junctionsOffset = (int)ms.Position;
-            long[] junctionExitFieldPos = new long[junctions.Count];
-            for (int i = 0; i < junctions.Count; i++)
-            {
-                long start = ms.Position;
-                junctionExitFieldPos[i] = start + 0xC;
-                junctions[i].Write(bw);
-            }
+            for (int i = 0; i < junctions.Count; i++) junctions[i].Write(bw);
 
-            // Same for Road.mpaSpans, also at offset 0xC.
-            PadTo(bw, 16);
+            bw.WritePadding();
             int roadsOffset = (int)ms.Position;
-            long[] roadSpanFieldPos = new long[roads.Count];
-            for (int i = 0; i < roads.Count; i++)
-            {
-                long start = ms.Position;
-                roadSpanFieldPos[i] = start + 0xC;
-                roads[i].Write(bw);
-            }
+            for (int i = 0; i < roads.Count; i++) roads[i].Write(bw);
 
-            PadTo(bw, 16);
+            bw.WritePadding();
             int challengesOffset = (int)ms.Position;
             for (int i = 0; i < challenges.Count; i++) challenges[i].Write(bw);
 
-            // Tail (spans + exits). Preserve the captured raw blob when
-            // no list mutations have happened (byte-exact, shared arrays
-            // preserved); otherwise pack each road/junction array
-            // sequentially and patch the sub-pointers.
-            PadTo(bw, 16);
-
-            int miSizeOut;
-
-            bool canPreserveTail =
-                _rawTail != null &&
-                _rawTail.Length > 0 &&
-                ms.Position <= _tailOffset;
-
-            // Compare against the Read-time snapshot, not against
-            // miExitCount / miSpanCount, which the caller could update
-            // independently of the list.
-            if (canPreserveTail &&
-                (_origJunctionExitCounts == null ||
-                 _origJunctionExitCounts.Length != junctions.Count))
-            {
-                canPreserveTail = false;
-            }
-            if (canPreserveTail)
-            {
-                for (int i = 0; i < junctions.Count; i++)
-                {
-                    if (junctions[i].exits.Count != _origJunctionExitCounts[i] ||
-                        junctions[i].miExitCount != _origJunctionExitCounts[i])
-                    {
-                        canPreserveTail = false;
-                        break;
-                    }
-                }
-            }
-            if (canPreserveTail &&
-                (_origRoadSpanCounts == null ||
-                 _origRoadSpanCounts.Length != roads.Count))
-            {
-                canPreserveTail = false;
-            }
-            if (canPreserveTail)
-            {
-                for (int i = 0; i < roads.Count; i++)
-                {
-                    if (roads[i].spans.Count != _origRoadSpanCounts[i] ||
-                        roads[i].miSpanCount != _origRoadSpanCounts[i])
-                    {
-                        canPreserveTail = false;
-                        break;
-                    }
-                }
-            }
-
-            if (canPreserveTail)
-            {
-                while (ms.Position < _tailOffset) bw.Write((byte)0);
-                bw.Write(_rawTail);
-                int totalSize = (int)ms.Position;
-                miSizeOut = _origMiSize > 0 ? _origMiSize : totalSize;
-            }
-            else
-            {
-                int[] newRoadSpanOffsets = new int[roads.Count];
-                for (int i = 0; i < roads.Count; i++)
-                {
-                    newRoadSpanOffsets[i] = (int)ms.Position;
-                    for (int j = 0; j < roads[i].spans.Count; j++)
-                        bw.Write(roads[i].spans[j]);
-                }
-
-                PadTo(bw, 16);
-                int[] newJunctionExitOffsets = new int[junctions.Count];
-                for (int i = 0; i < junctions.Count; i++)
-                {
-                    newJunctionExitOffsets[i] = (int)ms.Position;
-                    for (int j = 0; j < junctions[i].exits.Count; j++)
-                        junctions[i].exits[j].Write(bw);
-                }
-
-                // miSize excludes the trailing alignment pad.
-                int tailEnd = (int)ms.Position;
-                PadTo(bw, 16);
-                miSizeOut = tailEnd;
-
-                long savedPos = ms.Position;
-                for (int i = 0; i < roads.Count; i++)
-                {
-                    ms.Position = roadSpanFieldPos[i];
-                    bw.Write(newRoadSpanOffsets[i]);
-                }
-                for (int i = 0; i < junctions.Count; i++)
-                {
-                    ms.Position = junctionExitFieldPos[i];
-                    bw.Write(newJunctionExitOffsets[i]);
-                }
-                ms.Position = savedPos;
-            }
+            // The game's StreetData::FixUp() iterates miJunctionCount times
+            // (a Burnout bug; it should be miRoadCount) when constructing
+            // mDirty / mValidScores BitArrays inside ChallengeParScoresEntry.
+            // The extra iterations write past the real challenge entries, so
+            // the resource MUST extend at least to
+            //
+            //     mpaChallengeParScores + miJunctionCount * 0x28
+            //
+            // or FixUp() will trample whatever lives after the resource at
+            // runtime. We pad with zeroes here to keep that memory writeable.
+            //
+            // Road span and junction exit arrays used to live in this region
+            // in retail data, but the FixUp bug overwrites them, so the
+            // values are unreliable and the game ignores them. We omit them
+            // entirely - per-road / per-junction mpaSpans, miSpanCount,
+            // mpaExits, miExitCount are all written as 0.
+            int fixUpEnd = challengesOffset + junctions.Count * SIZEOF_CHALLENGE_PAR_SCORES_ENTRY;
+            while (ms.Position < fixUpEnd) bw.Write((byte)0);
+            int miSizeOut = (int)ms.Position;
+            bw.WritePadding();
 
             ms.Position = headerPos + 4;
             bw.Write(miSizeOut);
@@ -710,13 +564,6 @@ namespace BaseHandlers
             entry.EntryBlocks[0].Data = data;
             entry.Dirty = true;
             return true;
-        }
-
-        private static void PadTo(BinaryWriter2 bw, int alignment)
-        {
-            long pos = bw.BaseStream.Position;
-            long pad = (alignment - (pos % alignment)) % alignment;
-            for (long i = 0; i < pad; i++) bw.Write((byte)0);
         }
 
         public EntryType GetEntryType(BundleEntry entry)

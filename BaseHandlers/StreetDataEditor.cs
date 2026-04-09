@@ -130,7 +130,6 @@ namespace BaseHandlers
                     roadIdx == -1 ? "-" : roadIdx.ToString(),
                     j.super_SpanBase.miSpanIndex.ToString(),
                     j.super_SpanBase.meSpanType.ToString(),
-                    j.exits.Count.ToString(),
                     (j.macName ?? string.Empty).TrimEnd('\0'),
                 };
             };
@@ -151,11 +150,8 @@ namespace BaseHandlers
                         miSpanIndex = src.super_SpanBase.miSpanIndex,
                         meSpanType = src.super_SpanBase.meSpanType,
                     },
-                    miExitCount = src.miExitCount,
                     macName = src.macName,
                 };
-                foreach (Exit e in src.exits)
-                    copy.exits.Add(new Exit { mSpan = e.mSpan, mrAngle = e.mrAngle });
                 _model.junctions.Insert(i + 1, copy);
             };
             BuildContextMenu(ctx);
@@ -175,7 +171,6 @@ namespace BaseHandlers
                     r.mReferencePosition.X.ToString("0.###", CultureInfo.InvariantCulture),
                     r.mReferencePosition.Y.ToString("0.###", CultureInfo.InvariantCulture),
                     r.mReferencePosition.Z.ToString("0.###", CultureInfo.InvariantCulture),
-                    r.miSpanCount.ToString(),
                     r.mChallenge.ToString(),
                     r.mId.ToString(),
                 };
@@ -204,10 +199,8 @@ namespace BaseHandlers
                     miRoadLimitId1 = src.miRoadLimitId1,
                     macDebugName = src.macDebugName,
                     mChallenge = src.mChallenge,
-                    miSpanCount = src.miSpanCount,
                     unknown = src.unknown,
                 };
-                foreach (int s in src.spans) copy.spans.Add(s);
                 _model.roads.Insert(i + 1, copy);
                 _model.challenges.Insert(i + 1, new ChallengeParScores());
             };

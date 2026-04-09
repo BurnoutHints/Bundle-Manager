@@ -131,12 +131,12 @@ namespace BaseHandlers
             // junctionsList
             //
             ConfigureListView(junctionsList, junctionsContextMenu, "junctionsList",
-                new[] { "#", "RoadIndex", "SpanIndex", "SpanType", "ExitCount", "Name" });
+                new[] { "#", "RoadIndex", "SpanIndex", "SpanType", "Name" });
             //
             // roadsList
             //
             ConfigureListView(roadsList, roadsContextMenu, "roadsList",
-                new[] { "#", "DebugName", "RefX", "RefY", "RefZ", "SpanCount", "Challenge", "GameDB ID" });
+                new[] { "#", "DebugName", "RefX", "RefY", "RefZ", "Challenge", "GameDB ID" });
             //
             // challengesList
             //
