@@ -179,5 +179,17 @@ namespace BundleUtilities
 
             return false;
         }
+
+        public static void CalculateResourceIDFromName(string resourceName, out uint resourceID)
+        {
+            // example: bundlemanager://<selected name>.<selected type>
+            resourceID = Crc32.HashEntryID(resourceName.ToLower());
+        }
+
+        public static void CalculateResourceIDFromName(string resourceName, out string resourceID)
+        {
+            CalculateResourceIDFromName(resourceName, out uint id);
+            resourceID = id.ToString("X8");
+        }
     }
 }

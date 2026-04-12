@@ -102,8 +102,9 @@ namespace BundleManager
         {
             AutoUpdateID = autoUpdateIDCheckBox.Checked;
             resourceIDTextBox.ReadOnly = autoUpdateIDCheckBox.Checked;
+            
             if (AutoUpdateID)
-                CalculateResourceIDFromName();
+                RecalculateResourceIDTextBox();
         }
 
         private void resourceNameTextBox_TextChanged(object sender, EventArgs e)
@@ -111,7 +112,7 @@ namespace BundleManager
             ImportName = resourceNameTextBox.Text;
 
             if (AutoUpdateID)
-                CalculateResourceIDFromName();
+                RecalculateResourceIDTextBox();
         }
 
         private void primaryDataPathSelectorButton_Click(object sender, EventArgs e)
@@ -135,38 +136,26 @@ namespace BundleManager
         }
 #endregion
 
-        void CalculateResourceIDFromName()
-        {
-            resourceIDTextBox.Text =
-                Crc32.HashEntryID
-                (
-                    // example: bundlemanager://<selected name>.<selected type>
-                    $"{resourceNamePrefixLabel.Text}{ImportName.ToLower()}.{Properties.EntryType.ToString()}"
-                    .ToLower()
-                )
-                .ToString("X8");
-        }
-
         void RegisterDataBlockProperties()
         {
-            Properties.Entries[0].PathSelectorControls = new()
-            {
+            Properties.Entries[0].PathSelectorControls =
+            [
                 primaryDataPathSelectorButton,
                 primaryResourcePathTextBox,
                 primaryImportPathLabel
-            };
-            Properties.Entries[1].PathSelectorControls = new()
-            {
+            ];
+            Properties.Entries[1].PathSelectorControls =
+            [
                 secondaryDataPathSelectorButton,
                 secondaryResourcePathTextBox,
                 secondaryImportPathLabel
-            };
-            Properties.Entries[2].PathSelectorControls = new()
-            {
+            ];
+            Properties.Entries[2].PathSelectorControls =
+            [
                 tertiaryDataPathSelectorButton,
                 tertiaryResourcePathTextBox,
                 tertiaryImportPathLabel
-            };
+            ];
 
             for (int i = 0; i < Properties.Entries.Length; i++)
             {
@@ -217,14 +206,16 @@ namespace BundleManager
             byte[] data = memoryStream.ToArray();
 
             // AttribSysVault
-            bool attribSysBE = Utilities.ContainsASCII(data, "StrN")
-                            && Utilities.ContainsASCII(data, "Vers");
-
-            bool attribSysLE = Utilities.ContainsASCII(data, "NrtS")
-                            && Utilities.ContainsASCII(data, "sreV");
-
-            if (attribSysLE || attribSysBE)
+            if (_workingArchive.Console switch
+            {
+                true => Utilities.ContainsASCII(data, "StrN")
+                     && Utilities.ContainsASCII(data, "Vers"),
+                false => Utilities.ContainsASCII(data, "NrtS")
+                      && Utilities.ContainsASCII(data, "sreV")
+            } == true)
+            {
                 return EntryType.AttribSysVault;
+            }
 
             EntryType type = EntryType.Invalid;
 
@@ -292,6 +283,22 @@ namespace BundleManager
                 if (Properties.Entries[i].Path != path)
                     Properties.Entries[i].Path = path;
             }
+        }
+        
+        private void RecalculateResourceIDTextBox()
+        {
+            Utilities.CalculateResourceIDFromName
+            (
+                string.Concat
+                (
+                    resourceNamePrefixLabel.Text,
+                    ImportName.ToLowerInvariant(),
+                    ".",
+                    Properties.EntryType.ToString()
+                ),
+                out string id
+            );
+            resourceIDTextBox.Text = id;
         }
 
         void SelectNewDataChunkDialog(byte index)
