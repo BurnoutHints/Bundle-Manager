@@ -25,13 +25,13 @@ jobs:
       - name: Build solution
         run: msbuild BundleManager.sln /m /p:Configuration=Release
 
-      - name: Remove debug symbols and non-Windows binaries
+      - name: Remove debugging symbols
         shell: pwsh
         run: |
-          $patterns = @('*.pdb', '*.dylib', '*.so')
+          $patterns = @('*.pdb')
           foreach ($pattern in $patterns) {
             Get-ChildItem -Path . -Recurse -File -Filter $pattern |
-              Where-Object { $_.FullName -match '\\(bin|obj)\\Release\\' } |
+              Where-Object { $_.FullName -match '\\bin\\Release\\' } |
               Remove-Item -Force -ErrorAction SilentlyContinue
           }
 
@@ -41,7 +41,7 @@ jobs:
           do {
             $removed = 0
             $emptyDirs = Get-ChildItem -Path . -Directory -Recurse -ErrorAction SilentlyContinue |
-              Where-Object { $_.FullName -match '\\(bin|obj)\\Release(\\|$)' } |
+              Where-Object { $_.FullName -match '\\bin\\Release(\\|$)' } |
               Sort-Object { $_.FullName.Length } -Descending |
               Where-Object {
                 if (-not (Test-Path -LiteralPath $_.FullName -PathType Container)) {
@@ -65,5 +65,4 @@ jobs:
           name: BundleManager-Release
           if-no-files-found: warn
           path: |
-            **/bin/Release/**
-            **/obj/Release/**
+            BundleManager/bin/Release/**
