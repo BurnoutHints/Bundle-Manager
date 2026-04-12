@@ -152,5 +152,32 @@ namespace BundleUtilities
 
             return true;
         }
+
+        public static bool ContainsASCII(byte[] data, string value)
+        {
+            if (data.Length < value.Length)
+                return false;
+
+            byte[] pattern = Encoding.ASCII.GetBytes(value);
+
+            for (int i = 0; i <= data.Length - pattern.Length; i++)
+            {
+                bool match = true;
+
+                for (int j = 0; j < pattern.Length; j++)
+                {
+                    if (data[i + j] != pattern[j])
+                    {
+                        match = false;
+                        break;
+                    }
+                }
+
+                if (match)
+                    return true;
+            }
+
+            return false;
+        }
     }
 }

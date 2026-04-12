@@ -69,6 +69,8 @@ namespace BundleManager
             tertiaryResourcePathTextBox.Validated += UpdateDataPathsFromTextBoxes;
         }
 
+        #region Event Handlers
+
         private void ResourceIDTextBox_Validating(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (!Utilities.IsValidHex(resourceIDTextBox.Text))
@@ -111,6 +113,27 @@ namespace BundleManager
             if (AutoUpdateID)
                 CalculateResourceIDFromName();
         }
+
+        private void primaryDataPathSelectorButton_Click(object sender, EventArgs e)
+        {
+            SelectNewDataChunkDialog(0);
+        }
+
+        private void secondaryDataPathSelectorButton_Click(object sender, EventArgs e)
+        {
+            SelectNewDataChunkDialog(1);
+        }
+
+        private void tertiaryDataPathSelectorButton_Click(object sender, EventArgs e)
+        {
+            SelectNewDataChunkDialog(2);
+        }
+
+        private void importButton_Click(object sender, EventArgs e)
+        {
+            RunImportOperation();
+        }
+#endregion
 
         void CalculateResourceIDFromName()
         {
@@ -187,44 +210,59 @@ namespace BundleManager
             MessageBox.Show($"Resolved {_newEntry.Dependencies.Count} dependencies for the imported resource.");
         }
 
+        // This really needs to be put in a better spot
         EntryType InferEntryType(ref MemoryStream memoryStream)
         {
             long originalPos = memoryStream.Position;
+            byte[] data = memoryStream.ToArray();
+
+            // AttribSysVault
+            bool attribSysBE = Utilities.ContainsASCII(data, "StrN")
+                            && Utilities.ContainsASCII(data, "Vers");
+
+            bool attribSysLE = Utilities.ContainsASCII(data, "NrtS")
+                            && Utilities.ContainsASCII(data, "sreV");
+
+            if (attribSysLE || attribSysBE)
+                return EntryType.AttribSysVault;
+
             EntryType type = EntryType.Invalid;
 
-            ms.Seek(0x0, SeekOrigin.Begin);
+            memoryStream.Seek(0x0, SeekOrigin.Begin);
 
-            if (GameImage.DetectPlatform(ms.ToArray()) is PlatformType p
+            // Texture
+            if (GameImage.DetectPlatform(data) is PlatformType p
                 && p != PlatformType.Invalid
                 && _newEntry.Dependencies.Count == 0)
             {
                 type = EntryType.Texture;
             }
-            else if (ms.Length <= 0x20) // Model
+            // Model
+            else if (memoryStream.Length <= 0x20)
             {
                 // 32 bit model
-                ms.Seek(0x13, SeekOrigin.Begin);
-                byte modelCandidate32 = (byte)ms.ReadByte();
+                memoryStream.Seek(0x13, SeekOrigin.Begin);
+                byte modelCandidate32 = (byte)memoryStream.ReadByte();
 
-                if (ms.Length > 0x14) // 64 bit model (32 bit is technically padded to nearest 0x10, so this would run anyway)
+                // 64 bit model (32 bit is technically padded to nearest 0x10, so this would run anyway)
+                if (memoryStream.Length > 0x14)
                 {
-                    // 64 bit model
-                    ms.Seek(0x1F, SeekOrigin.Begin);
+                    memoryStream.Seek(0x1F, SeekOrigin.Begin);
 
-                    if (ms.ReadByte() == 0x2)
+                    if (memoryStream.ReadByte() == 0x2)
                         type = EntryType.Model;
                 }
 
                 if (modelCandidate32 == 0x2)
                     type = EntryType.Model;
             }
+            // Renderable
             else
             {
-                // renderable
                 if (_workingArchive.Console switch
                 {
-                    true => Utilities.ReadUInt16BE(ms.ToArray(), 0x10),
-                    false => Utilities.ReadUInt16LE(ms.ToArray(), 0x10)
+                    true => Utilities.ReadUInt16BE(data, 0x10),
+                    false => Utilities.ReadUInt16LE(data, 0x10)
                 } == 11) // mu16VersionNumber
                 {
                     type = EntryType.Renderable;
@@ -254,26 +292,6 @@ namespace BundleManager
                 if (Properties.Entries[i].Path != path)
                     Properties.Entries[i].Path = path;
             }
-        }
-
-        private void primaryDataPathSelectorButton_Click(object sender, EventArgs e)
-        {
-            SelectNewDataChunkDialog(0);
-        }
-
-        private void secondaryDataPathSelectorButton_Click(object sender, EventArgs e)
-        {
-            SelectNewDataChunkDialog(1);
-        }
-
-        private void tertiaryDataPathSelectorButton_Click(object sender, EventArgs e)
-        {
-            SelectNewDataChunkDialog(2);
-        }
-
-        private void importButton_Click(object sender, EventArgs e)
-        {
-            RunImportOperation();
         }
 
         void SelectNewDataChunkDialog(byte index)
@@ -528,6 +546,8 @@ namespace BundleManager
 
         #endregion
 
+        #region Data Chunks
+
         private static string GetDataChunkName(int index)
         {
             return index >= 0 && index < DataChunkNames.Length
@@ -593,8 +613,8 @@ namespace BundleManager
             }
             private bool _visible;
 
-            public List<Control>? PathSelectorControls;
-            public Action? PathChanged;
+            public List<Control> PathSelectorControls;
+            public Action PathChanged;
             public string Path
             {
                 get => _path;
@@ -606,5 +626,7 @@ namespace BundleManager
             }
             private string _path;
         }
+
+        #endregion
     }
 }

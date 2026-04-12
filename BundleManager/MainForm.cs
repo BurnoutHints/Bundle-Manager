@@ -598,6 +598,41 @@ namespace BundleManager
             Search();
         }
 
+        private void addResourcesToBundleToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (CurrentArchive == null)
+                return;
+
+            using OpenFileDialog ofd = new();
+
+            ofd.Title = "Please select the primary resource (or header) to import";
+            ofd.Filter = "Binary Files|*.dat;*.bin|Image Files(*.dds,*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp)|*.dds;*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp|All files (*.*)|*.*";
+
+            if (ofd.ShowDialog(this) != DialogResult.OK)
+                return;
+
+            var path = ofd.FileName;
+
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return;
+
+            Match m = ResourceIDPattern().Match(Path.GetFileNameWithoutExtension(path));
+
+            if (m.Success)
+            {
+                string hex = m.Value;
+                uint id = Convert.ToUInt32(hex, 16);
+            }
+
+            using ImportResourceForm importResourceForm = new(CurrentArchive, path);
+
+            if (importResourceForm.ShowDialog(this) == DialogResult.OK)
+            {
+                CurrentArchive = importResourceForm.ResultArchive;
+                UpdateDisplay();
+            }
+        }
+
         #endregion
 
         #region Utility
@@ -762,39 +797,9 @@ namespace BundleManager
             }
         }
 
+        [GeneratedRegex(@"\b[0-9A-Fa-f]{8}\b")]
+        private static partial Regex ResourceIDPattern();
+
         #endregion
-
-        private void addResourcesToBundleToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            using (var ofd = new OpenFileDialog())
-            {
-                ofd.Title = "Please select the primary resource (or header) to import";
-                ofd.Filter = "Binary Files|*.dat;*.bin|Image Files(*.dds,*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp)|*.dds;*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp|All files (*.*)|*.*";
-
-                if (ofd.ShowDialog(this) != DialogResult.OK)
-                    return;
-
-                var path = ofd.FileName;
-
-                if (string.IsNullOrEmpty(path) || !File.Exists(path))
-                    return;
-
-                Match m = Regex.Match(Path.GetFileNameWithoutExtension(path), @"\b[0-9A-Fa-f]{8}\b");
-                if (m.Success)
-                {
-                    string hex = m.Value;
-                    uint id = Convert.ToUInt32(hex, 16);
-                }
-
-                using (ImportResourceForm importResourceForm = new(CurrentArchive, path))
-                {
-                    if (importResourceForm.ShowDialog(this) == DialogResult.OK)
-                    {
-                        CurrentArchive = importResourceForm.ResultArchive;
-                        UpdateDisplay();
-                    }
-                }
-            }
-        }
     }
 }
