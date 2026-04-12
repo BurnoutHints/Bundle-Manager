@@ -2,7 +2,6 @@
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -16,7 +15,6 @@
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
@@ -31,6 +29,9 @@
   <PropertyGroup>
     <ApplicationManifest>App.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Update="BetterListView.cs">
       <SubType>Component</SubType>
@@ -40,31 +41,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BundleFormat\BundleFormat.csproj" />
-    <ProjectReference Include="..\BundleUtilities\BundleUtilities.csproj" />
-    <ProjectReference Include="..\BurnoutImage\BurnoutImage.csproj" />
-    <ProjectReference Include="..\HexEditor\HexEditor.csproj" />
-    <ProjectReference Include="..\IconLibrary\IconLibrary.csproj" />
-    <ProjectReference Include="..\LangEditor\LangEditor.csproj" />
-    <ProjectReference Include="..\MathLib\MathLib.csproj" />
-    <ProjectReference Include="..\ModelViewer\ModelViewer.csproj" />
-    <ProjectReference Include="..\PluginAPI\PluginAPI.csproj" />
-    <ProjectReference Include="..\PluginSystem\PluginSystem.csproj" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="icon.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.5.2 %28x86 und x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DebugHelper" Version="1.0.0" />
@@ -72,7 +49,60 @@
     <PackageReference Include="ScottPlot.WinForms" Version="5.0.54" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.12" />
   </ItemGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy &quot;$(SolutionDir)libs\*&quot; &quot;$(ProjectDir)$(OutDir)&quot; /s /e /y&#xD;&#xA;xcopy &quot;$(SolutionDir)resources\*&quot; &quot;$(ProjectDir)$(OutDir)&quot; /s /e /y" />
+  <ItemGroup>
+    <ProjectReference Include="..\BundleFormat\BundleFormat.csproj" />
+    <ProjectReference Include="..\BundleUtilities\BundleUtilities.csproj" />
+    <ProjectReference Include="..\BurnoutImage\BurnoutImage.csproj" />
+    <ProjectReference Include="..\HexEditor\HexEditor.csproj" />
+    <ProjectReference Include="..\LangEditor\LangEditor.csproj" />
+    <ProjectReference Include="..\PluginAPI\PluginAPI.csproj" />
+    <ProjectReference Include="..\PluginSystem\PluginSystem.csproj" />
+  </ItemGroup>
+  <Target Name="Plugins" BeforeTargets="Build">
+    <ItemGroup>
+      <PluginFiles Include="..\BaseHandlers\bin\$(Configuration)\$(TargetFramework)\BaseHandlers.dll;
+                            ..\BaseHandlers\bin\$(Configuration)\$(TargetFramework)\BaseHandlers.pdb;
+                            ..\LangEditor\bin\$(Configuration)\$(TargetFramework)\LangEditor.dll;
+                            ..\LangEditor\bin\$(Configuration)\$(TargetFramework)\LangEditor.pdb;
+                            ..\LoopModel\bin\$(Configuration)\$(TargetFramework)\LoopModel.dll;
+                            ..\LoopModel\bin\$(Configuration)\$(TargetFramework)\LoopModel.pdb;
+                            ..\LuaList\bin\$(Configuration)\$(TargetFramework)\LuaList.dll;
+                            ..\LuaList\bin\$(Configuration)\$(TargetFramework)\LuaList.pdb;
+                            ..\PVSFormat\bin\$(Configuration)\$(TargetFramework)\PVSFormat.dll;
+                            ..\PVSFormat\bin\$(Configuration)\$(TargetFramework)\PVSFormat.pdb;
+                            ..\VaultFormat\bin\$(Configuration)\$(TargetFramework)\VaultFormat.dll;
+                            ..\VaultFormat\bin\$(Configuration)\$(TargetFramework)\VaultFormat.pdb;
+                            ..\VehicleList\bin\$(Configuration)\$(TargetFramework)\VehicleList.dll;
+                            ..\VehicleList\bin\$(Configuration)\$(TargetFramework)\VehicleList.pdb;
+                            ..\WheelList\bin\$(Configuration)\$(TargetFramework)\WheelList.dll;
+                            ..\WheelList\bin\$(Configuration)\$(TargetFramework)\WheelList.pdb;
+                            ..\WorldCollisionHandler\bin\$(Configuration)\$(TargetFramework)\WorldCollisionHandler.dll;
+                            ..\WorldCollisionHandler\bin\$(Configuration)\$(TargetFramework)\WorldCollisionHandler.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(PluginFiles)"
+          DestinationFolder="$(OutputPath)plugins"
+          SkipUnchangedFiles="true" />
   </Target>
+  <ItemGroup>
+    <ShaderFiles Include="$(SolutionDir)resources\Shaders\**\*.*" />
+  </ItemGroup>
+  <Target Name="Shaders" AfterTargets="Build">
+    <Copy SourceFiles="@(ShaderFiles)"
+          DestinationFolder="$(OutputPath)Shaders"
+          SkipUnchangedFiles="true" />
+  </Target>
+  <ItemGroup>
+    <Content Include="$(OutputPath)plugins\*.dll">
+      <Link>plugins\%(FileName)%(Extension)</Link>
+      <PublishState>Include</PublishState>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\LangEditor\keys\**\*.*">
+      <Visible>false</Visible>
+      <Link>keys\%(RecursiveDir)%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
