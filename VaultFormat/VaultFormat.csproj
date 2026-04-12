@@ -16,6 +16,9 @@
     <Compile Remove="Properties\Resources.Designer.cs" />
     <EmbeddedResource Remove="Properties\Resources.resx" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)BundleManager\bin\$(ConfigurationName)\$(TargetFramework)\plugins\&quot; /s /e /y" />
   </Target>
