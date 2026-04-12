@@ -45,10 +45,7 @@ namespace BaseHandlers
 
                     if (descEntry1 != null && descEntry1.Type == EntryType.Texture)
                     {
-                        if (entry.Console)
-                            result.Texture = GameImage.GetImagePS3(descEntry1.EntryBlocks[0].Data, descEntry1.EntryBlocks[1].Data);
-                        else
-                            result.Texture = GameImage.GetImage(descEntry1.EntryBlocks[0].Data, descEntry1.EntryBlocks[1].Data);
+                        result.Texture = GameImage.GetImage(descEntry1.EntryBlocks[0].Data, descEntry1.EntryBlocks[1].Data);
 
                         if (result.Texture != null)
                             TextureCache.AddToCache(id, result.Texture);

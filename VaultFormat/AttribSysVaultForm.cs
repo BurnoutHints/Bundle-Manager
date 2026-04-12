@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Globalization;
 using System.Windows.Forms;
+using System.IO;
+using Newtonsoft.Json;
 using PluginAPI;
 using BundleUtilities;
 using LangEditor;
@@ -128,6 +130,33 @@ namespace VaultFormat
         {
             EditEvent?.Invoke();
             UpdateDisplay();
+        }
+
+        private void exportVaultToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // Dialog Creation
+            SaveFileDialog saveDialog = new SaveFileDialog();
+            saveDialog.Filter = "JSON File (*.json)|*.json";
+            saveDialog.Title = "Save AttribSys as JSON";
+            saveDialog.FileName = "AttribSys.json";
+
+            // Dialog Logic
+            if (saveDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    // Convertion of the AttribSys. Might need smarter structure to only keep the essential data concerning the configuration of the vehicle
+                    string jsonContent = JsonConvert.SerializeObject(AttribSys, Formatting.Indented);
+
+                    File.WriteAllText(saveDialog.FileName, jsonContent);
+
+                    MessageBox.Show("Successfully exported to " + saveDialog.FileName, "Export Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Failed to export file. Error: " + ex.Message, "Export Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
     }
 }
