@@ -614,7 +614,7 @@ namespace BundleManager
             private bool _visible;
 
             public List<Control> PathSelectorControls;
-            public Action PathChanged;
+            public Action? PathChanged;
             public string Path
             {
                 get => _path;
