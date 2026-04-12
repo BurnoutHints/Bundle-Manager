@@ -470,14 +470,17 @@ namespace BundleManager
                         }
                         catch (ReadFailedError ex)
                         {
+
+                            Console.Out.WriteLine(ex.ToString());
                             MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             failure = true;
 
                             throw;
                         }
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
+                        Console.Out.WriteLine(e.ToString());
                         MessageBox.Show("Failed to load Entry", "Error", MessageBoxButtons.OK,
                             MessageBoxIcon.Error);
                         failure = true;
