@@ -28,7 +28,6 @@ namespace BundleManager
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ImportResourceForm));
             importButton = new System.Windows.Forms.Button();
             resourceIDTextBox = new System.Windows.Forms.TextBox();
             label1 = new System.Windows.Forms.Label();
@@ -41,7 +40,13 @@ namespace BundleManager
             resourceTypeComboBox = new System.Windows.Forms.ComboBox();
             tertiaryDataPathSelectorButton = new System.Windows.Forms.Button();
             resourceNamePrefixLabel = new System.Windows.Forms.Label();
-            importPathsLabel = new System.Windows.Forms.Label();
+            primaryImportPathLabel = new System.Windows.Forms.Label();
+            primaryResourcePathTextBox = new System.Windows.Forms.TextBox();
+            secondaryImportPathLabel = new System.Windows.Forms.Label();
+            secondaryResourcePathTextBox = new System.Windows.Forms.TextBox();
+            tertiaryImportPathLabel = new System.Windows.Forms.Label();
+            tertiaryResourcePathTextBox = new System.Windows.Forms.TextBox();
+            primaryDataPathSelectorButton = new System.Windows.Forms.Button();
             SuspendLayout();
             // 
             // importButton
@@ -102,7 +107,7 @@ namespace BundleManager
             // 
             // secondaryDataPathSelectorButton
             // 
-            secondaryDataPathSelectorButton.Location = new System.Drawing.Point(11, 258);
+            secondaryDataPathSelectorButton.Location = new System.Drawing.Point(508, 175);
             secondaryDataPathSelectorButton.Name = "secondaryDataPathSelectorButton";
             secondaryDataPathSelectorButton.Size = new System.Drawing.Size(140, 23);
             secondaryDataPathSelectorButton.TabIndex = 6;
@@ -141,7 +146,7 @@ namespace BundleManager
             // 
             // tertiaryDataPathSelectorButton
             // 
-            tertiaryDataPathSelectorButton.Location = new System.Drawing.Point(157, 258);
+            tertiaryDataPathSelectorButton.Location = new System.Drawing.Point(508, 220);
             tertiaryDataPathSelectorButton.Name = "tertiaryDataPathSelectorButton";
             tertiaryDataPathSelectorButton.Size = new System.Drawing.Size(140, 23);
             tertiaryDataPathSelectorButton.TabIndex = 11;
@@ -158,22 +163,82 @@ namespace BundleManager
             resourceNamePrefixLabel.TabIndex = 12;
             resourceNamePrefixLabel.Text = "bundlemanager://";
             // 
-            // importPathsLabel
+            // primaryImportPathLabel
             // 
-            importPathsLabel.AutoSize = true;
-            importPathsLabel.Location = new System.Drawing.Point(11, 117);
-            importPathsLabel.Name = "importPathsLabel";
-            importPathsLabel.Size = new System.Drawing.Size(571, 120);
-            importPathsLabel.TabIndex = 13;
-            importPathsLabel.Text = resources.GetString("importPathsLabel.Text");
-            importPathsLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            primaryImportPathLabel.AutoSize = true;
+            primaryImportPathLabel.Location = new System.Drawing.Point(12, 114);
+            primaryImportPathLabel.Name = "primaryImportPathLabel";
+            primaryImportPathLabel.Size = new System.Drawing.Size(104, 15);
+            primaryImportPathLabel.TabIndex = 13;
+            primaryImportPathLabel.Text = "Primary data path:";
+            primaryImportPathLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            // 
+            // primaryResourcePathTextBox
+            // 
+            primaryResourcePathTextBox.Location = new System.Drawing.Point(12, 132);
+            primaryResourcePathTextBox.Name = "primaryResourcePathTextBox";
+            primaryResourcePathTextBox.Size = new System.Drawing.Size(490, 23);
+            primaryResourcePathTextBox.TabIndex = 14;
+            primaryResourcePathTextBox.Text = "my_really_cool_and_extremely_long_primary_resource_path";
+            // 
+            // secondaryImportPathLabel
+            // 
+            secondaryImportPathLabel.AutoSize = true;
+            secondaryImportPathLabel.Location = new System.Drawing.Point(12, 158);
+            secondaryImportPathLabel.Name = "secondaryImportPathLabel";
+            secondaryImportPathLabel.Size = new System.Drawing.Size(118, 15);
+            secondaryImportPathLabel.TabIndex = 15;
+            secondaryImportPathLabel.Text = "Secondary data path:";
+            secondaryImportPathLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            // 
+            // secondaryResourcePathTextBox
+            // 
+            secondaryResourcePathTextBox.Location = new System.Drawing.Point(12, 176);
+            secondaryResourcePathTextBox.Name = "secondaryResourcePathTextBox";
+            secondaryResourcePathTextBox.Size = new System.Drawing.Size(490, 23);
+            secondaryResourcePathTextBox.TabIndex = 16;
+            secondaryResourcePathTextBox.Text = "my_really_cool_and_extremely_long_secondary_resource_path";
+            // 
+            // tertiaryImportPathLabel
+            // 
+            tertiaryImportPathLabel.AutoSize = true;
+            tertiaryImportPathLabel.Location = new System.Drawing.Point(12, 202);
+            tertiaryImportPathLabel.Name = "tertiaryImportPathLabel";
+            tertiaryImportPathLabel.Size = new System.Drawing.Size(101, 15);
+            tertiaryImportPathLabel.TabIndex = 17;
+            tertiaryImportPathLabel.Text = "Tertiary data path:";
+            tertiaryImportPathLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            // 
+            // tertiaryResourcePathTextBox
+            // 
+            tertiaryResourcePathTextBox.Location = new System.Drawing.Point(12, 220);
+            tertiaryResourcePathTextBox.Name = "tertiaryResourcePathTextBox";
+            tertiaryResourcePathTextBox.Size = new System.Drawing.Size(490, 23);
+            tertiaryResourcePathTextBox.TabIndex = 18;
+            tertiaryResourcePathTextBox.Text = "my_really_cool_and_extremely_long_tertiary_resource_path";
+            // 
+            // primaryDataPathSelectorButton
+            // 
+            primaryDataPathSelectorButton.Location = new System.Drawing.Point(508, 132);
+            primaryDataPathSelectorButton.Name = "primaryDataPathSelectorButton";
+            primaryDataPathSelectorButton.Size = new System.Drawing.Size(140, 23);
+            primaryDataPathSelectorButton.TabIndex = 19;
+            primaryDataPathSelectorButton.Text = "Select Primary Data";
+            primaryDataPathSelectorButton.UseVisualStyleBackColor = true;
+            primaryDataPathSelectorButton.Click += primaryDataPathSelectorButton_Click;
             // 
             // ImportResourceForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(660, 293);
-            Controls.Add(importPathsLabel);
+            ClientSize = new System.Drawing.Size(659, 293);
+            Controls.Add(primaryDataPathSelectorButton);
+            Controls.Add(tertiaryResourcePathTextBox);
+            Controls.Add(tertiaryImportPathLabel);
+            Controls.Add(secondaryResourcePathTextBox);
+            Controls.Add(secondaryImportPathLabel);
+            Controls.Add(primaryResourcePathTextBox);
+            Controls.Add(primaryImportPathLabel);
             Controls.Add(resourceNamePrefixLabel);
             Controls.Add(tertiaryDataPathSelectorButton);
             Controls.Add(resourceTypeComboBox);
@@ -206,6 +271,12 @@ namespace BundleManager
         private System.Windows.Forms.ComboBox resourceTypeComboBox;
         private System.Windows.Forms.Button tertiaryDataPathSelectorButton;
         private System.Windows.Forms.Label resourceNamePrefixLabel;
-        private System.Windows.Forms.Label importPathsLabel;
+        private System.Windows.Forms.Label primaryImportPathLabel;
+        private System.Windows.Forms.TextBox primaryResourcePathTextBox;
+        private System.Windows.Forms.Label secondaryImportPathLabel;
+        private System.Windows.Forms.TextBox secondaryResourcePathTextBox;
+        private System.Windows.Forms.Label tertiaryImportPathLabel;
+        private System.Windows.Forms.TextBox tertiaryResourcePathTextBox;
+        private System.Windows.Forms.Button primaryDataPathSelectorButton;
     }
 }

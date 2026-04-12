@@ -1,7 +1,6 @@
 using BundleFormat;
-using BurnoutImage;
 using BundleUtilities;
-
+using BurnoutImage;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -65,6 +64,9 @@ namespace BundleManager
             resourceIDTextBox.KeyPress += ResourceIDTextBox_KeyPress;
             resourceIDTextBox.Validating += ResourceIDTextBox_Validating;
 
+            primaryResourcePathTextBox.Validated += UpdateDataPathsFromTextBoxes;
+            secondaryResourcePathTextBox.Validated += UpdateDataPathsFromTextBoxes;
+            tertiaryResourcePathTextBox.Validated += UpdateDataPathsFromTextBoxes;
         }
 
         private void ResourceIDTextBox_Validating(object sender, System.ComponentModel.CancelEventArgs e)
@@ -124,8 +126,24 @@ namespace BundleManager
 
         void RegisterDataBlockProperties()
         {
-            Properties.Entries[1].PathSelectorControl = secondaryDataPathSelectorButton;
-            Properties.Entries[2].PathSelectorControl = tertiaryDataPathSelectorButton;
+            Properties.Entries[0].PathSelectorControls = new()
+            {
+                primaryDataPathSelectorButton,
+                primaryResourcePathTextBox,
+                primaryImportPathLabel
+            };
+            Properties.Entries[1].PathSelectorControls = new()
+            {
+                secondaryDataPathSelectorButton,
+                secondaryResourcePathTextBox,
+                secondaryImportPathLabel
+            };
+            Properties.Entries[2].PathSelectorControls = new()
+            {
+                tertiaryDataPathSelectorButton,
+                tertiaryResourcePathTextBox,
+                tertiaryImportPathLabel
+            };
 
             for (int i = 0; i < Properties.Entries.Length; i++)
             {
@@ -176,8 +194,8 @@ namespace BundleManager
 
             ms.Seek(0x0, SeekOrigin.Begin);
 
-            if (GameImage.DetectPlatform(ms.ToArray()) is PlatformType p 
-                && p != PlatformType.Invalid 
+            if (GameImage.DetectPlatform(ms.ToArray()) is PlatformType p
+                && p != PlatformType.Invalid
                 && _newEntry.Dependencies.Count == 0)
             {
                 type = EntryType.Texture;
@@ -204,10 +222,10 @@ namespace BundleManager
             {
                 // renderable
                 if (_workingArchive.Console switch
-                    {
-                        true => Utilities.ReadUInt16BE(ms.ToArray(), 0x10),
-                        false => Utilities.ReadUInt16LE(ms.ToArray(), 0x10)
-                    } == 11) // mu16VersionNumber
+                {
+                    true => Utilities.ReadUInt16BE(ms.ToArray(), 0x10),
+                    false => Utilities.ReadUInt16LE(ms.ToArray(), 0x10)
+                } == 11) // mu16VersionNumber
                 {
                     type = EntryType.Renderable;
                 }
@@ -219,10 +237,28 @@ namespace BundleManager
 
         void OnAnyDataBlockPathsUpdated()
         {
-            importPathsLabel.Text =
-                $"Primary data path:\r\n{Properties.Entries[0].Path}" +
-                (Properties.DataChunkCount > 1 ? $"\r\n\r\nSecondary data path:\r\n{Properties.Entries[1].Path}" : string.Empty) +
-                (Properties.DataChunkCount > 2 ? $"\r\n\r\nTertiary data path:\r\n{Properties.Entries[2].Path}" : string.Empty);
+            primaryResourcePathTextBox.Text = Properties.Entries[0].Path;
+            secondaryResourcePathTextBox.Text = Properties.Entries[1].Path;
+            tertiaryResourcePathTextBox.Text = Properties.Entries[2].Path;
+        }
+
+        private void UpdateDataPathsFromTextBoxes(object sender, EventArgs e)
+        {
+            if (sender is not TextBox textBox)
+                return;
+
+            string path = textBox.Text;
+
+            for (int i = 0; i < Properties.Entries.Length; i++)
+            {
+                if (Properties.Entries[i].Path != path)
+                    Properties.Entries[i].Path = path;
+            }
+        }
+
+        private void primaryDataPathSelectorButton_Click(object sender, EventArgs e)
+        {
+            SelectNewDataChunkDialog(0);
         }
 
         private void secondaryDataPathSelectorButton_Click(object sender, EventArgs e)
@@ -304,14 +340,14 @@ namespace BundleManager
 
                 block2.Data = dataBlocks[1];
             }
-            
+
             _newEntry.EntryBlocks =
             [
                 block1,
                 block2,
                 block3
             ];
-            
+
             _newEntry.Dirty = true;
             _newEntry.Type = Properties.EntryType;
 
@@ -375,27 +411,27 @@ namespace BundleManager
             foreach (string line in lines)
             {
                 string trimmed = line.Trim();
-                
-                if (trimmed.Length == 0) 
+
+                if (trimmed.Length == 0)
                     continue;
-                
-                if (trimmed.StartsWith("#")) 
+
+                if (trimmed.StartsWith("#"))
                     continue;
 
                 if (trimmed[0] == '-')
                     trimmed = trimmed.Substring(1).TrimStart();
 
                 int colonIndex = trimmed.IndexOf(':');
-                if (colonIndex <= 0) 
+                if (colonIndex <= 0)
                     continue;
 
                 string offsetPart = trimmed.Substring(0, colonIndex).Trim();
                 string idPart = trimmed.Substring(colonIndex + 1).Trim();
 
-                if (!Utilities.TryParseHexUInt(offsetPart, out uint offset)) 
+                if (!Utilities.TryParseHexUInt(offsetPart, out uint offset))
                     continue;
-                
-                if (!Utilities.TryParseHexUInt(idPart, out uint id)) 
+
+                if (!Utilities.TryParseHexUInt(idPart, out uint id))
                     continue;
 
                 Dependency dep = new()
@@ -549,14 +585,15 @@ namespace BundleManager
                 set
                 {
                     _visible = value;
-                    if (PathSelectorControl != null)
-                        PathSelectorControl.Visible = value;
+                    if (PathSelectorControls.Count > 0)
+                        foreach (var control in PathSelectorControls)
+                            control.Visible = value;
                     Path = value == false ? string.Empty : Path;
                 }
             }
             private bool _visible;
 
-            public Control? PathSelectorControl;
+            public List<Control>? PathSelectorControls;
             public Action? PathChanged;
             public string Path
             {

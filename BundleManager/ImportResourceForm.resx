@@ -117,15 +117,4 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="importPathsLabel.Text" xml:space="preserve">
-    <value>Primary data path:
-C:\Users\Username\Desktop\MyReallyLongFolderName\Extracted Bundle\Texture\12345678_primary.dat
-
-Secondary data path:
-C:\Users\Username\Desktop\MyReallyLongFolderName\Extracted Bundle\Texture\12345678_secondary.dat
-
-Tertiary data path:
-C:\Users\Username\Desktop\MyReallyLongFolderName\Extracted Bundle\Model\12345678_tertiary.dat
-</value>
-  </data>
 </root>
