@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\BundleUtilities\BundleUtilities.csproj" />
+    <ProjectReference Include="..\MathLib\MathLib.csproj" />
     <ProjectReference Include="..\PluginAPI\PluginAPI.csproj" />
   </ItemGroup>
 </Project>
