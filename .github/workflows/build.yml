@@ -11,13 +11,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
 
       - name: Setup NuGet
-        uses: NuGet/setup-nuget@v2
+        uses: NuGet/setup-nuget@v3
 
       - name: Restore NuGet packages
         run: nuget restore BundleManager.sln
@@ -25,13 +25,13 @@ jobs:
       - name: Build solution
         run: msbuild BundleManager.sln /m /p:Configuration=Release
 
-      - name: Remove debug symbols and non-Windows binaries
+      - name: Remove debugging symbols
         shell: pwsh
         run: |
-          $patterns = @('*.pdb', '*.dylib', '*.so')
+          $patterns = @('*.pdb')
           foreach ($pattern in $patterns) {
             Get-ChildItem -Path . -Recurse -File -Filter $pattern |
-              Where-Object { $_.FullName -match '\\(bin|obj)\\Release\\' } |
+              Where-Object { $_.FullName -match '\\bin\\Release\\' } |
               Remove-Item -Force -ErrorAction SilentlyContinue
           }
 
@@ -41,7 +41,7 @@ jobs:
           do {
             $removed = 0
             $emptyDirs = Get-ChildItem -Path . -Directory -Recurse -ErrorAction SilentlyContinue |
-              Where-Object { $_.FullName -match '\\(bin|obj)\\Release(\\|$)' } |
+              Where-Object { $_.FullName -match '\\bin\\Release(\\|$)' } |
               Sort-Object { $_.FullName.Length } -Descending |
               Where-Object {
                 if (-not (Test-Path -LiteralPath $_.FullName -PathType Container)) {
@@ -60,10 +60,9 @@ jobs:
           } while ($removed -gt 0)
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: BundleManager-Release
           if-no-files-found: warn
           path: |
-            **/bin/Release/**
-            **/obj/Release/**
+            BundleManager/bin/Release/**
