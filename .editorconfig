@@ -7,3 +7,7 @@ charset = utf-8
 indent_style = space
 indent_size = 4
 dotnet_diagnostic.CA1416.severity = none
+
+[*.csproj]
+indent_style = space
+indent_size = 2

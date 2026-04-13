@@ -1,5 +1,6 @@
 using BundleUtilities;
 using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace BundleUtilities
@@ -12,6 +13,7 @@ namespace BundleUtilities
         private delegate object GetObject();
         private delegate void SetObject(object obj);
         private object _value;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public object Value
         {
             get
@@ -46,14 +48,17 @@ namespace BundleUtilities
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool IsDone { get; set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string Status
         {
             get => lblStatus.Text;
             set => lblStatus.Text = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public int Progress
         {
             get => pboMain.Value;

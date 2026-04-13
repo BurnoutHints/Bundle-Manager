@@ -1,5 +1,6 @@
 using BundleUtilities;
 using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace VehicleList
@@ -9,6 +10,7 @@ namespace VehicleList
         public delegate void Done(Vehicle vehicle);
         public event Done OnDone;
         private Vehicle _vehicle;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Vehicle Vehicle
         {
             get

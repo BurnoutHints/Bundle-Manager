@@ -1,11 +1,12 @@
+using PluginAPI;
 using System;
 using System.Collections;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows.Forms;
-using PluginAPI;
 
 namespace BaseHandlers
 {
@@ -14,6 +15,7 @@ namespace BaseHandlers
         public event Notify EditEvent;
 
         private StreetData _model;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public StreetData Model
         {
             get => _model;
