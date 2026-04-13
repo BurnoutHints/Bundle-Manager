@@ -1,5 +1,6 @@
-using System.Windows.Forms;
 using PluginAPI;
+using System.ComponentModel;
+using System.Windows.Forms;
 
 namespace LuaList
 {
@@ -9,6 +10,7 @@ namespace LuaList
         public event Notify EditEvent;
 
         private LuaList _luaList;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public LuaList LuaList
         {
             get => _luaList;

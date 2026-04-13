@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFrameworks>net8.0-windows;net9.0-windows;net10.0-windows</TargetFrameworks>
     <OutputType>WinExe</OutputType>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -18,18 +18,9 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup>
     <StartupObject>BundleManager.Program</StartupObject>
-  </PropertyGroup>
-  <PropertyGroup>
     <ApplicationIcon>icon.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup>
     <ApplicationManifest>App.manifest</ApplicationManifest>
-  </PropertyGroup>
-  <PropertyGroup>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>
@@ -58,7 +49,7 @@
     <ProjectReference Include="..\PluginAPI\PluginAPI.csproj" />
     <ProjectReference Include="..\PluginSystem\PluginSystem.csproj" />
   </ItemGroup>
-  <Target Name="Plugins" BeforeTargets="Build">
+  <Target Name="Plugins" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
     <ItemGroup>
       <PluginFiles Include="..\BaseHandlers\bin\$(Configuration)\$(TargetFramework)\BaseHandlers.dll;
                             ..\BaseHandlers\bin\$(Configuration)\$(TargetFramework)\BaseHandlers.pdb;
@@ -83,10 +74,10 @@
           DestinationFolder="$(OutputPath)plugins"
           SkipUnchangedFiles="true" />
   </Target>
-  <ItemGroup>
-    <ShaderFiles Include="$(SolutionDir)resources\Shaders\**\*.*" />
-  </ItemGroup>
-  <Target Name="Shaders" AfterTargets="Build">
+  <Target Name="Shaders" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
+    <ItemGroup>
+      <ShaderFiles Include="$(SolutionDir)resources\Shaders\**\*.*" />
+    </ItemGroup>
     <Copy SourceFiles="@(ShaderFiles)"
           DestinationFolder="$(OutputPath)Shaders"
           SkipUnchangedFiles="true" />

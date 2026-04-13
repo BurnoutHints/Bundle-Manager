@@ -6,6 +6,7 @@ using ModelViewer.SceneData;
 using PluginAPI;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -18,6 +19,7 @@ namespace BaseHandlers
 
         private InstanceList _instanceList;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public InstanceList InstanceList
         {
             get => _instanceList;

@@ -18,6 +18,7 @@ namespace BundleManager
         #region Variables and Properties
 
         private bool _subForm;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool SubForm
         {
             get { return _subForm; }

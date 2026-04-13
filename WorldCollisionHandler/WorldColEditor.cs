@@ -1,8 +1,9 @@
-using System;
-using System.Windows.Forms;
 using BundleUtilities;
 using DebugHelper;
 using PluginAPI;
+using System;
+using System.ComponentModel;
+using System.Windows.Forms;
 
 namespace WorldCollisionHandler
 {
@@ -12,6 +13,7 @@ namespace WorldCollisionHandler
         public event OnChanged Changed;
 
         private PolygonSoupList _poly;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public PolygonSoupList Poly
         {
             get => _poly;

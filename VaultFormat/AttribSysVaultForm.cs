@@ -1,12 +1,13 @@
-using System;
-using System.Collections;
-using System.Globalization;
-using System.Windows.Forms;
-using System.IO;
-using Newtonsoft.Json;
-using PluginAPI;
 using BundleUtilities;
 using LangEditor;
+using Newtonsoft.Json;
+using PluginAPI;
+using System;
+using System.Collections;
+using System.ComponentModel;
+using System.Globalization;
+using System.IO;
+using System.Windows.Forms;
 
 namespace VaultFormat
 {
@@ -21,6 +22,7 @@ namespace VaultFormat
         public event Notify EditEvent;
 
         private AttribSys _attribSys;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public AttribSys AttribSys
         {
             get => _attribSys;

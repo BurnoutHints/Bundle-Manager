@@ -1,11 +1,12 @@
+using DebugHelper;
+using PluginAPI;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Windows.Forms;
-using DebugHelper;
-using PluginAPI;
 
 namespace PVSFormat
 {
@@ -16,6 +17,7 @@ namespace PVSFormat
 
         private PVS _currentPVS;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Image GameMap
         {
             get => pvsMain.GameMap;

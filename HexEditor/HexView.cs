@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
@@ -8,6 +9,7 @@ namespace HexEditor
     public class HexView : UserControl
     {
         private byte[] _hexData;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public byte[] HexData
         {
             get

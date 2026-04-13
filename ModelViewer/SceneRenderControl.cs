@@ -8,7 +8,8 @@ namespace ModelViewer
     public partial class SceneRenderControl : UserControl
     {
         private GraphicsScene _graphicsScene;
-        
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Scene Scene
         {
             get => _graphicsScene?.Scene;

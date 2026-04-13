@@ -20,6 +20,7 @@ namespace WheelList
         public event OnEdit Edit;
 
         private WheelListData _list;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public WheelListData List
         {
             get => _list;
