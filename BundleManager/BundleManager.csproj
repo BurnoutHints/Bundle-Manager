@@ -35,7 +35,6 @@
     <Content Include="icon.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DebugHelper" Version="1.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="ScottPlot.WinForms" Version="5.1.58" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
@@ -51,24 +50,8 @@
   </ItemGroup>
   <Target Name="Plugins" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
     <ItemGroup>
-      <PluginFiles Include="..\BaseHandlers\bin\$(Configuration)\$(TargetFramework)\BaseHandlers.dll;
-                            ..\BaseHandlers\bin\$(Configuration)\$(TargetFramework)\BaseHandlers.pdb;
-                            ..\LangEditor\bin\$(Configuration)\$(TargetFramework)\LangEditor.dll;
-                            ..\LangEditor\bin\$(Configuration)\$(TargetFramework)\LangEditor.pdb;
-                            ..\LoopModel\bin\$(Configuration)\$(TargetFramework)\LoopModel.dll;
-                            ..\LoopModel\bin\$(Configuration)\$(TargetFramework)\LoopModel.pdb;
-                            ..\LuaList\bin\$(Configuration)\$(TargetFramework)\LuaList.dll;
-                            ..\LuaList\bin\$(Configuration)\$(TargetFramework)\LuaList.pdb;
-                            ..\PVSFormat\bin\$(Configuration)\$(TargetFramework)\PVSFormat.dll;
-                            ..\PVSFormat\bin\$(Configuration)\$(TargetFramework)\PVSFormat.pdb;
-                            ..\VaultFormat\bin\$(Configuration)\$(TargetFramework)\VaultFormat.dll;
-                            ..\VaultFormat\bin\$(Configuration)\$(TargetFramework)\VaultFormat.pdb;
-                            ..\VehicleList\bin\$(Configuration)\$(TargetFramework)\VehicleList.dll;
-                            ..\VehicleList\bin\$(Configuration)\$(TargetFramework)\VehicleList.pdb;
-                            ..\WheelList\bin\$(Configuration)\$(TargetFramework)\WheelList.dll;
-                            ..\WheelList\bin\$(Configuration)\$(TargetFramework)\WheelList.pdb;
-                            ..\WorldCollisionHandler\bin\$(Configuration)\$(TargetFramework)\WorldCollisionHandler.dll;
-                            ..\WorldCollisionHandler\bin\$(Configuration)\$(TargetFramework)\WorldCollisionHandler.pdb" />
+      <PluginNames Include="BaseHandlers;LangEditor;LoopModel;LuaList;PVSFormat;VaultFormat;VehicleList;WheelList;WorldCollisionHandler" />
+      <PluginFiles Include="@(PluginNames -> '..\%(Identity)\bin\$(Configuration)\$(TargetFramework)\%(Identity).dll');@(PluginNames -> '..\%(Identity)\bin\$(Configuration)\$(TargetFramework)\%(Identity).pdb')" />
     </ItemGroup>
     <Copy SourceFiles="@(PluginFiles)" DestinationFolder="$(OutputPath)plugins" SkipUnchangedFiles="true" />
   </Target>
