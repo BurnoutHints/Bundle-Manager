@@ -1,6 +1,5 @@
 using BundleFormat;
 using BundleUtilities;
-using DebugHelper;
 using ModelViewer;
 using ModelViewer.SceneData;
 using PluginAPI;
@@ -238,7 +237,7 @@ namespace BaseHandlers
 
         private void DebugToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DebugUtil.ShowDebug(this, InstanceList);
+            
         }
 
         private void LstMain_SizeChanged(object sender, EventArgs e)
