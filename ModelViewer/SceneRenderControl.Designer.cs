@@ -1,4 +1,5 @@
 using OpenTK;
+using OpenTK.GLControl;
 
 namespace ModelViewer
 {
@@ -43,7 +44,6 @@ namespace ModelViewer
             this.glcMain.Name = "glcMain";
             this.glcMain.Size = new System.Drawing.Size(150, 150);
             this.glcMain.TabIndex = 1;
-            this.glcMain.VSync = false;
             this.glcMain.Paint += new System.Windows.Forms.PaintEventHandler(this.glcMain_Paint);
             // 
             // tmrUpdate
