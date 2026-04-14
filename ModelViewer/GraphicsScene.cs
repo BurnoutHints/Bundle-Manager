@@ -103,9 +103,7 @@ namespace ModelViewer
             {
                 _shader.Bind();
 
-                OpenTK.Matrix4 projectionOTK3 = OpenTKCompat.ToOTK3Matrix4(_projection);
-                GL.UniformMatrix4(20, false, ref projectionOTK3);
-                _projection = OpenTKCompat.ToOTK4Matrix4(projectionOTK3);
+                GL.UniformMatrix4(20, false, ref _projection);
 
                 Scene?.Render(_camera);
             }
