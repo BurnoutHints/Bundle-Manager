@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using BundleFormat;
 using BundleUtilities;
+using DebugHelper;
 using PluginAPI;
 
 namespace BundleManager
@@ -442,9 +443,15 @@ namespace BundleManager
                         else
                         {
                             loader.Hide();
+                            if (forceDebug)
+                            {
+                                DebugUtil.ShowDebug(this, data);
+                            }
                             IEntryEditor editor = data.GetEditor(entry);
                             if (editor != null)
                                 editor.ShowDialog(this);
+                            else
+                                DebugUtil.ShowDebug(this, data);
                             if (ForceOnlySpecificEntry)
                                 Environment.Exit(0);
                         }

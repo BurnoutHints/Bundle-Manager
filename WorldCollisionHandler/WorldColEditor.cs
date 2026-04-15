@@ -1,4 +1,5 @@
 using BundleUtilities;
+using DebugHelper;
 using PluginAPI;
 using System;
 using System.ComponentModel;
@@ -84,7 +85,8 @@ namespace WorldCollisionHandler
 
         private void debugInfoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            
+            if (_poly != null)
+                DebugUtil.ShowDebug(this, _poly);
         }
 
         private void removeWreckSurfacesToolStripMenuItem_Click(object sender, EventArgs e)
