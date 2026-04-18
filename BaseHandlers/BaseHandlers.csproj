@@ -2,10 +2,12 @@
   <PropertyGroup>
     <TargetFrameworks>net8.0-windows;net9.0-windows;net10.0-windows</TargetFrameworks>
     <OutputType>Library</OutputType>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="DebugHelper" Version="1.1.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BundleFormat\BundleFormat.csproj" />
     <ProjectReference Include="..\BundleUtilities\BundleUtilities.csproj" />
@@ -13,9 +15,5 @@
     <ProjectReference Include="..\MathLib\MathLib.csproj" />
     <ProjectReference Include="..\ModelViewer\ModelViewer.csproj" />
     <ProjectReference Include="..\PluginAPI\PluginAPI.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="DebugHelper" Version="1.1.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
 </Project>

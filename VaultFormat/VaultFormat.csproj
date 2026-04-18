@@ -2,21 +2,15 @@
   <PropertyGroup>
     <TargetFrameworks>net8.0-windows;net9.0-windows;net10.0-windows</TargetFrameworks>
     <OutputType>Library</OutputType>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BundleFormat\BundleFormat.csproj" />
     <ProjectReference Include="..\BundleUtilities\BundleUtilities.csproj" />
     <ProjectReference Include="..\LangEditor\LangEditor.csproj" />
     <ProjectReference Include="..\PluginAPI\PluginAPI.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Properties\Resources.Designer.cs" />
-    <EmbeddedResource Remove="Properties\Resources.resx" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 </Project>
