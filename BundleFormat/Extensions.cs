@@ -1,19 +1,15 @@
 using System;
-using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Numerics;
 using System.Text;
-using System.Windows.Forms;
-using LibDeflate;
 
 namespace BundleFormat
 {
     public static class Extensions
     {
-        private static Decompressor decompressor = new ZlibDecompressor();
-        private static Compressor compressor = new ZlibCompressor(9);
-
         public static string AsString(this byte[] self)
         {
             if (self == null)
@@ -45,18 +41,23 @@ namespace BundleFormat
 
         public static byte[] Compress(this byte[] self)
         {
-            return compressor.Compress(self).Memory.ToArray();
+            MemoryStream uncompressed = new(self);
+            MemoryStream compressed = new();
+            using (ZLibStream zlibStream = new(compressed, CompressionLevel.SmallestSize, true))
+            {
+                uncompressed.CopyTo(zlibStream);
+            }
+            return compressed.ToArray();
         }
         
-        public static byte[] Decompress(this byte[] self, int uncompressedSize)
+        public static byte[] Decompress(this byte[] self)
         {
-            var status = decompressor.Decompress(self, uncompressedSize, out var owner, out var bytesRead);
-            if (status != OperationStatus.Done)
+            MemoryStream decompressed = new();
+            using (ZLibStream zlibStream = new(new MemoryStream(self), CompressionMode.Decompress))
             {
-                MessageBox.Show("Error decompressing data, status: " + status.ToString() + ", read: " + bytesRead.ToString(), "Error", MessageBoxButtons.OK);
-                return null;
+                zlibStream.CopyTo(decompressed);
             }
-            return owner.Memory.ToArray();
+            return decompressed.ToArray();
         }
 
         public static bool Matches(this byte[] self, byte[] other)
