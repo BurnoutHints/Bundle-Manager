@@ -3,21 +3,14 @@ using PluginAPI;
 
 namespace LoopModel
 {
-    public class LoopModelPlugin : Plugin
+    public class LoopModelPlugin : IPlugin
     {
-        public override void Init()
+        public string Id => "loopmodelplugin";
+        public string Name => "LoopModel Resource Handler";
+
+        public static void Init()
         {
             EntryTypeRegistry.Register(EntryType.LoopModel, new LoopModelData());
-        }
-
-        public override string GetID()
-        {
-            return "loopmodelplugin";
-        }
-
-        public override string GetName()
-        {
-            return "LoopModel Resource Handler";
         }
     }
 }

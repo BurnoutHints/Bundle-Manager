@@ -3,21 +3,14 @@ using PluginAPI;
 
 namespace VaultFormat
 {
-    public class AttribSysPlugin : Plugin
+    public class AttribSysPlugin : IPlugin
     {
-        public override void Init()
+        public string Id => "attribsysplugin";
+        public string Name => "AttribSys Resource Handler";
+
+        public static void Init()
         {
             EntryTypeRegistry.Register(EntryType.AttribSysVault, new AttribSys());
-        }
-
-        public override string GetID()
-        {
-            return "attribsysplugin";
-        }
-
-        public override string GetName()
-        {
-            return "AttribSys Resource Handler";
         }
     }
 }

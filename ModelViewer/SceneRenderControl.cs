@@ -1,12 +1,15 @@
 using System;
 using System.ComponentModel;
+using System.Drawing;
 using System.Windows.Forms;
 using ModelViewer.SceneData;
+using OpenTK.GLControl;
 
 namespace ModelViewer
 {
     public partial class SceneRenderControl : UserControl
     {
+        private GLControl glcMain;
         private GraphicsScene _graphicsScene;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
@@ -23,10 +26,25 @@ namespace ModelViewer
         public SceneRenderControl()
         {
             InitializeComponent();
-
             _designMode = LicenseManager.UsageMode == LicenseUsageMode.Designtime;
-
+            if (!_designMode)
+                SetupGLControl();
             _sceneChanged = true;
+        }
+
+        private void SetupGLControl()
+        {
+            glcMain = new()
+            {
+                BackColor = Color.Black,
+                Dock = DockStyle.Fill,
+                Location = new Point(0, 0),
+                Name = "glcMain",
+                Size = new Size(150, 150),
+                TabIndex = 1
+            };
+            glcMain.Paint += new PaintEventHandler(this.glcMain_Paint);
+            Controls.Add(glcMain);
         }
 
         protected override void OnResize(EventArgs e)
