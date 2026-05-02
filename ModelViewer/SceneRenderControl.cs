@@ -44,6 +44,7 @@ namespace ModelViewer
                 TabIndex = 1
             };
             glcMain.Paint += new PaintEventHandler(this.glcMain_Paint);
+            Controls.Add(glcMain);
         }
 
         protected override void OnResize(EventArgs e)
