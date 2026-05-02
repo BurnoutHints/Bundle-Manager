@@ -12,8 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DebugHelper" Version="1.1.0" />
-    <PackageReference Include="ScottPlot.WinForms" Version="5.1.58" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BundleFormat\BundleFormat.csproj" />
@@ -21,29 +19,16 @@
     <ProjectReference Include="..\BurnoutImage\BurnoutImage.csproj" />
     <ProjectReference Include="..\HexEditor\HexEditor.csproj" />
     <ProjectReference Include="..\LangEditor\LangEditor.csproj" />
+    <ProjectReference Include="..\ModelViewer\ModelViewer.csproj" />
     <ProjectReference Include="..\PluginAPI\PluginAPI.csproj" />
     <ProjectReference Include="..\PluginSystem\PluginSystem.csproj" />
   </ItemGroup>
-  <Target Name="Plugins" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
-    <ItemGroup>
-      <PluginNames Include="BaseHandlers;LangEditor;LoopModel;LuaList;PVSFormat;VaultFormat;VehicleList;WheelList;WorldCollisionHandler" />
-      <PluginFiles Include="@(PluginNames -> '..\%(Identity)\bin\$(Configuration)\$(TargetFramework)\%(Identity).dll');@(PluginNames -> '..\%(Identity)\bin\$(Configuration)\$(TargetFramework)\%(Identity).pdb')" />
-    </ItemGroup>
-    <Copy SourceFiles="@(PluginFiles)" DestinationFolder="$(OutputPath)plugins" SkipUnchangedFiles="true" />
-  </Target>
   <Target Name="Shaders" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
     <ItemGroup>
       <ShaderFiles Include="$(SolutionDir)resources\Shaders\**\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(ShaderFiles)" DestinationFolder="$(OutputPath)Shaders" SkipUnchangedFiles="true" />
   </Target>
-  <ItemGroup>
-    <Content Include="$(OutputPath)plugins\*.dll">
-      <Link>plugins\%(FileName)%(Extension)</Link>
-      <PublishState>Include</PublishState>
-      <Visible>false</Visible>
-    </Content>
-  </ItemGroup>
   <ItemGroup>
     <None Include="..\LangEditor\keys\**\*.*">
       <Visible>false</Visible>

@@ -34,7 +34,7 @@ namespace BundleManager
             Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
             Application.SetCompatibleTextRenderingDefault(false);
 
-            PluginLoader.LoadPlugins();
+            PluginLoader.InitializePlugins();
 
             fileModeForm = new MainForm();
             folderModeForm = new FileView();

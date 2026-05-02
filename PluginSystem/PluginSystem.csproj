@@ -4,8 +4,15 @@
     <OutputType>Library</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BundleUtilities\BundleUtilities.csproj" />
-    <ProjectReference Include="..\MathLib\MathLib.csproj" />
+    <ProjectReference Include="..\BaseHandlers\BaseHandlers.csproj" />
+    <ProjectReference Include="..\LangEditor\LangEditor.csproj" />
+    <ProjectReference Include="..\LoopModel\LoopModel.csproj" />
+    <ProjectReference Include="..\LuaList\LuaList.csproj" />
     <ProjectReference Include="..\PluginAPI\PluginAPI.csproj" />
+    <ProjectReference Include="..\PVSFormat\PVSFormat.csproj" />
+    <ProjectReference Include="..\VaultFormat\VaultFormat.csproj" />
+    <ProjectReference Include="..\VehicleList\VehicleList.csproj" />
+    <ProjectReference Include="..\WheelList\WheelList.csproj" />
+    <ProjectReference Include="..\WorldCollisionHandler\WorldCollisionHandler.csproj" />
   </ItemGroup>
 </Project>

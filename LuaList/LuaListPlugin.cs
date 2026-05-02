@@ -4,22 +4,14 @@ using PluginAPI;
 namespace LuaList
 {
 
-    public class LuaListPlugin : Plugin
+    public class LuaListPlugin : IPlugin
     {
-        public override void Init()
+        public string Id => "lualistplugin";
+        public string Name => "Lua List Resource Handler";
+        
+        public static void Init()
         {
             EntryTypeRegistry.Register(EntryType.LUAList, new LuaList());
         }
-
-        public override string GetID()
-        {
-            return "lualistplugin";
-        }
-
-        public override string GetName()
-        {
-            return "Lua List Resource Handler";
-        }
-        
     }
 }
