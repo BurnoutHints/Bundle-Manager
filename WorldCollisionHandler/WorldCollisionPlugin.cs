@@ -7,9 +7,12 @@ using System.Windows.Forms;
 
 namespace WorldCollisionHandler
 {
-    public class WorldCollisionPlugin : Plugin
+    public class WorldCollisionPlugin : IPlugin
     {
-        public override void Init()
+        public string Id => "worldcolplugin";
+        public string Name => "World Collision Handler";
+        
+        public static void Init()
         {
             EntryTypeRegistry.Register(EntryType.PolygonSoupList, new PolygonSoupList());
 
@@ -17,19 +20,9 @@ namespace WorldCollisionHandler
             PluginCommandRegistry.Register("remove_wreck_surfaces", "Remove Wreck Surfaces", RemoveWreckSurfaces, IsWorldCol);
         }
 
-        public override string GetID()
-        {
-            return "worldcolplugin";
-        }
-
-        public override string GetName()
-        {
-            return "World Collision Handler";
-        }
-
         #region Extra Tools
 
-        private bool IsWorldCol(BundleArchive archive)
+        private static bool IsWorldCol(BundleArchive archive)
         {
             for (int i = 0; i < archive.Entries.Count; i++)
             {
@@ -42,7 +35,7 @@ namespace WorldCollisionHandler
             return false;
         }
 
-        private void DumpAllCollisions(IWin32Window window, BundleArchive archive)
+        private static void DumpAllCollisions(IWin32Window window, BundleArchive archive)
         {
             if (archive == null)
                 return;
@@ -91,7 +84,7 @@ namespace WorldCollisionHandler
             }
         }
 
-        private void RemoveWreckSurfaces(IWin32Window window, BundleArchive archive)
+        private static void RemoveWreckSurfaces(IWin32Window window, BundleArchive archive)
         {
             for (int i = 0; i < archive.Entries.Count; i++)
             {

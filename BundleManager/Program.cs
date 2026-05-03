@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Numerics;
+using System.Security.Principal;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -34,10 +35,12 @@ namespace BundleManager
             Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
             Application.SetCompatibleTextRenderingDefault(false);
 
-            PluginLoader.LoadPlugins();
+            PluginLoader.InitializePlugins();
 
             fileModeForm = new MainForm();
             folderModeForm = new FileView();
+
+            CheckElevation();
 
             if (args.Length == 0)
             {
@@ -111,7 +114,22 @@ namespace BundleManager
                     }
                 }
             }
+        }
 
+        public static void CheckElevation()
+        {
+            using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
+            {
+                WindowsPrincipal principal = new(identity);
+                if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
+                {
+                    MessageBox.Show("Bundle Manager is running with standard permissions.\n"
+                        + "Saving may fail in write-protected locations.",
+                        "Running non-elevated",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
+            }
         }
 
         public static void SavePreferredMode(bool useFolderMode)

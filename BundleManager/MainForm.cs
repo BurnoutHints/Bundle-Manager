@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
 using System.ComponentModel;
-using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,6 +16,7 @@ namespace BundleManager
         #region Variables and Properties
 
         private bool _subForm;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool SubForm
         {
             get { return _subForm; }
@@ -470,14 +469,17 @@ namespace BundleManager
                         }
                         catch (ReadFailedError ex)
                         {
+
+                            Console.Out.WriteLine(ex.ToString());
                             MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             failure = true;
 
                             throw;
                         }
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
+                        Console.Out.WriteLine(e.ToString());
                         MessageBox.Show("Failed to load Entry", "Error", MessageBoxButtons.OK,
                             MessageBoxIcon.Error);
                         failure = true;

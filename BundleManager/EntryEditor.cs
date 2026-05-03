@@ -21,6 +21,7 @@ namespace BundleManager
         private delegate void SetEntry(BundleEntry entry);
 
         private BundleEntry _entry;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public BundleEntry Entry
         {
             get
@@ -57,8 +58,7 @@ namespace BundleManager
             }
         }
 
-
-
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ForceHex
         {
             get;
