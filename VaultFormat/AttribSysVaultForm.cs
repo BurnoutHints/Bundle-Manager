@@ -1,16 +1,24 @@
-using System;
-using System.Collections;
-using System.Globalization;
-using System.Windows.Forms;
-using PluginAPI;
 using BundleUtilities;
 using LangEditor;
+using PluginAPI;
+using System;
+using System.Collections;
+using System.ComponentModel;
+using System.Globalization;
+using System.IO;
+using System.Text.Json;
+using System.Windows.Forms;
 
 namespace VaultFormat
 {
     public delegate void Notify();  // delegate
     public partial class AttribSysVaultForm : Form, IEntryEditor
     {
+        private readonly JsonSerializerOptions jsonSerializerOptions = new()
+        {
+            WriteIndented = true
+        };
+
         public AttribSysVaultForm()
         {
             InitializeComponent();
@@ -19,6 +27,7 @@ namespace VaultFormat
         public event Notify EditEvent;
 
         private AttribSys _attribSys;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public AttribSys AttribSys
         {
             get => _attribSys;
@@ -128,6 +137,34 @@ namespace VaultFormat
         {
             EditEvent?.Invoke();
             UpdateDisplay();
+        }
+
+        private void exportVaultToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // Dialog Creation
+            SaveFileDialog saveDialog = new SaveFileDialog();
+            saveDialog.Filter = "JSON File (*.json)|*.json";
+            saveDialog.Title = "Save AttribSys as JSON";
+            saveDialog.FileName = "AttribSys.json";
+
+            // Dialog Logic
+            if (saveDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    // Convertion of the AttribSys. Might need smarter structure to only keep the essential data concerning the configuration of the vehicle
+                    
+                    string jsonContent = JsonSerializer.Serialize(AttribSys, jsonSerializerOptions);
+
+                    File.WriteAllText(saveDialog.FileName, jsonContent);
+
+                    MessageBox.Show("Successfully exported to " + saveDialog.FileName, "Export Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Failed to export file. Error: " + ex.Message, "Export Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
     }
 }

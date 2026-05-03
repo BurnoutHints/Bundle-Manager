@@ -1,6 +1,7 @@
-using System;
-using System.Windows.Forms;
 using PluginAPI;
+using System;
+using System.ComponentModel;
+using System.Windows.Forms;
 
 namespace BaseHandlers
 {
@@ -10,6 +11,7 @@ namespace BaseHandlers
         public event Notify EditEvent;
 
         private TriggerData _trigger;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public TriggerData trigger
         {
             get => _trigger;

@@ -18,6 +18,7 @@ namespace WheelList
         public delegate void Done(Wheel wheel);
         public event Done OnDone;
         private Wheel _wheel;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Wheel Wheel
         {
             get

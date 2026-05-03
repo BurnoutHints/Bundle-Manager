@@ -4,7 +4,9 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Numerics;
+using System.Security.Principal;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 using BundleManager.TypeConverters;
 
@@ -15,6 +17,10 @@ namespace BundleManager
     {
         public static MainForm fileModeForm;
         public static FileView folderModeForm;
+
+        private const string RegistryKeyPath = @"Software\BurnoutHints\BundleManager";
+        private const string RegistryValueName = "PreferredMode"; // 1 = Studio, 0 = Bundle
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -29,26 +35,58 @@ namespace BundleManager
             Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
             Application.SetCompatibleTextRenderingDefault(false);
 
-            PluginLoader.LoadPlugins();
+            PluginLoader.InitializePlugins();
 
             fileModeForm = new MainForm();
             folderModeForm = new FileView();
 
+            CheckElevation();
+
             if (args.Length == 0)
             {
-                /*DialogResult result =
-                    MessageBox.Show(
-                        "This program has 2 modes, Folder mode and File mode. Would you like to use folder mode?",
-                        "Question", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-                if (result == DialogResult.Yes)
-                {
-                    Application.Run(new FileView());
-                } else if (result == DialogResult.No)
-                {
-                    Application.Run(new MainForm());
-                }*/
+                bool? preferFolderMode = null;
 
-                Application.Run(folderModeForm);
+                object? value = Registry.GetValue(
+                    $@"HKEY_CURRENT_USER\{RegistryKeyPath}",
+                    RegistryValueName,
+                    null);
+
+                if (value is int i)
+                    preferFolderMode = i == 1;
+
+                if (preferFolderMode is null)
+                {
+                    DialogResult result = MessageBox.Show(
+                        "Welcome to Bundle Manager!" +
+                        "\n\nThis program has 2 interchangable modes, Studio mode and Single Bundle mode." +
+                        "\n\nSingle Bundle mode is better for quicker, individual edits, while Studio mode is designed to allow editing of more complex resources (i.e. models) since these require dependent resources found in other bundles." +
+                        "\n\nWould you like to start in Studio mode?" +
+                        "\n\nThis setting can be changed at any time by clicking the \"Switch to (Bundle/Studio) Mode\" at the top of the main window.",
+                        "Question",
+                        MessageBoxButtons.YesNoCancel,
+                        MessageBoxIcon.Question);
+
+                    if (result == DialogResult.Cancel)
+                        return;
+
+                    bool useFolderMode = result == DialogResult.Yes;
+
+                    SavePreferredMode(useFolderMode ? true : false);
+
+                    if (useFolderMode)
+                        Application.Run(new FileView());
+                    else
+                        Application.Run(new MainForm());
+                }
+                else
+                {
+                    if (preferFolderMode.Value)
+                        Application.Run(new FileView());
+                    else
+                        Application.Run(new MainForm());
+                }
+
+                return;
             }
             else
             {
@@ -76,7 +114,31 @@ namespace BundleManager
                     }
                 }
             }
+        }
 
+        public static void CheckElevation()
+        {
+            using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
+            {
+                WindowsPrincipal principal = new(identity);
+                if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
+                {
+                    MessageBox.Show("Bundle Manager is running with standard permissions.\n"
+                        + "Saving may fail in write-protected locations.",
+                        "Running non-elevated",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
+            }
+        }
+
+        public static void SavePreferredMode(bool useFolderMode)
+        {
+            Registry.SetValue(
+                $@"HKEY_CURRENT_USER\{RegistryKeyPath}",
+                RegistryValueName,
+                useFolderMode ? 1 : 0,
+                RegistryValueKind.DWord);
         }
     }
 }

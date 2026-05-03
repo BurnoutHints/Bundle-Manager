@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace BundleManager
@@ -20,6 +21,7 @@ namespace BundleManager
         }
 
         private List<int> _vertexSizeList;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public List<int> VertexSizeList
         {
             get { return _vertexSizeList; }

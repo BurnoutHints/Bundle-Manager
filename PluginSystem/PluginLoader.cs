@@ -1,113 +1,46 @@
 using PluginAPI;
-using PluginSystem.Util;
 using System;
 using System.Collections.Generic;
-using BundleUtilities;
+using System.Reflection;
 
 namespace PluginSystem
 {
-    using System.IO;
-    using System.Reflection;
     public static class PluginLoader
     {
-        private static readonly Dictionary<string, Plugin> _plugins = new Dictionary<string, Plugin>();
+        // Plugin classes. To add an entry here, the plugin's containing project
+        // must be added as a reference.
+        private static readonly List<Type> registeredPlugins = 
+        [
+            typeof(BaseHandlers.BasePlugin),
+            typeof(LangEditor.LangPlugin),
+            typeof(LoopModel.LoopModelPlugin),
+            typeof(LuaList.LuaListPlugin),
+            typeof(PVSFormat.PVSPlugin),
+            typeof(VaultFormat.AttribSysPlugin),
+            typeof(VehicleList.VehicleListPlugin),
+            typeof(WheelList.WheelListPlugin),
+            typeof(WorldCollisionHandler.WorldCollisionPlugin)
+        ];
 
-        private delegate void OnLog(string message);
-        private static event OnLog Log;
-
-        private static void LogInfo(string message)
+        // Runs each plugin's static initialization method.
+        public static void InitializePlugins()
         {
-            new LogWriter(message);
-            Log?.Invoke(message);
-        }
-
-        private static void ScanPluginsFolder()
-        {
-            LogInfo("Scanning Plugins Folder");
-
-            string directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "plugins");
-            Directory.CreateDirectory(directory);
-            string[] pluginDLLs = Directory.GetFiles(directory, "*.dll", SearchOption.TopDirectoryOnly);
-
-            foreach (string pluginDLL in pluginDLLs)
+            Console.WriteLine("Initializing plugins...");
+            int numPluginsInitialized = 0;
+            foreach (Type pluginType in registeredPlugins)
             {
-                try
+                if (pluginType.IsAssignableTo(typeof(IPlugin)))
                 {
-                    Assembly.LoadFile(pluginDLL);
+                    MethodInfo initInfo = pluginType.GetMethod(nameof(IPlugin.Init));
+                    initInfo.Invoke(null, []);
+                    numPluginsInitialized++;
                 }
-                catch (Exception ex)
+                else
                 {
-                    LogInfo(ex.Message + "\n" + ex.StackTrace);
-                }
-            }
-        }
-
-        private static void FindPlugins()
-        {
-            LogInfo("Finding Plugins");
-
-            Type pluginType = typeof(Plugin);
-
-            List<Assembly> assemblies = AssemblyUtil.BuildAssemblyList();
-
-            foreach (Assembly assembly in assemblies)
-            {
-                LogInfo("Scanning Assembly: " + assembly.GetName().Name);
-
-                foreach (Type type in assembly.GetTypes())
-                {
-                    if (!type.IsSubclassOf(pluginType))
-                        continue;
-
-                    try
-                    {
-                        Plugin plugin = Activator.CreateInstance(type, true) as Plugin;
-                        if (plugin == null)
-                        {
-                            throw new InvalidCastException("Type is not plugin");
-                        }
-
-                        if (plugin.GetID() == null)
-                        {
-                            LogInfo(type.FullName + " is missing Plugin ID!");
-                            continue;
-                        }
-
-                        if (_plugins.ContainsKey(plugin.GetID()))
-                            continue;
-                        _plugins.Add(plugin.GetID(), plugin);
-
-                    } catch (Exception ex)
-                    {
-                        string err = ex.Message + "\n" + ex.StackTrace;
-                        LogInfo(err);
-                        continue;
-                    }
+                    Console.WriteLine($"{pluginType.AssemblyQualifiedName} is not a valid plugin. Skipping.");
                 }
             }
-        }
-
-        private static void InitPlugin(Plugin plugin)
-        {
-            LogInfo("Initializing Plugin (" + plugin.GetID() + ":" + plugin.GetName() + ")");
-            plugin.Init();
-        }
-
-        private static void InitPlugins()
-        {
-            LogInfo("Initializing Plugins");
-            foreach (var plugin in _plugins)
-            {
-                InitPlugin(plugin.Value);
-            }
-        }
-
-        public static void LoadPlugins()
-        {
-            LogInfo("Loading Plugins");
-            ScanPluginsFolder();
-            FindPlugins();
-            InitPlugins();
+            Console.WriteLine($"Initialized {numPluginsInitialized} plugins.");
         }
     }
 }

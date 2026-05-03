@@ -1,5 +1,3 @@
-using OpenTK;
-
 namespace ModelViewer
 {
     partial class SceneRenderControl
@@ -30,39 +28,26 @@ namespace ModelViewer
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.glcMain = new GLControl();
-            this.tmrUpdate = new System.Windows.Forms.Timer(this.components);
-            this.SuspendLayout();
-            // 
-            // glcMain
-            // 
-            this.glcMain.BackColor = System.Drawing.Color.Black;
-            this.glcMain.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.glcMain.Location = new System.Drawing.Point(0, 0);
-            this.glcMain.Name = "glcMain";
-            this.glcMain.Size = new System.Drawing.Size(150, 150);
-            this.glcMain.TabIndex = 1;
-            this.glcMain.VSync = false;
-            this.glcMain.Paint += new System.Windows.Forms.PaintEventHandler(this.glcMain_Paint);
+            components = new System.ComponentModel.Container();
+            tmrUpdate = new System.Windows.Forms.Timer(this.components);
+            SuspendLayout();
             // 
             // tmrUpdate
             // 
-            this.tmrUpdate.Interval = 17;
-            this.tmrUpdate.Tick += new System.EventHandler(this.tmrUpdate_Tick);
+            tmrUpdate.Interval = 17;
+            tmrUpdate.Tick += new System.EventHandler(this.tmrUpdate_Tick);
             // 
             // SceneRenderControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.glcMain);
-            this.Name = "SceneRenderControl";
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            Name = "SceneRenderControl";
+            Size = new System.Drawing.Size(175, 173);
+            ResumeLayout(false);
         }
 
         #endregion
-
-        private GLControl glcMain;
         private System.Windows.Forms.Timer tmrUpdate;
     }
 }
