@@ -39,7 +39,6 @@ namespace BundleManager
             selectTypeLabel = new System.Windows.Forms.Label();
             resourceTypeComboBox = new System.Windows.Forms.ComboBox();
             tertiaryDataPathSelectorButton = new System.Windows.Forms.Button();
-            resourceNamePrefixLabel = new System.Windows.Forms.Label();
             primaryImportPathLabel = new System.Windows.Forms.Label();
             primaryResourcePathTextBox = new System.Windows.Forms.TextBox();
             secondaryImportPathLabel = new System.Windows.Forms.Label();
@@ -80,11 +79,11 @@ namespace BundleManager
             // 
             // resourceNameTextBox
             // 
-            resourceNameTextBox.Location = new System.Drawing.Point(112, 27);
+            resourceNameTextBox.Location = new System.Drawing.Point(12, 27);
             resourceNameTextBox.Name = "resourceNameTextBox";
-            resourceNameTextBox.Size = new System.Drawing.Size(428, 23);
+            resourceNameTextBox.Size = new System.Drawing.Size(528, 23);
             resourceNameTextBox.TabIndex = 3;
-            resourceNameTextBox.Text = "my_really_cool_and_extremely_long_resource_name";
+            resourceNameTextBox.Text = "bundlemanager://my_really_cool_and_extremely_long_resource_name";
             resourceNameTextBox.TextChanged += resourceNameTextBox_TextChanged;
             // 
             // label2
@@ -153,15 +152,6 @@ namespace BundleManager
             tertiaryDataPathSelectorButton.Text = "Select Tertiary Data";
             tertiaryDataPathSelectorButton.UseVisualStyleBackColor = true;
             tertiaryDataPathSelectorButton.Click += tertiaryDataPathSelectorButton_Click;
-            // 
-            // resourceNamePrefixLabel
-            // 
-            resourceNamePrefixLabel.AutoSize = true;
-            resourceNamePrefixLabel.Location = new System.Drawing.Point(11, 30);
-            resourceNamePrefixLabel.Name = "resourceNamePrefixLabel";
-            resourceNamePrefixLabel.Size = new System.Drawing.Size(104, 15);
-            resourceNamePrefixLabel.TabIndex = 12;
-            resourceNamePrefixLabel.Text = "bundlemanager://";
             // 
             // primaryImportPathLabel
             // 
@@ -239,7 +229,6 @@ namespace BundleManager
             Controls.Add(secondaryImportPathLabel);
             Controls.Add(primaryResourcePathTextBox);
             Controls.Add(primaryImportPathLabel);
-            Controls.Add(resourceNamePrefixLabel);
             Controls.Add(tertiaryDataPathSelectorButton);
             Controls.Add(resourceTypeComboBox);
             Controls.Add(selectTypeLabel);
@@ -270,7 +259,6 @@ namespace BundleManager
         private System.Windows.Forms.Label selectTypeLabel;
         private System.Windows.Forms.ComboBox resourceTypeComboBox;
         private System.Windows.Forms.Button tertiaryDataPathSelectorButton;
-        private System.Windows.Forms.Label resourceNamePrefixLabel;
         private System.Windows.Forms.Label primaryImportPathLabel;
         private System.Windows.Forms.TextBox primaryResourcePathTextBox;
         private System.Windows.Forms.Label secondaryImportPathLabel;

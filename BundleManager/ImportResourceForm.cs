@@ -10,6 +10,8 @@ namespace BundleManager
 {
     public partial class ImportResourceForm : Form
     {
+        private const string ResourceNamePrefix = "bundlemanager://";
+
         MemoryStream ms;
         DataChunkImportProperties Properties = new();
         public bool AutoUpdateID;
@@ -25,11 +27,12 @@ namespace BundleManager
             get => _importName;
             set
             {
-                _importName = value;
-                resourceNameTextBox.Text = ImportName;
+                _importName = value ?? string.Empty;
+                SetResourceNameText(ResourceNamePrefix + _importName, ResourceNamePrefix.Length + _importName.Length);
             }
         }
         private string _importName;
+        private bool _isUpdatingResourceNameText;
 
         public ImportResourceForm(BundleArchive destination, string primaryDataPath, uint? resourceID = null)
         {
@@ -109,7 +112,14 @@ namespace BundleManager
 
         private void resourceNameTextBox_TextChanged(object sender, EventArgs e)
         {
-            ImportName = resourceNameTextBox.Text;
+            if (_isUpdatingResourceNameText)
+                return;
+
+            string text = resourceNameTextBox.Text ?? string.Empty;
+
+            _importName = text.StartsWith(ResourceNamePrefix, StringComparison.OrdinalIgnoreCase)
+                ? text.Substring(ResourceNamePrefix.Length)
+                : text;
 
             if (AutoUpdateID)
                 RecalculateResourceIDTextBox();
@@ -287,12 +297,13 @@ namespace BundleManager
         
         private void RecalculateResourceIDTextBox()
         {
+            string nameText = resourceNameTextBox.Text ?? string.Empty;
+
             Utilities.CalculateResourceIDFromName
             (
                 string.Concat
                 (
-                    resourceNamePrefixLabel.Text,
-                    ImportName.ToLowerInvariant(),
+                    nameText.ToLowerInvariant(),
                     ".",
                     Properties.EntryType.ToString()
                 ),
@@ -380,7 +391,7 @@ namespace BundleManager
             _newEntry.Index = _workingArchive.Entries.Count;
             _newEntry.DebugInfo = new()
             {
-                Name = $"{resourceNamePrefixLabel.Text}{ImportName}.{Properties.EntryType.ToString()}",
+                Name = $"{resourceNameTextBox.Text}.{Properties.EntryType.ToString()}",
                 TypeName = Properties.EntryType.ToString()
             };
 
@@ -392,6 +403,15 @@ namespace BundleManager
         }
 
         #region Dependency Handling
+
+        private void SetResourceNameText(string text, int caretPosition)
+        {
+            _isUpdatingResourceNameText = true;
+            resourceNameTextBox.Text = text;
+            resourceNameTextBox.SelectionStart = Math.Clamp(caretPosition, 0, resourceNameTextBox.TextLength);
+            resourceNameTextBox.SelectionLength = 0;
+            _isUpdatingResourceNameText = false;
+        }
 
         private static void LoadDependencies(
             byte[] primaryData,
