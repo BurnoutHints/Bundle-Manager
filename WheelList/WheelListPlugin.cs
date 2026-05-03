@@ -3,21 +3,14 @@ using PluginAPI;
 
 namespace WheelList
 {
-    public class WheelListPlugin : Plugin
+    public class WheelListPlugin : IPlugin
     {
-        public override void Init()
+        public string Id => "wheellistplugin";
+        public string Name => "WheelList Resource Handler";
+        
+        public static void Init()
         {
             EntryTypeRegistry.Register(EntryType.WheelList, new WheelListData());
-        }
-
-        public override string GetID()
-        {
-            return "wheellistplugin";
-        }
-
-        public override string GetName()
-        {
-            return "WheelList Resource Handler";
         }
     }
 }

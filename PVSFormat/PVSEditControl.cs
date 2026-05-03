@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Numerics;
 using System.Windows.Forms;
@@ -9,6 +10,7 @@ namespace PVSFormat
     public class PVSEditControl : Control
     {
         private PVS _pvsFile;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public PVS PVS
         {
             get => _pvsFile;

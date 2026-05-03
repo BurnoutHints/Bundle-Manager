@@ -20,7 +20,7 @@ namespace BundleFormat
                     return null;
 
                 if (Compressed)
-                    return RawData.Decompress((int)UncompressedSize);
+                    return RawData.Decompress();
 
                 return RawData;
             }

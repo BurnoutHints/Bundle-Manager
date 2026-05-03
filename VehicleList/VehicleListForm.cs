@@ -3,6 +3,7 @@ using PluginAPI;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -17,6 +18,7 @@ namespace VehicleList
         private VehicleListData _list;
         private System.Windows.Forms.Timer _searchTimer;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public VehicleListData List
         {
             get => _list;

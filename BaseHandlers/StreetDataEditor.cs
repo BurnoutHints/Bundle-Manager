@@ -1,11 +1,12 @@
+using PluginAPI;
 using System;
 using System.Collections;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows.Forms;
-using PluginAPI;
 
 namespace BaseHandlers
 {
@@ -14,6 +15,7 @@ namespace BaseHandlers
         public event Notify EditEvent;
 
         private StreetData _model;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public StreetData Model
         {
             get => _model;
@@ -32,9 +34,9 @@ namespace BaseHandlers
         public StreetDataEditor()
         {
             InitializeComponent();
-            _streetsCtx    = new TabContext { View = streetsList,    ContextMenu = streetsContextMenu };
-            _junctionsCtx  = new TabContext { View = junctionsList,  ContextMenu = junctionsContextMenu };
-            _roadsCtx      = new TabContext { View = roadsList,      ContextMenu = roadsContextMenu };
+            _streetsCtx = new TabContext { View = streetsList, ContextMenu = streetsContextMenu };
+            _junctionsCtx = new TabContext { View = junctionsList, ContextMenu = junctionsContextMenu };
+            _roadsCtx = new TabContext { View = roadsList, ContextMenu = roadsContextMenu };
             _challengesCtx = new TabContext { View = challengesList, ContextMenu = challengesContextMenu };
         }
 
@@ -290,11 +292,11 @@ namespace BaseHandlers
             object tag = ctx.View.SelectedItems[0].Tag;
             switch (tag)
             {
-                case Street s:             return _model.streets.IndexOf(s);
-                case Junction j:           return _model.junctions.IndexOf(j);
-                case Road r:               return _model.roads.IndexOf(r);
+                case Street s: return _model.streets.IndexOf(s);
+                case Junction j: return _model.junctions.IndexOf(j);
+                case Road r: return _model.roads.IndexOf(r);
                 case ChallengeParScores c: return _model.challenges.IndexOf(c);
-                default:                   return -1;
+                default: return -1;
             }
         }
 
@@ -322,9 +324,9 @@ namespace BaseHandlers
         private void UpdateTabTitles()
         {
             if (_model == null) return;
-            streetsPage.Text    = "Streets ("    + _model.streets.Count    + ")";
-            junctionsPage.Text  = "Junctions ("  + _model.junctions.Count  + ")";
-            roadsPage.Text      = "Roads ("      + _model.roads.Count      + ")";
+            streetsPage.Text = "Streets (" + _model.streets.Count + ")";
+            junctionsPage.Text = "Junctions (" + _model.junctions.Count + ")";
+            roadsPage.Text = "Roads (" + _model.roads.Count + ")";
             challengesPage.Text = "Challenges (" + _model.challenges.Count + ")";
         }
 

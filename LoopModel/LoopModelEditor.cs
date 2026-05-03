@@ -1,6 +1,7 @@
 using PluginAPI;
 using ScottPlot;
 using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace LoopModel
@@ -28,6 +29,7 @@ namespace LoopModel
         private int selectedGraphIndex = 0;
 
         private LoopModelData _data;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public LoopModelData Data
         {
             get => _data;

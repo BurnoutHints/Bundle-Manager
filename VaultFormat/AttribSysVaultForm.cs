@@ -1,18 +1,24 @@
-using System;
-using System.Collections;
-using System.Globalization;
-using System.Windows.Forms;
-using System.IO;
-using Newtonsoft.Json;
-using PluginAPI;
 using BundleUtilities;
 using LangEditor;
+using PluginAPI;
+using System;
+using System.Collections;
+using System.ComponentModel;
+using System.Globalization;
+using System.IO;
+using System.Text.Json;
+using System.Windows.Forms;
 
 namespace VaultFormat
 {
     public delegate void Notify();  // delegate
     public partial class AttribSysVaultForm : Form, IEntryEditor
     {
+        private readonly JsonSerializerOptions jsonSerializerOptions = new()
+        {
+            WriteIndented = true
+        };
+
         public AttribSysVaultForm()
         {
             InitializeComponent();
@@ -21,6 +27,7 @@ namespace VaultFormat
         public event Notify EditEvent;
 
         private AttribSys _attribSys;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public AttribSys AttribSys
         {
             get => _attribSys;
@@ -146,7 +153,8 @@ namespace VaultFormat
                 try
                 {
                     // Convertion of the AttribSys. Might need smarter structure to only keep the essential data concerning the configuration of the vehicle
-                    string jsonContent = JsonConvert.SerializeObject(AttribSys, Formatting.Indented);
+                    
+                    string jsonContent = JsonSerializer.Serialize(AttribSys, jsonSerializerOptions);
 
                     File.WriteAllText(saveDialog.FileName, jsonContent);
 

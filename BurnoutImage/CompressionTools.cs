@@ -30,7 +30,7 @@ namespace BurnoutImage
         {
             BcDecoder decoder = new BcDecoder();
             Image<Rgba32> image = decoder.DecodeRawToImageRgba32(source, width, height, compression);
-            byte[] data = new byte[width * height * Unsafe.SizeOf<Rgba32>()];
+            byte[] data = new byte[width * height * 4];
             image.CopyPixelDataTo(data);
             return data;
         }

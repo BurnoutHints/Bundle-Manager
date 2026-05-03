@@ -1,6 +1,7 @@
 using PluginAPI;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -18,6 +19,7 @@ namespace LangEditor
         private string searchVal;
         private Dictionary<uint, string> dict;
         private Language _lang;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Language Lang
         {
             get => _lang;

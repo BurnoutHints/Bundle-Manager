@@ -3,21 +3,14 @@ using PluginAPI;
 
 namespace PVSFormat
 {
-    public class PVSPlugin : Plugin
+    public class PVSPlugin : IPlugin
     {
-        public override void Init()
+        public string Id => "pvsplugin";
+        public string Name => "PVS Resource Handler";
+
+        public static void Init()
         {
             EntryTypeRegistry.Register(EntryType.ZoneList, new PVS());
-        }
-
-        public override string GetID()
-        {
-            return "pvsplugin";
-        }
-
-        public override string GetName()
-        {
-            return "PVS Resource Handler";
         }
     }
 }

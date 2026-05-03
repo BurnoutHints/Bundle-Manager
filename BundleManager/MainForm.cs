@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
 using System.ComponentModel;
-using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,6 +16,7 @@ namespace BundleManager
         #region Variables and Properties
 
         private bool _subForm;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool SubForm
         {
             get { return _subForm; }
