@@ -44,6 +44,7 @@ namespace LangEditor
             _suppressHandlers = true;
             
             InitializeComponent();
+            FormatCellDimensions();
             GenerateDictionary();
             
             dgvMain.CellBeginEdit += dgvMain_CellBeginEdit;
@@ -51,6 +52,16 @@ namespace LangEditor
             
             _suppressHandlers = false;
             _ignoreChanges = false;
+        }
+
+        private void FormatCellDimensions()
+        {
+            dgvMain.RowTemplate.Height = 20;
+
+            int width = TextRenderer.MeasureText("0x00000000", dgvMain.Font).Width + 16;
+            colID.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            colID.MinimumWidth = width;
+            colID.Width = width;
         }
 
         private void dgvMain_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
