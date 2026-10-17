@@ -1,5 +1,4 @@
 using System;
-using System.Text;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -157,38 +156,50 @@ namespace BurnoutImage
                     CompressionType.DXT5 => 0x4D,
                 };
                 bw.Write(format);
-                bw.Write(0); // Flags
-                bw.Write((ushort)width); // Width
-                bw.Write((ushort)height); // Height
-                bw.Write((ushort)1); // Depth
-                bw.Write((ushort)1); // Array size
-                bw.Write((byte)0); // Most detailed mip
-                bw.Write((byte)numMips); // Mip levels
-                bw.Write((ushort)0); // ?
-                bw.Write(0); // ? pointer
-                bw.Write(0); // Array index (unused)
-                bw.Write(0); // Contents size (unused)
-                bw.Write(0); // Texture data (unused)
+                bw.Write(0);                // Flags
+                bw.Write((ushort)width);    // Width
+                bw.Write((ushort)height);   // Height
+                bw.Write((ushort)1);        // Depth
+                bw.Write((ushort)1);        // Array size
+                bw.Write((byte)0);          // Most detailed mip
+                bw.Write((byte)numMips);    // Mip levels
+                bw.Write((ushort)0);        // ?
+                bw.Write(0);                // ? pointer
+                bw.Write(0);                // Array index (unused)
+                bw.Write(0);                // Contents size (unused)
+                bw.Write(0);                // Texture data (unused)
             }
-            else if (platform == PlatformType.PC)
+            else if (platform == PlatformType.PC || platform == PlatformType.PCx64)
             {
-                // Original game header: https://burnout.wiki/wiki/Texture/PC
-                bw.Write(0); // Data pointer
-                bw.Write(0); // Texture interface pointer
-                bw.Write(0); // Padding
-                bw.Write((ushort)1); // Pool
-                bw.Write((byte)0); // ?
-                bw.Write((byte)0); // ?
-                if (compression == CompressionType.DXT1 || compression == CompressionType.DXT5) // Format
-                    bw.Write(Encoding.ASCII.GetBytes(compression.ToString()));
+                if (platform == PlatformType.PC)
+                {
+                    // TUB PC
+                    bw.Write(0);                // Data pointer
+                    bw.Write(0);                // Texture interface pointer
+                    bw.Write(0);                // Padding
+                    bw.Write((ushort)1);        // Pool
+                    bw.Write((byte)0);          // ?
+                    bw.Write((byte)0);          // ?
+                }
                 else
-                    bw.Write(0x15); // A8R8G8B8
-                bw.Write((ushort)width); // Width
-                bw.Write((short)height); // Height
-                bw.Write((byte)1); // Depth
-                bw.Write(numMips); // MipLevels
-                bw.Write((byte)0); // Texture type
-                bw.Write((byte)0); // Flags
+                {
+                    // Decomp. See b5-decomp src/pc/gcm/renderengine/texture.h
+                    bw.Write(new byte[0x1C]);   // 3 pointers, 4 bools
+                }
+                bw.Write(compression switch     // D3DFORMAT
+                {
+                    CompressionType.DXT1 => 0x31545844, // "DXT1"
+                    CompressionType.DXT5 => 0x35545844, // "DXT5"
+                    CompressionType.RGBA => 0x20,       // A8B8G8R8
+                    _ => 0x15                           // A8R8G8B8
+                });
+                bw.Write((ushort)width);        // Width
+                bw.Write((short)height);        // Height
+                bw.Write((byte)1);              // Depth
+                bw.Write((byte)numMips);        // MipLevels
+                bw.Write((byte)0);              // Texture type
+                bw.Write((byte)0);              // Flags
+                bw.Write(new byte[platform == PlatformType.PC ? 4 : 8]); // 0x10 alignment
             }
 
             bw.Flush();
@@ -243,14 +254,15 @@ namespace BurnoutImage
 
                     return new ImageHeader(type, width, height, PlatformType.Remastered);
                 }
-                else if (platform == PlatformType.PC)
+                else if (platform == PlatformType.PC || platform == PlatformType.PCx64)
                 {
-                    br.BaseStream.Seek(0x10, SeekOrigin.Begin);
+                    br.BaseStream.Seek(platform == PlatformType.PC ? 0x10 : 0x1C, SeekOrigin.Begin);
 
                     // D3DFORMAT
                     CompressionType type = br.ReadInt32() switch
                     {
                         0x00000015  => CompressionType.BGRA,
+                        0x00000020  => CompressionType.RGBA,
                         0x000000FF  => CompressionType.ARGB,
                         0x31545844  => CompressionType.DXT1, // "DXT1"
                         0x35545844  => CompressionType.DXT5, // "DXT5"
@@ -262,7 +274,7 @@ namespace BurnoutImage
 
                     br.Close();
 
-                    return new ImageHeader(type, width, height, PlatformType.PC);
+                    return new ImageHeader(type, width, height, platform);
                 }
                 else if (platform == PlatformType.PS3) // PS3
                 {
@@ -406,8 +418,9 @@ namespace BurnoutImage
             if (len == 0x20)
                 return PlatformType.PC;
 
+            // PS3 starts with format/mip/dimension bytes; decomp x64 starts with null pointers and bools
             if (len == 0x30)
-                return PlatformType.PS3;
+                return data.AsSpan(0, 0x1C).IndexOfAnyExcept((byte)0) < 0 ? PlatformType.PCx64 : PlatformType.PS3;
 
             return PlatformType.Invalid;
         }
@@ -431,6 +444,7 @@ namespace BurnoutImage
         Remastered,
         PC,
         PS3,
-        X360
+        X360,
+        PCx64
     }
 }
