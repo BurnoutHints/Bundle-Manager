@@ -107,10 +107,7 @@ namespace BundleFormat
         {
             BundleEntry template = Entries.FirstOrDefault(e => e.Type == type);
 
-            // Secondary data is memory type 2 on PS3 and 1 elsewhere
-            int secondaryBlock = template != null
-                ? (template.HasSection(2) && !template.HasSection(1) ? 2 : 1)
-                : (Platform == BundlePlatform.PS3 ? 2 : 1);
+            int secondaryBlock = template?.SecondaryBlock ?? (Platform == BundlePlatform.PS3 ? 2 : 1);
 
             byte[][] data = new byte[3][];
             data[0] = primary;
