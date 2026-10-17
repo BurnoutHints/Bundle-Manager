@@ -256,12 +256,12 @@ namespace BundleManager
 
                 if (type == EntryType.Texture
                     && !ResourceImport.TextureMatchesBundle(_primary.Data, _workingArchive.Platform)
-                    && !Confirm($"This texture header doesn't look like a {_workingArchive.Platform} texture. Import it anyway?"))
+                    && !Confirm($"This texture header doesn't look like a {_workingArchive.Platform} texture.", "Import anyway"))
                     return;
             }
 
             BundleEntry existing = _workingArchive.GetEntryByID(id);
-            if (existing != null && !Confirm($"This bundle already has a resource with ID {id:X8} ({existing.Type}). Replace it?"))
+            if (existing != null && !Confirm($"This bundle already has a resource with ID {id:X8} ({existing.Type}). Replace it?", "Replace"))
                 return;
 
             _workingArchive.AddEntry(_workingArchive.CreateEntry(id, type, FullName, _primary.Data, (int)importCountUpDown.Value, secondary));
@@ -275,9 +275,20 @@ namespace BundleManager
             MessageBox.Show(this, message, Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
-        private bool Confirm(string message)
+        private bool Confirm(string message, string action)
         {
-            return MessageBox.Show(this, message, Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes;
+            TaskDialogButton confirm = new(action);
+
+            TaskDialogPage page = new()
+            {
+                Caption = Text,
+                Text = message,
+                Icon = TaskDialogIcon.Warning,
+                Buttons = { confirm, TaskDialogButton.Cancel },
+                AllowCancel = true
+            };
+
+            return TaskDialog.ShowDialog(this, page) == confirm;
         }
     }
 }

@@ -616,13 +616,25 @@ namespace BundleManager
             }
             else if (CurrentArchive.Dirty)
             {
-                DialogResult result = MessageBox.Show(this, "There are unsaved changes!\nWould you like to save?",
-                    "Save", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
-                if (result == DialogResult.Yes)
+                TaskDialogButton save = new("Save");
+                TaskDialogButton dontSave = new("Don't Save");
+
+                TaskDialogPage page = new()
+                {
+                    Caption = "Save",
+                    Heading = "There are unsaved changes",
+                    Text = "Would you like to save them first?",
+                    Icon = TaskDialogIcon.Warning,
+                    Buttons = { save, dontSave, TaskDialogButton.Cancel },
+                    AllowCancel = true
+                };
+
+                TaskDialogButton result = TaskDialog.ShowDialog(this, page);
+                if (result == save)
                 {
                     return Save();
                 }
-                else if (result == DialogResult.No)
+                else if (result == dontSave)
                 {
                     CurrentArchive = null;
                     CurrentFileName = null;
