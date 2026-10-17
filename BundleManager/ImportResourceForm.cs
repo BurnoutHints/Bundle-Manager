@@ -37,7 +37,7 @@ namespace BundleManager
 
             resourceTypeComboBox.DataSource = Enum.GetValues(typeof(EntryType));
             resourceTypeComboBox.SelectedIndexChanged += (_, _) => OnTypeChanged();
-            primaryResourcePathTextBox.Validated += primaryResourcePathTextBox_Validated;
+            primaryResourcePathTextBox.Validating += primaryResourcePathTextBox_Validating;
             importCountUpDown.ValueChanged += (_, _) => RefreshImportsList();
 
             LoadPrimary(primaryDataPath);
@@ -80,10 +80,11 @@ namespace BundleManager
                 RecalculateResourceIDTextBox();
         }
 
-        private void primaryResourcePathTextBox_Validated(object sender, EventArgs e)
+        // Validating instead of Validated so a bad path also cancels the click that moved focus away
+        private void primaryResourcePathTextBox_Validating(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (primaryResourcePathTextBox.Text != _primaryPath)
-                TryLoadPrimary(primaryResourcePathTextBox.Text);
+                e.Cancel = !TryLoadPrimary(primaryResourcePathTextBox.Text);
         }
 
         private void primaryDataPathSelectorButton_Click(object sender, EventArgs e)
@@ -182,16 +183,18 @@ namespace BundleManager
                 resourceIDTextBox.Text = idMatch.Value.ToUpperInvariant();
         }
 
-        private void TryLoadPrimary(string path)
+        private bool TryLoadPrimary(string path)
         {
             try
             {
                 LoadPrimary(path);
+                return true;
             }
             catch (Exception ex)
             {
                 Warn($"Unable to use {path}: {ex.Message}");
                 primaryResourcePathTextBox.Text = _primaryPath; // Put the old path back in the text box
+                return false;
             }
         }
 
