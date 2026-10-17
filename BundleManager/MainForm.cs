@@ -148,6 +148,7 @@ namespace BundleManager
             lstEntries.Items.Clear();
 
             UpdatePluginMenu();
+            addResourcesToBundleToolStripMenuItem.Enabled = CurrentArchive != null;
 
             if (CurrentArchive == null)
             {
@@ -618,19 +619,26 @@ namespace BundleManager
                 return;
 
             Match m = ResourceIDPattern().Match(Path.GetFileNameWithoutExtension(path));
+            uint? id = m.Success ? Convert.ToUInt32(m.Value, 16) : null;
 
-            if (m.Success)
+            ImportResourceForm importResourceForm;
+            try
             {
-                string hex = m.Value;
-                uint id = Convert.ToUInt32(hex, 16);
+                importResourceForm = new(CurrentArchive, path, id);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, $"Unable to import {path}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
-            using ImportResourceForm importResourceForm = new(CurrentArchive, path);
-
-            if (importResourceForm.ShowDialog(this) == DialogResult.OK)
+            using (importResourceForm)
             {
-                CurrentArchive = importResourceForm.ResultArchive;
-                UpdateDisplay();
+                if (importResourceForm.ShowDialog(this) == DialogResult.OK)
+                {
+                    CurrentArchive = importResourceForm.ResultArchive;
+                    UpdateDisplay();
+                }
             }
         }
 
@@ -798,7 +806,7 @@ namespace BundleManager
             }
         }
 
-        [GeneratedRegex(@"\b[0-9A-Fa-f]{8}\b")]
+        [GeneratedRegex(@"^[0-9A-Fa-f]{8}(?![0-9A-Fa-f])")]
         private static partial Regex ResourceIDPattern();
 
         #endregion

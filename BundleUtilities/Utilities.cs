@@ -125,22 +125,6 @@ namespace BundleUtilities
                 | data[offset + 1]);
         }
 
-        public static uint ReadUInt32LE(byte[] data, int offset)
-        {
-            return (uint)(data[offset]
-                | (data[offset + 1] << 8)
-                | (data[offset + 2] << 16)
-                | (data[offset + 3] << 24));
-        }
-
-        public static uint ReadUInt32BE(byte[] data, int offset)
-        {
-            return (uint)((data[offset] << 24)
-                | (data[offset + 1] << 16)
-                | (data[offset + 2] << 8)
-                | data[offset + 3]);
-        }
-
         public static bool IsValidHex(string s)
         {
             if (string.IsNullOrWhiteSpace(s))

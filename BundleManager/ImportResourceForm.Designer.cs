@@ -46,11 +46,15 @@ namespace BundleManager
             tertiaryImportPathLabel = new System.Windows.Forms.Label();
             tertiaryResourcePathTextBox = new System.Windows.Forms.TextBox();
             primaryDataPathSelectorButton = new System.Windows.Forms.Button();
+            importsLabel = new System.Windows.Forms.Label();
+            importCountUpDown = new System.Windows.Forms.NumericUpDown();
+            importsListBox = new System.Windows.Forms.ListBox();
+            ((System.ComponentModel.ISupportInitialize)importCountUpDown).BeginInit();
             SuspendLayout();
             // 
             // importButton
             // 
-            importButton.Location = new System.Drawing.Point(562, 258);
+            importButton.Location = new System.Drawing.Point(562, 344);
             importButton.Name = "importButton";
             importButton.Size = new System.Drawing.Size(88, 23);
             importButton.TabIndex = 0;
@@ -216,12 +220,40 @@ namespace BundleManager
             primaryDataPathSelectorButton.Text = "Select Primary Data";
             primaryDataPathSelectorButton.UseVisualStyleBackColor = true;
             primaryDataPathSelectorButton.Click += primaryDataPathSelectorButton_Click;
-            // 
+            //
+            // importsLabel
+            //
+            importsLabel.AutoSize = true;
+            importsLabel.Location = new System.Drawing.Point(12, 250);
+            importsLabel.Name = "importsLabel";
+            importsLabel.Size = new System.Drawing.Size(51, 15);
+            importsLabel.TabIndex = 20;
+            importsLabel.Text = "Imports:";
+            //
+            // importCountUpDown
+            //
+            importCountUpDown.Location = new System.Drawing.Point(12, 270);
+            importCountUpDown.Name = "importCountUpDown";
+            importCountUpDown.Size = new System.Drawing.Size(60, 23);
+            importCountUpDown.TabIndex = 21;
+            //
+            // importsListBox
+            //
+            importsListBox.FormattingEnabled = true;
+            importsListBox.ItemHeight = 15;
+            importsListBox.Location = new System.Drawing.Point(80, 270);
+            importsListBox.Name = "importsListBox";
+            importsListBox.Size = new System.Drawing.Size(568, 64);
+            importsListBox.TabIndex = 22;
+            //
             // ImportResourceForm
-            // 
+            //
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(659, 293);
+            ClientSize = new System.Drawing.Size(659, 379);
+            Controls.Add(importsListBox);
+            Controls.Add(importCountUpDown);
+            Controls.Add(importsLabel);
             Controls.Add(primaryDataPathSelectorButton);
             Controls.Add(tertiaryResourcePathTextBox);
             Controls.Add(tertiaryImportPathLabel);
@@ -242,6 +274,7 @@ namespace BundleManager
             Controls.Add(importButton);
             Name = "ImportResourceForm";
             Text = "Import Resource into Bundle";
+            ((System.ComponentModel.ISupportInitialize)importCountUpDown).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -266,5 +299,8 @@ namespace BundleManager
         private System.Windows.Forms.Label tertiaryImportPathLabel;
         private System.Windows.Forms.TextBox tertiaryResourcePathTextBox;
         private System.Windows.Forms.Button primaryDataPathSelectorButton;
+        private System.Windows.Forms.Label importsLabel;
+        private System.Windows.Forms.NumericUpDown importCountUpDown;
+        private System.Windows.Forms.ListBox importsListBox;
     }
 }

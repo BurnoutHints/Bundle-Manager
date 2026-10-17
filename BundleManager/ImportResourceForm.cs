@@ -3,7 +3,9 @@ using BundleUtilities;
 using BurnoutImage;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace BundleManager
@@ -11,16 +13,21 @@ namespace BundleManager
     public partial class ImportResourceForm : Form
     {
         private const string ResourceNamePrefix = "bundlemanager://";
+        private const int ImportEntrySize = 0x10;
 
-        MemoryStream ms;
+        private const string BinaryFilter = "Binary Files|*.dat;*.bin|All files (*.*)|*.*";
+        private const string BinaryAndImageFilter = "Binary Files|*.dat;*.bin|Image Files(*.dds,*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp)|*.dds;*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp|All files (*.*)|*.*";
+        private static readonly string[] ImageExtensions = [".dds", ".bmp", ".gif", ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".tga", ".webp"];
+
         DataChunkImportProperties Properties = new();
         public bool AutoUpdateID;
         public BundleArchive ResultArchive { get; private set; }
 
         private BundleArchive _workingArchive;
 
-        private BundleEntry _newEntry;
-
+        private byte[] _primaryData;
+        private List<Dependency> _imports = [];
+        private byte[] _imageBody;
 
         string ImportName
         {
@@ -40,29 +47,10 @@ namespace BundleManager
 
             _workingArchive = destination;
 
-            if (!Path.Exists(primaryDataPath))
-                throw new InvalidDataException("Selected file does not exist or is corrupt!");
-
-            ms = new(File.ReadAllBytes(primaryDataPath));
-
-            ImportName = Path.GetFileNameWithoutExtension(primaryDataPath);
-
             RegisterDataBlockProperties();
-            Properties.Entries[0].Path = primaryDataPath;
-
-            ResolveDependencies();
-
-            Properties.EntryType = InferEntryType(ref ms);
-            _newEntry.Type = Properties.EntryType;
-
-            if (Properties.EntryType == EntryType.Invalid)
-                selectTypeLabel.Text = "Unable to auto detect resource type, please select it from the box below:";
-
-            autoUpdateIDCheckBox.Checked = resourceID == null ? true : false;
 
             resourceTypeComboBox.DataSource = Enum.GetValues(typeof(EntryType));
             resourceTypeComboBox.SelectedIndexChanged += ResourceTypeComboBox_SelectedIndexChanged;
-            resourceTypeComboBox.SelectedItem = Properties.EntryType;
 
             resourceIDTextBox.KeyPress += ResourceIDTextBox_KeyPress;
             resourceIDTextBox.Validating += ResourceIDTextBox_Validating;
@@ -70,6 +58,14 @@ namespace BundleManager
             primaryResourcePathTextBox.Validated += UpdateDataPathsFromTextBoxes;
             secondaryResourcePathTextBox.Validated += UpdateDataPathsFromTextBoxes;
             tertiaryResourcePathTextBox.Validated += UpdateDataPathsFromTextBoxes;
+
+            importCountUpDown.ValueChanged += (_, _) => RefreshImportsList();
+
+            LoadPrimary(primaryDataPath);
+
+            if (resourceID is uint id)
+                resourceIDTextBox.Text = id.ToString("X8");
+            autoUpdateIDCheckBox.Checked = resourceID == null;
         }
 
         #region Event Handlers
@@ -97,7 +93,10 @@ namespace BundleManager
             if (resourceTypeComboBox.SelectedItem is EntryType entryType)
             {
                 Properties.EntryType = entryType;
-                _newEntry.Type = entryType;
+                FillDefaultSecondary();
+
+                if (AutoUpdateID)
+                    RecalculateResourceIDTextBox();
             }
         }
 
@@ -105,7 +104,7 @@ namespace BundleManager
         {
             AutoUpdateID = autoUpdateIDCheckBox.Checked;
             resourceIDTextBox.ReadOnly = autoUpdateIDCheckBox.Checked;
-            
+
             if (AutoUpdateID)
                 RecalculateResourceIDTextBox();
         }
@@ -142,7 +141,14 @@ namespace BundleManager
 
         private void importButton_Click(object sender, EventArgs e)
         {
-            RunImportOperation();
+            try
+            {
+                RunImportOperation();
+            }
+            catch (Exception ex)
+            {
+                Warn("Failed to import the resource: " + ex.Message);
+            }
         }
 #endregion
 
@@ -167,6 +173,10 @@ namespace BundleManager
                 tertiaryImportPathLabel
             ];
 
+            primaryResourcePathTextBox.Tag = 0;
+            secondaryResourcePathTextBox.Tag = 1;
+            tertiaryResourcePathTextBox.Tag = 2;
+
             for (int i = 0; i < Properties.Entries.Length; i++)
             {
                 Properties.Entries[i].PathChanged = OnAnyDataBlockPathsUpdated;
@@ -175,46 +185,116 @@ namespace BundleManager
             OnAnyDataBlockPathsUpdated();
         }
 
-        void ResolveDependencies()
+        void LoadPrimary(string path)
         {
-            byte[] primaryData = ms.ToArray();
+            byte[] primary;
+            byte[] imageBody = null;
+            List<Dependency> imports = [];
+            string importsSource = null;
+            EntryType type = EntryType.Texture;
 
-            LoadDependencies(
-                primaryData,
-                _workingArchive.Platform > BundlePlatform.PC,
-                Properties.Entries[0].Path,
-                out List<Dependency> dependencies,
-                out int dependencyBytes
-                );
-
-            int newPrimarySize = primaryData.Length - dependencyBytes;
-            if (newPrimarySize < 0) newPrimarySize = 0;
-
-            byte[] strippedPrimary = new byte[newPrimarySize];
-            if (newPrimarySize > 0)
-                Buffer.BlockCopy(primaryData, 0, strippedPrimary, 0, newPrimarySize);
-
-            _newEntry = new(_workingArchive)
+            if (ImageExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase))
             {
-                Type = Properties.EntryType
-            };
+                PlatformType platform = GetImageTexturePlatform()
+                    ?? throw new NotSupportedException($"Images can't be converted for {_workingArchive.Platform} bundles. Import the texture's header and body instead.");
 
-            foreach (Dependency dep in dependencies)
-                _newEntry.Dependencies.Add(dep);
+                ImageInfo info = GameImage.SetImage(path, CompressionType.DXT5, platform);
+                primary = info.Header;
+                imageBody = info.Data;
+            }
+            else
+            {
+                primary = File.ReadAllBytes(path);
 
-            _newEntry.DependencyCount = (short)_newEntry.Dependencies.Count;
+                string yamlPath = GetImportsYamlPath(path);
+                if (yamlPath != null && File.Exists(yamlPath))
+                {
+                    imports = LoadDependenciesFromYaml(yamlPath);
+                    importsSource = Path.GetFileName(yamlPath);
+                    primary = AppendImportTable(primary, imports, _workingArchive.Console);
+                }
+                else
+                {
+                    imports = ScanImportTable(primary, _workingArchive.Console, _workingArchive.Platform == BundlePlatform.PCx64 ? 8 : 4);
+                }
 
-            ms.SetLength(strippedPrimary.Length);
+                type = InferEntryType(primary[..^(imports.Count * ImportEntrySize)], imports.Count);
+            }
 
-            MessageBox.Show($"Resolved {_newEntry.Dependencies.Count} dependencies for the imported resource.");
+            _primaryData = primary;
+            _imageBody = imageBody;
+            _imports = imports;
+
+            ImportName = GetResourceBaseName(path);
+            Properties.Entries[0].Path = path;
+            Properties.Entries[1].Path = string.Empty; // Belonged to the previous primary
+
+            resourceTypeComboBox.SelectedItem = type;
+            Properties.EntryType = type;
+            resourceTypeComboBox.Enabled = imageBody == null;
+            if (imageBody != null)
+                Properties.Entries[1].Visible = false; // Body comes from the image
+            FillDefaultSecondary();
+
+            selectTypeLabel.Text = type == EntryType.Invalid
+                ? "Unable to auto detect resource type, please select it from the box below:"
+                : "Select the resource type to import as:";
+
+            importCountUpDown.Value = 0;
+            importCountUpDown.Maximum = imports.Count;
+            importCountUpDown.Value = imports.Count;
+            importCountUpDown.Enabled = importsSource == null && imports.Count > 0;
+            importsLabel.Text = imageBody != null ? "Imports: none (texture built from the image)"
+                : importsSource != null ? $"Imports from {importsSource}:"
+                : imports.Count > 0 ? "Imports detected at the end of the primary data. Lower the count if the first rows are really resource data:"
+                : "Imports: none detected in the primary data";
+            RefreshImportsList();
+
+            if (AutoUpdateID)
+                RecalculateResourceIDTextBox();
         }
 
-        // This really needs to be put in a better spot
-        EntryType InferEntryType(ref MemoryStream memoryStream)
+        private void TryLoadPrimary(string path)
         {
-            long originalPos = memoryStream.Position;
-            byte[] data = memoryStream.ToArray();
+            try
+            {
+                LoadPrimary(path);
+            }
+            catch (Exception ex)
+            {
+                Warn($"Unable to use {path}: {ex.Message}");
+                OnAnyDataBlockPathsUpdated(); // Put the old path back in the text box
+            }
+        }
 
+        PlatformType? GetImageTexturePlatform()
+        {
+            BundleEntry sample = _workingArchive.Entries.FirstOrDefault(e => e.Type == EntryType.Texture && e.HasHeader);
+            PlatformType? platform = sample != null
+                ? GameImage.DetectPlatform(sample.EntryBlocks[0].Data)
+                : _workingArchive.Platform switch
+                {
+                    BundlePlatform.PC => PlatformType.PC,
+                    BundlePlatform.PCx64 => PlatformType.PCx64,
+                    _ => null
+                };
+
+            // GameImage.SetImage can only write these
+            return platform is PlatformType.PC or PlatformType.PCx64 or PlatformType.Remastered ? platform : null;
+        }
+
+        private static bool TextureMatchesBundle(PlatformType texture, BundlePlatform bundle) => bundle switch
+        {
+            BundlePlatform.PC => texture is PlatformType.PC or PlatformType.Remastered,
+            BundlePlatform.PCx64 => texture == PlatformType.PCx64,
+            BundlePlatform.X360 => texture == PlatformType.X360,
+            BundlePlatform.PS3 => texture == PlatformType.PS3,
+            _ => true
+        };
+
+        // This really needs to be put in a better spot
+        EntryType InferEntryType(byte[] data, int importCount)
+        {
             // AttribSysVault
             if (_workingArchive.Console switch
             {
@@ -229,32 +309,19 @@ namespace BundleManager
 
             EntryType type = EntryType.Invalid;
 
-            memoryStream.Seek(0x0, SeekOrigin.Begin);
-
             // Texture
             if (GameImage.DetectPlatform(data) is PlatformType p
                 && p != PlatformType.Invalid
-                && _newEntry.Dependencies.Count == 0)
+                && importCount == 0)
             {
                 type = EntryType.Texture;
             }
             // Model
-            else if (memoryStream.Length <= 0x20)
+            else if (data.Length <= 0x20)
             {
-                // 32 bit model
-                memoryStream.Seek(0x13, SeekOrigin.Begin);
-                byte modelCandidate32 = (byte)memoryStream.ReadByte();
-
-                // 64 bit model (32 bit is technically padded to nearest 0x10, so this would run anyway)
-                if (memoryStream.Length > 0x14)
-                {
-                    memoryStream.Seek(0x1F, SeekOrigin.Begin);
-
-                    if (memoryStream.ReadByte() == 0x2)
-                        type = EntryType.Model;
-                }
-
-                if (modelCandidate32 == 0x2)
+                // 32 bit model, then 64 bit model (32 bit is technically padded to nearest 0x10, so this would run anyway)
+                if ((data.Length > 0x13 && data[0x13] == 0x2)
+                    || (data.Length > 0x1F && data[0x1F] == 0x2))
                     type = EntryType.Model;
             }
             // Renderable
@@ -270,7 +337,6 @@ namespace BundleManager
                 }
             }
 
-            memoryStream.Position = originalPos;
             return type;
         }
 
@@ -283,18 +349,15 @@ namespace BundleManager
 
         private void UpdateDataPathsFromTextBoxes(object sender, EventArgs e)
         {
-            if (sender is not TextBox textBox)
+            if (sender is not TextBox { Tag: int index } textBox || textBox.Text == Properties.Entries[index].Path)
                 return;
 
-            string path = textBox.Text;
-
-            for (int i = 0; i < Properties.Entries.Length; i++)
-            {
-                if (Properties.Entries[i].Path != path)
-                    Properties.Entries[i].Path = path;
-            }
+            if (index == 0)
+                TryLoadPrimary(textBox.Text);
+            else
+                Properties.Entries[index].Path = textBox.Text;
         }
-        
+
         private void RecalculateResourceIDTextBox()
         {
             string nameText = resourceNameTextBox.Text ?? string.Empty;
@@ -312,12 +375,27 @@ namespace BundleManager
             resourceIDTextBox.Text = id;
         }
 
+        private void RefreshImportsList()
+        {
+            int count = (int)importCountUpDown.Value;
+
+            importsListBox.BeginUpdate();
+            importsListBox.Items.Clear();
+            foreach (Dependency dep in _imports.Skip(_imports.Count - count))
+            {
+                BundleEntry target = _workingArchive.GetEntryByID(dep.ID);
+                importsListBox.Items.Add($"0x{dep.EntryPointerOffset:X8} -> {dep.ID:X8}"
+                    + (target == null ? string.Empty : $"  ({target.Type} in this bundle)"));
+            }
+            importsListBox.EndUpdate();
+        }
+
         void SelectNewDataChunkDialog(byte index)
         {
             using (OpenFileDialog ofd = new())
             {
                 ofd.Title = $"Please select the {GetDataChunkName(index)} resource to import";
-                ofd.Filter = "Binary Files|*.dat;*.bin|Image Files(*.dds,*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp)|*.dds;*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp|All files (*.*)|*.*";
+                ofd.Filter = index == 0 ? BinaryAndImageFilter : BinaryFilter;
 
                 if (ofd.ShowDialog(this) != DialogResult.OK)
                     return;
@@ -327,79 +405,123 @@ namespace BundleManager
                 if (string.IsNullOrEmpty(path) || !File.Exists(path))
                     return;
 
-                Properties.Entries[index].Path = path;
+                if (index == 0)
+                    TryLoadPrimary(path);
+                else
+                    Properties.Entries[index].Path = path;
             }
         }
 
         private void RunImportOperation()
         {
-            for (int i = 1; i < Properties.DataChunkCount; i++)
+            EntryType type = Properties.EntryType;
+
+            if (string.IsNullOrWhiteSpace(_importName))
             {
-                if (!File.Exists(Properties.Entries[i].Path))
-                {
-                    MessageBox.Show($"Please select valid {GetDataChunkName(i)} data for the resource you are trying to import.");
-                    return;
-                }
+                Warn("Please enter a name for the resource.");
+                return;
             }
 
-            byte[][] dataBlocks = new byte[Properties.DataChunkCount][];
+            if (type == EntryType.Invalid)
+            {
+                Warn("Please select the resource type to import as.");
+                return;
+            }
 
-            dataBlocks[0] = ms.ToArray();
-            if (Properties.DataChunkCount > 1)
+            if (!uint.TryParse(resourceIDTextBox.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint id))
+            {
+                Warn("Please enter a valid hexadecimal resource ID.");
+                return;
+            }
+
+            BundleEntry template = _workingArchive.Entries.FirstOrDefault(e => e.Type == type);
+
+            // Secondary data is memory type 2 on PS3 and 1 elsewhere
+            int secondaryBlock = template != null
+                ? (template.HasSection(2) && !template.HasSection(1) ? 2 : 1)
+                : (_workingArchive.Platform == BundlePlatform.PS3 ? 2 : 1);
+
+            byte[][] dataBlocks = new byte[3][];
+            dataBlocks[0] = _primaryData;
+
+            if (_imageBody != null)
+            {
+                dataBlocks[secondaryBlock] = _imageBody;
+            }
+            else
             {
                 for (int i = 1; i < Properties.DataChunkCount; i++)
                 {
-                    dataBlocks[i] = File.ReadAllBytes(Properties.Entries[i].Path);
+                    if (!File.Exists(Properties.Entries[i].Path))
+                    {
+                        Warn($"Please select valid {GetDataChunkName(i)} data for the resource you are trying to import.");
+                        return;
+                    }
+
+                    dataBlocks[i == 1 ? secondaryBlock : i] = File.ReadAllBytes(Properties.Entries[i].Path);
                 }
+
+                if (type == EntryType.Texture
+                    && !TextureMatchesBundle(GameImage.DetectPlatform(_primaryData), _workingArchive.Platform)
+                    && !Confirm($"This texture header doesn't look like a {_workingArchive.Platform} texture. Import it anyway?"))
+                    return;
             }
 
-            EntryBlock block1 = new()
+            BundleEntry existing = _workingArchive.GetEntryByID(id);
+            if (existing != null && !Confirm($"This bundle already has a resource with ID {id:X8} ({existing.Type}). Replace it?"))
+                return;
+
+            int importCount = (int)importCountUpDown.Value;
+
+            BundleEntry entry = new(_workingArchive)
             {
-                Compressed = false,
-                Data = dataBlocks[0]
+                ID = id,
+                Type = type,
+                Platform = _workingArchive.Platform,
+                DependencyCount = (short)importCount,
+                DependenciesListOffset = importCount > 0 ? _primaryData.Length - importCount * ImportEntrySize : 0,
+                DebugInfo = new()
+                {
+                    Name = $"{resourceNameTextBox.Text}.{type}",
+                    TypeName = type.ToString()
+                },
+                Dirty = true,
+                EntryBlocks = new EntryBlock[3]
             };
 
-            EntryBlock block2 = new()
+            for (int i = 0; i < entry.EntryBlocks.Length; i++)
             {
-                Compressed = false
-            };
-
-            EntryBlock block3 = new()
-            {
-                Compressed = false
-            };
-
-            if (Properties.DataChunkCount > 1)
-            {
-                if (Properties.EntryType == EntryType.Texture)
-                    block2.Compressed = true;
-
-                block2.Data = dataBlocks[1];
+                EntryBlock block = new() { Compressed = false };
+                if (dataBlocks[i] != null)
+                {
+                    block.Data = dataBlocks[i];
+                    block.UncompressedAlignment = template != null && template.HasSection(i) ? template.EntryBlocks[i].UncompressedAlignment : 16;
+                }
+                entry.EntryBlocks[i] = block;
             }
 
-            _newEntry.EntryBlocks =
-            [
-                block1,
-                block2,
-                block3
-            ];
+            if (existing != null)
+                _workingArchive.Entries.Remove(existing);
 
-            _newEntry.Dirty = true;
-            _newEntry.Type = Properties.EntryType;
-
-            _newEntry.ID = Convert.ToUInt32(resourceIDTextBox.Text, 16);
-            _newEntry.Index = _workingArchive.Entries.Count;
-            _newEntry.DebugInfo = new()
-            {
-                Name = $"{resourceNameTextBox.Text}.{Properties.EntryType.ToString()}",
-                TypeName = Properties.EntryType.ToString()
-            };
-
-            _workingArchive.Entries.Add(_newEntry);
+            // Retain ID sorting like retail bundles
+            int index = _workingArchive.Entries.FindIndex(e => e.ID > entry.ID);
+            _workingArchive.Entries.Insert(index < 0 ? _workingArchive.Entries.Count : index, entry);
+            for (int i = 0; i < _workingArchive.Entries.Count; i++)
+                _workingArchive.Entries[i].Index = i;
 
             ResultArchive = _workingArchive;
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        private void Warn(string message)
+        {
+            MessageBox.Show(this, message, Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        private bool Confirm(string message)
+        {
+            return MessageBox.Show(this, message, Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes;
         }
 
         #region Dependency Handling
@@ -413,34 +535,33 @@ namespace BundleManager
             _isUpdatingResourceNameText = false;
         }
 
-        private static void LoadDependencies(
-            byte[] primaryData,
-            bool isBigEndian,
-            string primaryPath,
-            out List<Dependency> dependencies,
-            out int dependencyBytes)
+        // When the type needs secondary data, use "<ID>_secondary" next to "<ID>_primary" if it's there
+        private void FillDefaultSecondary()
         {
-            string yamlPath = GetImportsYamlPath(primaryPath);
+            string primary = Properties.Entries[0].Path;
+            if (_imageBody != null || Properties.DataChunkCount < 2
+                || string.IsNullOrEmpty(primary) || !string.IsNullOrEmpty(Properties.Entries[1].Path))
+                return;
 
-            if (yamlPath != null && File.Exists(yamlPath))
-            {
-                dependencies = LoadDependenciesFromYaml(yamlPath);
-                dependencyBytes = dependencies.Count * 0x10;
-            }
-            else
-            {
-                ScanBinaryDependencies(primaryData, isBigEndian, out dependencies, out dependencyBytes);
-            }
+            string secondary = Path.Combine(Path.GetDirectoryName(primary), GetResourceBaseName(primary) + "_secondary" + Path.GetExtension(primary));
+            if (File.Exists(secondary))
+                Properties.Entries[1].Path = secondary;
+        }
+
+        private static string GetResourceBaseName(string path)
+        {
+            const string primarySuffix = "_primary";
+            string name = Path.GetFileNameWithoutExtension(path);
+
+            return name.EndsWith(primarySuffix, StringComparison.OrdinalIgnoreCase)
+                ? name[..^primarySuffix.Length]
+                : name;
         }
 
         private static string GetImportsYamlPath(string primaryPath)
         {
             string dir = Path.GetDirectoryName(primaryPath);
-            string name = Path.GetFileNameWithoutExtension(primaryPath);
-            const string primarySuffix = "_primary";
-
-            if (name.EndsWith(primarySuffix, StringComparison.OrdinalIgnoreCase))
-                name = name.Substring(0, name.Length - primarySuffix.Length);
+            string name = GetResourceBaseName(primaryPath);
 
             if (string.IsNullOrEmpty(dir) || string.IsNullOrEmpty(name))
                 return null;
@@ -491,84 +612,63 @@ namespace BundleManager
             return list;
         }
 
-        private static void ScanBinaryDependencies(
-            byte[] primaryData,
-            bool isBigEndian,
-            out List<Dependency> dependencies,
-            out int dependencyBytes)
+        private static byte[] AppendImportTable(byte[] primary, List<Dependency> imports, bool bigEndian)
         {
-            dependencies = [];
-            dependencyBytes = 0;
-
-            if (primaryData.Length < 0x10)
-                return;
-
-            int pos = primaryData.Length - 0x10;
-
-            while (pos >= 0)
+            MemoryStream ms = new();
+            BinaryWriter2 bw = new(ms, bigEndian);
+            foreach (Dependency dep in imports)
             {
-                if (!TryReadDependencyEntry(primaryData, pos, isBigEndian, out uint id, out uint location))
-                    break;
-
-                Dependency dep = new()
-                {
-                    ID = id,
-                    EntryPointerOffset = location
-                };
-
-                dependencies.Add(dep);
-                dependencyBytes += 0x10;
-                pos -= 0x10;
+                bw.Write(dep.ID);
+                bw.Write(dep.EntryPointerOffset);
+                bw.Write(0u); // Padding
             }
+            byte[] table = ms.ToArray();
 
-            if (dependencies.Count > 0)
-                dependencies.Reverse();
+            // Compare id and offset only, padding isn't always zero on console
+            int start = primary.Length - table.Length;
+            bool present = start >= 0;
+            for (int i = 0; present && i < table.Length; i++)
+                present = i % ImportEntrySize >= 12 || primary[start + i] == table[i];
+            if (present)
+                return primary;
+
+            int tableStart = (primary.Length + 0xF) & ~0xF;
+            byte[] result = new byte[tableStart + table.Length];
+            Buffer.BlockCopy(primary, 0, result, 0, primary.Length);
+            Buffer.BlockCopy(table, 0, result, tableStart, table.Length);
+            return result;
         }
 
-        private static bool TryReadDependencyEntry(
-            byte[] data,
-            int offset,
-            bool isBigEndian,
-            out uint id,
-            out uint location)
+        private static List<Dependency> ScanImportTable(byte[] data, bool bigEndian, int pointerSize)
         {
-            id = 0;
-            location = 0;
+            List<Dependency> imports = [];
 
-            if (offset < 0 || offset + 0x10 > data.Length)
-                return false;
+            if (data.Length % ImportEntrySize != 0)
+                return imports;
 
-            if (isBigEndian)
+            using BinaryReader2 br = new(new MemoryStream(data), bigEndian);
+
+            for (int start = data.Length - ImportEntrySize; start >= 0; start -= ImportEntrySize)
             {
-                if (data[offset + 0] != 0 || data[offset + 1] != 0 ||
-                    data[offset + 2] != 0 || data[offset + 3] != 0)
-                    return false;
+                br.BaseStream.Position = start;
+                ulong id = br.ReadUInt64();
+                uint offset = br.ReadUInt32();
 
-                if (data[offset + 8] != 0 || data[offset + 9] != 0 ||
-                    data[offset + 10] != 0 || data[offset + 11] != 0)
-                    return false;
+                if (id == 0 || id > uint.MaxValue || offset % 4 != 0
+                    || (imports.Count > 0 && offset >= imports[^1].EntryPointerOffset))
+                    break;
 
-                id = Utilities.ReadUInt32BE(data, offset + 4);
-                location = Utilities.ReadUInt32BE(data, offset + 12);
-            }
-            else
-            {
-                if (data[offset + 4] != 0 || data[offset + 5] != 0 ||
-                    data[offset + 6] != 0 || data[offset + 7] != 0)
-                    return false;
-
-                if (data[offset + 12] != 0 || data[offset + 13] != 0 ||
-                    data[offset + 14] != 0 || data[offset + 15] != 0)
-                    return false;
-
-                id = Utilities.ReadUInt32LE(data, offset + 0);
-                location = Utilities.ReadUInt32LE(data, offset + 8);
+                imports.Add(new Dependency { ID = id, EntryPointerOffset = offset });
             }
 
-            if (id == 0)
-                return false;
+            imports.Reverse();
 
-            return true;
+            // Drop leading records until the last pointer slot fits before the table
+            while (imports.Count > 0
+                && imports[^1].EntryPointerOffset + pointerSize > data.Length - imports.Count * ImportEntrySize)
+                imports.RemoveAt(0);
+
+            return imports;
         }
 
         #endregion

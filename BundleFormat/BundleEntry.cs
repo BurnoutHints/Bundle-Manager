@@ -10,7 +10,7 @@ namespace BundleFormat
         public bool Compressed;
         public uint CompressedSize;
         public uint UncompressedSize;
-        public uint UncompressedAlignment; // default depending on file type
+        public uint UncompressedAlignment = 1; // default depending on file type, 1 (what empty blocks use) so new blocks never write alignment 0
         public byte[] RawData;
         public byte[] Data
         {
