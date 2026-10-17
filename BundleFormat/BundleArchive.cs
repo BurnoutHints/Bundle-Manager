@@ -528,7 +528,7 @@ namespace BundleFormat
 
                 entry.ID = br.ReadUInt64();
 
-                entry.References = br.ReadUInt64();
+                br.ReadUInt64(); // Import Resource ID, which we now recompute on write
 
                 entry.EntryBlocks = new EntryBlock[3];
                 for (int j = 0; j < entry.EntryBlocks.Length; j++)
@@ -674,7 +674,7 @@ namespace BundleFormat
                 compressedBlocks.Add(new byte[3][]);
 
                 bw.Write(entry.ID);
-                bw.Write(entry.References);
+                bw.Write(entry.ImportID);
 
                 for (int j = 0; j < entry.EntryBlocks.Length; j++)
                 {

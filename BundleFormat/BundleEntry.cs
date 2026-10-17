@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using BundleUtilities;
 
 namespace BundleFormat
@@ -88,7 +89,6 @@ namespace BundleFormat
         public int Index;
 
         public ulong ID;
-        public ulong References;
         public int DependenciesListOffset;
         public short DependencyCount;
         public List<Dependency> Dependencies;
@@ -116,6 +116,11 @@ namespace BundleFormat
             Archive.EntryCount = (uint)archive.Entries.Count;*/
             Dependencies = new List<Dependency>();
         }
+
+        public ulong ImportID => 
+            DependencyCount == 0 
+                ? 0 
+                : GetDependencies().Aggregate(0UL, (id, dep) => id | dep.EntryID);
 
         public bool HasSection(int section)
         {
