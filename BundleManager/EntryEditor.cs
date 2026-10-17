@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -17,6 +18,9 @@ namespace BundleManager
 {
     public partial class EntryEditor : Form
     {
+        private const string DataFileFilter = "YAP Binary Files|*.dat|Binary Files (Legacy)|*.bin;*.dat";
+        private const int LegacyFilterIndex = 2;
+
         private delegate BundleEntry GetEntry();
         private delegate void SetEntry(BundleEntry entry);
 
@@ -520,7 +524,7 @@ namespace BundleManager
             if (TabsVisible)
             {
                 DataHex = _entry.EntryBlocks[0].Data;
-                ExtraDataHex = _entry.EntryBlocks[1].Data;
+                ExtraDataHex = _entry.EntryBlocks[_entry.SecondaryBlock].Data;
             }
 
             MenuVisible = true;
@@ -592,40 +596,71 @@ namespace BundleManager
 
         private void importDataToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog ofd = new OpenFileDialog();
-            ofd.FileName = $"{_entry.ID.ToString("X8")}_primary";
-            ofd.DefaultExt = "bin";
-            ofd.Filter = "Binary Files|*.dat;*.bin|YAP Binary Files|*.dat";
-            ofd.FileOk += Ofd_FileOk1;
-            ofd.ShowDialog(this);
+            using OpenFileDialog ofd = new()
+            {
+                FileName = $"{_entry.ID.ToString("X8")}_primary",
+                DefaultExt = "dat",
+                Filter = DataFileFilter
+            };
+
+            if (ofd.ShowDialog(this) == DialogResult.OK)
+                ImportPrimary(ofd.FileName);
         }
 
-        private void Ofd_FileOk1(object sender, CancelEventArgs e)
+        private void ImportPrimary(string path)
         {
-            OpenFileDialog ofd = (OpenFileDialog)sender;
+            byte[] data = ResourceImport.ReadPrimary(path, Entry.Console, out List<Dependency> imports);
 
-            if (ofd.FileName == null || ofd.FileName.Length <= 0 || !File.Exists(ofd.FileName))
-                return;
-
-            Stream s = ofd.OpenFile();
-            MemoryStream ms = new MemoryStream();
-            s.CopyTo(ms);
-            s.Close();
-            byte[] data = ms.ToArray();
-            ms.Close();
+            if (imports == null)
+            {
+                imports = Entry.GetDependencies().Select(d => new Dependency { ID = d.EntryID, EntryPointerOffset = (uint)d.EntryPointerOffset }).ToList();
+                if (imports.Count > 0 && !Dependency.EndsWithTable(data, imports, Entry.Console))
+                {
+                    bool? keep = AskKeepImports(imports.Count);
+                    if (keep == null)
+                        return;
+                    if (keep == false)
+                        imports = [];
+                }
+                data = Dependency.AppendTable(data, imports, Entry.Console);
+            }
 
             Entry.EntryBlocks[0].Data = data;
+            Entry.Dependencies.Clear(); // A BND1 import list would hide the table
+            Entry.DependencyCount = (short)imports.Count;
+            Entry.DependenciesListOffset = imports.Count > 0 ? data.Length - imports.Count * Dependency.Size : 0;
             Entry.Dirty = true;
 
             Task.Run(() => UpdateDisplay());
+        }
+
+        // The file alone can't say whether it's missing its import table or has no imports. Null when cancelled
+        private bool? AskKeepImports(int count)
+        {
+            string imports = count == 1 ? "1 import" : $"{count} imports";
+            TaskDialogCommandLinkButton keep = new($"Keep its {imports}", "The file is the resource without its import table.");
+            TaskDialogCommandLinkButton none = new("No imports", "The new resource doesn't import anything.");
+
+            TaskDialogPage page = new()
+            {
+                Caption = "Import Data",
+                Heading = $"This file doesn't end with the resource's {imports}",
+                Text = "There's no _imports.yaml next to it to say which imports it has.",
+                Icon = TaskDialogIcon.Warning,
+                Buttons = { keep, none, TaskDialogButton.Cancel },
+                AllowCancel = true
+            };
+
+            TaskDialogButton result = TaskDialog.ShowDialog(this, page);
+            return result == keep ? true : result == none ? false : null;
         }
 
         private void exportDataToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveFileDialog sfd = new SaveFileDialog();
             sfd.FileName = $"{_entry.ID.ToString("X8")}_primary";
-            sfd.DefaultExt = "bin";
-            sfd.Filter = "Binary Files|*.dat;*.bin|YAP Binary Files|*.dat";
+            sfd.DefaultExt = "dat";
+            sfd.Filter = DataFileFilter;
             sfd.FileOk += Sfd_FileOk1;
             sfd.ShowDialog(this);
         }
@@ -637,20 +672,18 @@ namespace BundleManager
             if (sfd.FileName == null || sfd.FileName.Length <= 0)
                 return;
 
-            Stream s = sfd.OpenFile();
-            MemoryStream ms = new MemoryStream(Entry.EntryBlocks[0].Data);
-            ms.CopyTo(s);
-            s.Flush();
-            s.Close();
-            ms.Close();
+            if (sfd.FilterIndex == LegacyFilterIndex)
+                File.WriteAllBytes(sfd.FileName, Entry.EntryBlocks[0].Data);
+            else
+                ResourceImport.WritePrimary(sfd.FileName, Entry);
         }
 
         private void importExtraToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.FileName = $"{_entry.ID.ToString("X8")}_secondary";
-            ofd.DefaultExt = "bin";
-            ofd.Filter = "Binary Files|*.dat;*.bin|YAP Binary Files|*.dat";
+            ofd.DefaultExt = "dat";
+            ofd.Filter = DataFileFilter;
             ofd.FileOk += Ofd_FileOk2;
             ofd.ShowDialog(this);
         }
@@ -669,7 +702,7 @@ namespace BundleManager
             byte[] data = ms.ToArray();
             ms.Close();
 
-            Entry.EntryBlocks[1].Data = data;
+            Entry.EntryBlocks[Entry.SecondaryBlock].Data = data;
             Entry.Dirty = true;
 
             Task.Run(() => UpdateDisplay());
@@ -679,8 +712,8 @@ namespace BundleManager
         {
             SaveFileDialog sfd = new SaveFileDialog();
             sfd.FileName = $"{_entry.ID.ToString("X8")}_secondary";
-            sfd.DefaultExt = "bin";
-            sfd.Filter = "Binary Files|*.dat;*.bin|YAP Binary Files|*.dat";
+            sfd.DefaultExt = "dat";
+            sfd.Filter = DataFileFilter;
             sfd.FileOk += Sfd_FileOk2;
             sfd.ShowDialog(this);
         }
@@ -715,7 +748,7 @@ namespace BundleManager
                 return;
 
             Stream s = sfd.OpenFile();
-            MemoryStream ms = new MemoryStream(Entry.EntryBlocks[1].Data);
+            MemoryStream ms = new MemoryStream(Entry.EntryBlocks[Entry.SecondaryBlock].Data);
             ms.CopyTo(s);
             s.Flush();
             s.Close();

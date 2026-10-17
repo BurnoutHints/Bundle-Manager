@@ -27,24 +27,36 @@ namespace BundleManager
                 return new(info.Header, info.Data, [], null, EntryType.Texture);
             }
 
-            byte[] data = File.ReadAllBytes(path);
-            List<Dependency> imports;
-            string importsSource = null;
-
-            string yamlPath = GetImportsYamlPath(path);
-            if (yamlPath != null && File.Exists(yamlPath))
-            {
-                imports = LoadDependenciesFromYaml(yamlPath);
-                importsSource = Path.GetFileName(yamlPath);
-                data = Dependency.AppendTable(data, imports, archive.Console);
-            }
-            else
-            {
-                imports = Dependency.ScanTable(data, archive.Console, archive.Platform == BundlePlatform.PCx64 ? 8 : 4);
-            }
+            byte[] data = ReadPrimary(path, archive.Console, out List<Dependency> imports);
+            string importsSource = imports != null ? Path.GetFileName(GetImportsYamlPath(path)) : null;
+            imports ??= Dependency.ScanTable(data, archive.Console, archive.Platform == BundlePlatform.PCx64 ? 8 : 4);
 
             EntryType type = InferEntryType(data[..^(imports.Count * Dependency.Size)], imports.Count, archive.Console);
             return new(data, null, imports, importsSource, type);
+        }
+
+        public static byte[] ReadPrimary(string path, bool bigEndian, out List<Dependency> imports)
+        {
+            byte[] data = File.ReadAllBytes(path);
+            string yamlPath = GetImportsYamlPath(path);
+            imports = yamlPath != null && File.Exists(yamlPath) ? LoadDependenciesFromYaml(yamlPath) : null;
+            return imports != null ? Dependency.AppendTable(data, imports, bigEndian) : data;
+        }
+
+        // We now export the primary data without its import table and include a YAP-style yaml file for imports
+        public static void WritePrimary(string path, BundleEntry entry)
+        {
+            byte[] data = entry.EntryBlocks[0].Data;
+            List<BundleDependency> imports = entry.GetDependencies();
+
+            int length = imports.Count > 0 && entry.Dependencies.Count == 0 ? entry.DependenciesListOffset : data.Length;
+            File.WriteAllBytes(path, data[..length]);
+
+            string yamlPath = GetImportsYamlPath(path);
+            if (imports.Count > 0)
+                File.WriteAllLines(yamlPath, imports.Select(d => $"- 0x{d.EntryPointerOffset:x8}: 0x{d.EntryID:x8}"));
+            else if (File.Exists(yamlPath))
+                File.Delete(yamlPath); // From an earlier export of this resource, it would add imports back on import
         }
 
         public static string GetResourceBaseName(string path)

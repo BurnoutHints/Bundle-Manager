@@ -74,23 +74,35 @@ namespace BundleFormat
             bw.Write(0u); // Padding
         }
 
-        // Appends the import table to primary data unless it already ends with it
-        public static byte[] AppendTable(byte[] data, List<Dependency> imports, bool bigEndian)
+        private static byte[] WriteTable(List<Dependency> imports, bool bigEndian)
         {
             MemoryStream ms = new();
             BinaryWriter2 bw = new(ms, bigEndian);
             foreach (Dependency dep in imports)
                 dep.Write(bw);
-            byte[] table = ms.ToArray();
+            return ms.ToArray();
+        }
+
+        // Whether primary data already ends with this import table
+        public static bool EndsWithTable(byte[] data, List<Dependency> imports, bool bigEndian)
+        {
+            byte[] table = WriteTable(imports, bigEndian);
 
             // Compare id and offset only, padding isn't always zero on console
             int start = data.Length - table.Length;
             bool present = start >= 0;
             for (int i = 0; present && i < table.Length; i++)
                 present = i % Size >= 12 || data[start + i] == table[i];
-            if (present)
+            return present;
+        }
+
+        // Appends the import table to primary data unless it already ends with it
+        public static byte[] AppendTable(byte[] data, List<Dependency> imports, bool bigEndian)
+        {
+            if (EndsWithTable(data, imports, bigEndian))
                 return data;
 
+            byte[] table = WriteTable(imports, bigEndian);
             int tableStart = (data.Length + 0xF) & ~0xF;
             byte[] result = new byte[tableStart + table.Length];
             data.CopyTo(result, 0);
@@ -177,6 +189,9 @@ namespace BundleFormat
             DependencyCount == 0 
                 ? 0 
                 : GetDependencies().Aggregate(0UL, (id, dep) => id | dep.EntryID);
+
+        // Secondary data is memory type 2 on PS3 and 1 elsewhere
+        public int SecondaryBlock => HasSection(1) ? 1 : (HasSection(2) || Platform == BundlePlatform.PS3) ? 2 : 1;
 
         public bool HasSection(int section)
         {
