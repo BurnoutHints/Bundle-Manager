@@ -177,7 +177,7 @@ namespace BundleManager
             {
                 Caption = "Import Resource into Bundle",
                 Heading = "Which version of Burnout Paradise is this bundle for?",
-                Text = "Bundle Manager was unable to infer the platform for this bundle. Please select the version of Burnout Paradise that this bundle is for.\n This will determine how this texture and others are imported.",
+                Text = "Bundle Manager was unable to infer the platform for this bundle. Please select the version of Burnout Paradise that this bundle is for. This will determine how this texture and others are imported.",
                 Buttons = { original, remastered }
             };
 
