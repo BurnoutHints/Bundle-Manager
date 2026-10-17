@@ -56,22 +56,28 @@ namespace BundleManager
 
                 if (preferFolderMode is null)
                 {
-                    DialogResult result = MessageBox.Show(
-                        "Welcome to Bundle Manager!" +
-                        "\n\nThis program has 2 interchangable modes, Studio mode and Single Bundle mode." +
-                        "\n\nSingle Bundle mode is better for quicker, individual edits, while Studio mode is designed to allow editing of more complex resources (i.e. models) since these require dependent resources found in other bundles." +
-                        "\n\nWould you like to start in Studio mode?" +
-                        "\n\nThis setting can be changed at any time by clicking the \"Switch to (Bundle/Studio) Mode\" at the top of the main window.",
-                        "Question",
-                        MessageBoxButtons.YesNoCancel,
-                        MessageBoxIcon.Question);
+                    TaskDialogCommandLinkButton studio = new("Studio mode",
+                        "Edit complex resources, such as models, that need dependent resources found in other bundles.");
+                    TaskDialogCommandLinkButton bundle = new("Bundle mode",
+                        "Make quicker, individual edits to a single bundle.");
 
-                    if (result == DialogResult.Cancel)
+                    TaskDialogPage page = new()
+                    {
+                        Caption = "Bundle Manager",
+                        Heading = "Welcome to Bundle Manager.",
+                        Text = "This program has two interchangable modes. Which one would you like to start in?\n\nYou can switch at any time with \"Switch to Bundle/Studio Mode\" at the top of the main window.",
+                        Buttons = { bundle, studio, TaskDialogButton.Cancel },
+                        Footnote = "",
+                        AllowCancel = true
+                    };
+
+                    TaskDialogButton result = TaskDialog.ShowDialog(page);
+                    if (result != studio && result != bundle)
                         return;
 
-                    bool useFolderMode = result == DialogResult.Yes;
+                    bool useFolderMode = result == studio;
 
-                    SavePreferredMode(useFolderMode ? true : false);
+                    SavePreferredMode(useFolderMode);
 
                     if (useFolderMode)
                         Application.Run(new FileView());
