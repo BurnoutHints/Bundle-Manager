@@ -16,14 +16,19 @@ namespace BundleManager
     {
         private static readonly string[] ImageExtensions = [".dds", ".bmp", ".gif", ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".tga", ".webp"];
 
-        public static PrimaryResource LoadPrimary(string path, BundleArchive archive, Func<PlatformType> choosePCTexturePlatform)
+        public static PrimaryResource LoadPrimary(string path, BundleArchive archive, Func<PlatformType> choosePCTexturePlatform, Func<string, CompressionType?> chooseCompression)
         {
-            if (ImageExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase))
+            string extension = Path.GetExtension(path);
+            if (ImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
                 PlatformType platform = GetImageTexturePlatform(archive, choosePCTexturePlatform)
                     ?? throw new NotSupportedException($"Images can't be converted for {archive.Platform} bundles. Import the texture's header and body instead.");
 
-                ImageInfo info = GameImage.SetImage(path, CompressionType.DXT5, platform);
+                CompressionType compression = string.Equals(extension, ".dds", StringComparison.OrdinalIgnoreCase)
+                    ? CompressionType.UNKNOWN // SetImage reads the DDS file's own format
+                    : chooseCompression(path) ?? throw new OperationCanceledException();
+
+                ImageInfo info = GameImage.SetImage(path, compression, platform);
                 return new(info.Header, info.Data, [], null, EntryType.Texture);
             }
 

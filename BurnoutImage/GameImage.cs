@@ -38,6 +38,29 @@ namespace BurnoutImage
     {
         public const string FileFilter = "Image Files(*.dds,*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp)|*.dds;*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp";
 
+        public static (int Width, int Height, bool HasAlpha) InspectImage(string path)
+        {
+            using Bitmap image = new(path);
+            Rectangle area = new(0, 0, image.Width, image.Height);
+            System.Drawing.Imaging.BitmapData bits = image.LockBits(area, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            try
+            {
+                byte[] row = new byte[image.Width * 4]; // BGRA
+                for (int y = 0; y < image.Height; y++)
+                {
+                    System.Runtime.InteropServices.Marshal.Copy(bits.Scan0 + y * bits.Stride, row, 0, row.Length);
+                    for (int a = 3; a < row.Length; a += 4)
+                        if (row[a] != 255)
+                            return (image.Width, image.Height, true);
+                }
+                return (image.Width, image.Height, false);
+            }
+            finally
+            {
+                image.UnlockBits(bits);
+            }
+        }
+
         public static ImageInfo SetImage(string path, CompressionType compression, PlatformType platform = PlatformType.Remastered)
         {
             byte[] data;
@@ -96,7 +119,7 @@ namespace BurnoutImage
             // Process non-DDS textures
             else
             {
-                Bitmap image = new(Image.FromFile(path));
+                using Bitmap image = new(path);
 
                 width = image.Width;
                 height = image.Height;

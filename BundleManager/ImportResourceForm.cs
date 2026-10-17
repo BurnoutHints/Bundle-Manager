@@ -48,6 +48,10 @@ namespace BundleManager
             {
                 form = new(destination, path);
             }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
             catch (Exception ex)
             {
                 MessageBox.Show(owner, $"Unable to import {path}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -108,7 +112,7 @@ namespace BundleManager
 
         void LoadPrimary(string path)
         {
-            _primary = ResourceImport.LoadPrimary(path, _workingArchive, AskPCTexturePlatform);
+            _primary = ResourceImport.LoadPrimary(path, _workingArchive, AskPCTexturePlatform, p => ImageImportDialog.AskCompression(null, p));
             _primaryPath = path;
 
             primaryResourcePathTextBox.Text = path;
@@ -150,7 +154,8 @@ namespace BundleManager
             }
             catch (Exception ex)
             {
-                Warn($"Unable to use {path}: {ex.Message}");
+                if (ex is not OperationCanceledException)
+                    Warn($"Unable to use {path}: {ex.Message}");
                 primaryResourcePathTextBox.Text = _primaryPath; // Put the old path back in the text box
                 return false;
             }

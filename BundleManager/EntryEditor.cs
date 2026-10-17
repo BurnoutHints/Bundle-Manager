@@ -554,24 +554,32 @@ namespace BundleManager
 
         private void importToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = GameImage.FileFilter + "|All files (*.*)|*.*";
-            ofd.FileOk += Ofd_FileOk;
-            ofd.ShowDialog(this);
-        }
-
-        private void Ofd_FileOk(object sender, CancelEventArgs e)
-        {
-            OpenFileDialog ofd = (OpenFileDialog)sender;
-
-            if (ofd.FileName == null || ofd.FileName.Length <= 0 || !File.Exists(ofd.FileName))
+            using OpenFileDialog ofd = new() { Filter = GameImage.FileFilter + "|All files (*.*)|*.*" };
+            if (ofd.ShowDialog(this) != DialogResult.OK)
                 return;
 
             string path = ofd.FileName;
-            Task.Run(() => ImportImage(path));
+            CompressionType? compression = null; // DDS files keep their own format
+            if (!string.Equals(Path.GetExtension(path), ".dds", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    compression = ImageImportDialog.AskCompression(this, path);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, $"Unable to import {path}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if (compression == null)
+                    return;
+            }
+
+            Task.Run(() => ImportImage(path, compression));
         }
 
-        private void ImportImage(string path)
+        private void ImportImage(string path, CompressionType? compression)
         {
             _entry.Dirty = true;
 
@@ -582,7 +590,7 @@ namespace BundleManager
 
             ImageHeader header = GameImage.GetImageHeader(_entry.EntryBlocks[0].Data);
 
-            ImageInfo info = GameImage.SetImage(path, header.CompressionType, header.Platform);
+            ImageInfo info = GameImage.SetImage(path, compression ?? header.CompressionType, header.Platform);
 
             Entry.EntryBlocks[0].Data = info.Header;
             Entry.EntryBlocks[1].Data = info.Data;
