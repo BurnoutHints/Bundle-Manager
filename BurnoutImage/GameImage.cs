@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -36,7 +37,7 @@ namespace BurnoutImage
 
     public static class GameImage
     {
-        public const string FileFilter = "Image Files(*.dds,*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp)|*.dds;*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp";
+        public const string FileFilter = "Image Files(*.dds,*.bmp;*.gif;*.jpg;*.png;*.tif)|*.dds;*.bmp;*.gif;*.jpg;*.jpeg;*.png;*.tif;*.tiff";
 
         public static (int Width, int Height, bool HasAlpha) InspectImage(string path)
         {
@@ -61,8 +62,22 @@ namespace BurnoutImage
             }
         }
 
-        public static ImageInfo SetImage(string path, CompressionType compression, PlatformType platform = PlatformType.Remastered)
+        // Bytes of pixel data for a texture, including its smaller mips
+        public static int TextureSize(CompressionType compression, int width, int height, int mips = 1)
         {
+            int size = 0;
+            for (int i = 0; i < mips; i++, width = Math.Max(1, width / 2), height = Math.Max(1, height / 2))
+                size += compression is CompressionType.DXT1 or CompressionType.DXT5
+                    ? ((width + 3) / 4) * ((height + 3) / 4) * (compression == CompressionType.DXT1 ? 8 : 16)
+                    : width * height * 4;
+            return size;
+        }
+
+        public static ImageInfo SetImage(string path, CompressionType compression, PlatformType platform = PlatformType.Remastered, byte[] template = null)
+        {
+            if (platform is not (PlatformType.PC or PlatformType.PCx64 or PlatformType.Remastered))
+                throw new NotSupportedException($"Images can't be converted to {platform} textures yet.");
+
             byte[] data;
             int width = 0, height = 0, numMips = 1;
 
@@ -115,6 +130,9 @@ namespace BurnoutImage
                 data = br.ReadBytes((int)(fs.Length - ddsHeaderSize));
 
                 br.Close();
+
+                if (data.Length < TextureSize(compression, width, height, numMips))
+                    throw new InvalidDataException($"The DDS file has less pixel data than a {width}×{height} {compression} texture with {numMips} mips needs.");
             }
             // Process non-DDS textures
             else
@@ -158,43 +176,40 @@ namespace BurnoutImage
             }
 
 
-            // Process header block
-            MemoryStream msx = new();
-            BinaryWriter2 bw = new(msx);
+            // Direct3D can't create block compressed textures of other sizes, and the game crashes on them
+            if (compression is CompressionType.DXT1 or CompressionType.DXT5 && (width % 4 != 0 || height % 4 != 0))
+                throw new InvalidDataException($"{compression} textures need a width and height that are multiples of 4, but this image is {width}×{height}. Resize it or import it uncompressed.");
 
+            // Process header block
             if (platform == PlatformType.Remastered)
             {
-                // Remastered Texture header: https://burnout.wiki/wiki/Texture/Remastered
-                bw.Write(0); // Texture interface pointer
-                bw.Write(0); // Usage
-                bw.Write(7); // Dimension
-                bw.Write(0); // Pixel data pointer
-                bw.Write(0); // Shader resource view interface pointer 1
-                bw.Write(0); // Shader resource view interface pointer 2
-                bw.Write(0); // ?
-                int format = compression switch
+                // Remastered Texture header: https://burnout.wiki/wiki/Texture/Burnout_Paradise/Remastered
+                byte[] header = template?.Length is 0x40 or 0x60 ? (byte[])template.Clone() : new byte[0x40];
+                Span<byte> h = header;
+                int p = header.Length == 0x60 ? 4 : 0;    // 64-bit pointers move Dimension 4 bytes
+                int f = header.Length == 0x60 ? 0x10 : 0; // and Format onwards 0x10 bytes
+                BinaryPrimitives.WriteInt32LittleEndian(h[(0x08 + p)..], 7); // Dimension: 2D
+                BinaryPrimitives.WriteInt32LittleEndian(h[(0x1C + f)..], compression switch
                 {
                     CompressionType.ARGB => 0x1C, // v One of these may be incorrect
                     CompressionType.RGBA => 0x1C, // ^
                     CompressionType.BGRA => 0x57,
                     CompressionType.DXT1 => 0x47,
                     CompressionType.DXT5 => 0x4D,
-                };
-                bw.Write(format);
-                bw.Write(0);                // Flags
-                bw.Write((ushort)width);    // Width
-                bw.Write((ushort)height);   // Height
-                bw.Write((ushort)1);        // Depth
-                bw.Write((ushort)1);        // Array size
-                bw.Write((byte)0);          // Most detailed mip
-                bw.Write((byte)numMips);    // Mip levels
-                bw.Write((ushort)0);        // ?
-                bw.Write(0);                // ? pointer
-                bw.Write(0);                // Array index (unused)
-                bw.Write(0);                // Contents size (unused)
-                bw.Write(0);                // Texture data (unused)
+                });
+                BinaryPrimitives.WriteUInt16LittleEndian(h[(0x24 + f)..], (ushort)width);
+                BinaryPrimitives.WriteUInt16LittleEndian(h[(0x26 + f)..], (ushort)height);
+                BinaryPrimitives.WriteUInt16LittleEndian(h[(0x28 + f)..], 1); // Depth
+                BinaryPrimitives.WriteUInt16LittleEndian(h[(0x2A + f)..], 1); // Array size
+                h[0x2C + f] = 0;                                              // Most detailed mip
+                h[0x2D + f] = (byte)numMips;                                  // Mip levels
+                return new ImageInfo(header, data);
             }
-            else if (platform == PlatformType.PC || platform == PlatformType.PCx64)
+
+            MemoryStream msx = new();
+            BinaryWriter2 bw = new(msx);
+
+            if (platform == PlatformType.PC || platform == PlatformType.PCx64)
             {
                 if (platform == PlatformType.PC)
                 {
@@ -253,7 +268,7 @@ namespace BurnoutImage
                     var (oFormat, oSize) = data.Length switch
                     {
                         0x40 => (0x1C, 0x24),
-                        0x60 => (0x24, 0x34),
+                        0x60 => (0x2C, 0x34),
                         _ => throw new InvalidDataException()
                     };
 

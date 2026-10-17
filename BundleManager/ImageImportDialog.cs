@@ -10,11 +10,16 @@ namespace BundleManager
         {
             var (width, height, hasAlpha) = GameImage.InspectImage(imagePath);
             CompressionType compressed = hasAlpha ? CompressionType.DXT5 : CompressionType.DXT1;
-            long compressedSize = (long)((width + 3) / 4) * ((height + 3) / 4) * (hasAlpha ? 16 : 8);
-            long linearSize = (long)width * height * 4;
+            long compressedSize = GameImage.TextureSize(compressed, width, height);
+            long linearSize = GameImage.TextureSize(CompressionType.BGRA, width, height);
+            bool compressible = width % 4 == 0 && height % 4 == 0; // GameImage.SetImage refuses other sizes
 
-            TaskDialogCommandLinkButton compressedButton = new("Compressed (recommended)",
-                $"{compressed}{(hasAlpha ? ", keeps the transparency" : "")}. {Size(compressedSize)}.");
+            TaskDialogCommandLinkButton compressedButton = new("Compressed (recommended)", compressible
+                ? $"{compressed}{(hasAlpha ? ", keeps the transparency" : "")}. {Size(compressedSize)}."
+                : "Needs a width and height that are multiples of 4. Resize the image to use it.")
+            {
+                Enabled = compressible
+            };
             TaskDialogCommandLinkButton linear = new("High quality (linear)",
                 $"Uncompressed, exact colours{(hasAlpha ? " and transparency" : "")}. {Size(linearSize)}, {linearSize / compressedSize}× the size.");
 
@@ -24,6 +29,7 @@ namespace BundleManager
                 Heading = "How should this texture be stored?",
                 Text = $"{Path.GetFileName(imagePath)}, {width}×{height}",
                 Buttons = { compressedButton, linear, TaskDialogButton.Cancel },
+                DefaultButton = compressible ? compressedButton : linear,
                 AllowCancel = true,
                 Footnote = new TaskDialogFootnote("High quality textures can quickly exhaust the game's memory budget.") { Icon = TaskDialogIcon.Warning }
             };

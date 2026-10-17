@@ -14,21 +14,23 @@ namespace BundleManager
 
     public static partial class ResourceImport
     {
-        private static readonly string[] ImageExtensions = [".dds", ".bmp", ".gif", ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".tga", ".webp"];
+        private static readonly string[] ImageExtensions = [".dds", ".bmp", ".gif", ".jpg", ".jpeg", ".png", ".tif", ".tiff"];
 
         public static PrimaryResource LoadPrimary(string path, BundleArchive archive, Func<PlatformType> choosePCTexturePlatform, Func<string, CompressionType?> chooseCompression)
         {
             string extension = Path.GetExtension(path);
             if (ImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
-                PlatformType platform = GetImageTexturePlatform(archive, choosePCTexturePlatform)
+                BundleEntry sample = archive.Entries.FirstOrDefault(e => e.Type == EntryType.Texture && e.HasHeader);
+                PlatformType platform = GetImageTexturePlatform(archive, sample, choosePCTexturePlatform)
                     ?? throw new NotSupportedException($"Images can't be converted for {archive.Platform} bundles. Import the texture's header and body instead.");
 
                 CompressionType compression = string.Equals(extension, ".dds", StringComparison.OrdinalIgnoreCase)
                     ? CompressionType.UNKNOWN // SetImage reads the DDS file's own format
                     : chooseCompression(path) ?? throw new OperationCanceledException();
 
-                ImageInfo info = GameImage.SetImage(path, compression, platform);
+                // A blank header the size of the bundle's others, so 64-bit Remastered bundles get 64-bit headers
+                ImageInfo info = GameImage.SetImage(path, compression, platform, sample != null ? new byte[sample.EntryBlocks[0].Data.Length] : null);
                 return new(info.Header, info.Data, [], null, EntryType.Texture);
             }
 
@@ -128,9 +130,8 @@ namespace BundleManager
             _ => null
         };
 
-        private static PlatformType? GetImageTexturePlatform(BundleArchive archive, Func<PlatformType> choosePCTexturePlatform)
+        private static PlatformType? GetImageTexturePlatform(BundleArchive archive, BundleEntry sample, Func<PlatformType> choosePCTexturePlatform)
         {
-            BundleEntry sample = archive.Entries.FirstOrDefault(e => e.Type == EntryType.Texture && e.HasHeader);
             PlatformType? platform = sample != null
                 ? GameImage.DetectPlatform(sample.EntryBlocks[0].Data)
                 : archive.Platform == BundlePlatform.PC

@@ -552,48 +552,34 @@ namespace BundleManager
             Image.Save(path, ImageFormat.Png);
         }
 
-        private void importToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void importToolStripMenuItem_Click(object sender, EventArgs e)
         {
             using OpenFileDialog ofd = new() { Filter = GameImage.FileFilter + "|All files (*.*)|*.*" };
             if (ofd.ShowDialog(this) != DialogResult.OK)
                 return;
 
             string path = ofd.FileName;
-            CompressionType? compression = null; // DDS files keep their own format
-            if (!string.Equals(Path.GetExtension(path), ".dds", StringComparison.OrdinalIgnoreCase))
+            byte[] oldHeader = _entry.EntryBlocks[0].Data;
+            ImageInfo info;
+            try
             {
-                try
-                {
-                    compression = ImageImportDialog.AskCompression(this, path);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(this, $"Unable to import {path}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ImageHeader header = GameImage.GetImageHeader(oldHeader);
+                CompressionType? compression = null; // DDS files keep their own format
+                if (!string.Equals(Path.GetExtension(path), ".dds", StringComparison.OrdinalIgnoreCase)
+                    && (compression = ImageImportDialog.AskCompression(this, path)) == null)
                     return;
-                }
 
-                if (compression == null)
-                    return;
+                info = await Task.Run(() => GameImage.SetImage(path, compression ?? header.CompressionType, header.Platform, oldHeader));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, $"Unable to import {path}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
-            Task.Run(() => ImportImage(path, compression));
-        }
-
-        private void ImportImage(string path, CompressionType? compression)
-        {
             _entry.Dirty = true;
-
-            ImageVisible = false;
-            TabsVisible = false;
-            ImageMenuVisible = false;
-            BinaryMenuVisible = false;
-
-            ImageHeader header = GameImage.GetImageHeader(_entry.EntryBlocks[0].Data);
-
-            ImageInfo info = GameImage.SetImage(path, compression ?? header.CompressionType, header.Platform);
-
-            Entry.EntryBlocks[0].Data = info.Header;
-            Entry.EntryBlocks[1].Data = info.Data;
+            _entry.EntryBlocks[0].Data = info.Header;
+            _entry.EntryBlocks[1].Data = info.Data;
 
             ImageVisible = false;
             TabsVisible = false;
