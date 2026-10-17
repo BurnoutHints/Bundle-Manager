@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using BundleUtilities;
 
@@ -100,6 +101,45 @@ namespace BundleFormat
             Entries.Insert(index < 0 ? Entries.Count : index, entry);
             for (int i = 0; i < Entries.Count; i++)
                 Entries[i].Index = i;
+        }
+
+        public BundleEntry CreateEntry(ulong id, EntryType type, string name, byte[] primary, int importCount, byte[] secondary = null)
+        {
+            BundleEntry template = Entries.FirstOrDefault(e => e.Type == type);
+
+            // Secondary data is memory type 2 on PS3 and 1 elsewhere
+            int secondaryBlock = template != null
+                ? (template.HasSection(2) && !template.HasSection(1) ? 2 : 1)
+                : (Platform == BundlePlatform.PS3 ? 2 : 1);
+
+            byte[][] data = new byte[3][];
+            data[0] = primary;
+            data[secondaryBlock] = secondary;
+
+            BundleEntry entry = new(this)
+            {
+                ID = id,
+                Type = type,
+                Platform = Platform,
+                DependencyCount = (short)importCount,
+                DependenciesListOffset = importCount > 0 ? primary.Length - importCount * Dependency.Size : 0,
+                DebugInfo = new() { Name = name, TypeName = type.ToString() },
+                Dirty = true,
+                EntryBlocks = new EntryBlock[3]
+            };
+
+            for (int i = 0; i < entry.EntryBlocks.Length; i++)
+            {
+                EntryBlock block = new() { Compressed = false };
+                if (data[i] != null)
+                {
+                    block.Data = data[i];
+                    block.UncompressedAlignment = template != null && template.HasSection(i) ? template.EntryBlocks[i].UncompressedAlignment : 16;
+                }
+                entry.EntryBlocks[i] = block;
+            }
+
+            return entry;
         }
 
         public string GetEntryNameByID(ulong id)

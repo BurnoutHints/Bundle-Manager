@@ -73,6 +73,62 @@ namespace BundleFormat
             bw.Write(EntryPointerOffset);
             bw.Write(0u); // Padding
         }
+
+        // Appends the import table to primary data unless it already ends with it
+        public static byte[] AppendTable(byte[] data, List<Dependency> imports, bool bigEndian)
+        {
+            MemoryStream ms = new();
+            BinaryWriter2 bw = new(ms, bigEndian);
+            foreach (Dependency dep in imports)
+                dep.Write(bw);
+            byte[] table = ms.ToArray();
+
+            // Compare id and offset only, padding isn't always zero on console
+            int start = data.Length - table.Length;
+            bool present = start >= 0;
+            for (int i = 0; present && i < table.Length; i++)
+                present = i % Size >= 12 || data[start + i] == table[i];
+            if (present)
+                return data;
+
+            int tableStart = (data.Length + 0xF) & ~0xF;
+            byte[] result = new byte[tableStart + table.Length];
+            data.CopyTo(result, 0);
+            table.CopyTo(result, tableStart);
+            return result;
+        }
+
+        // Guesses the import table at the end of primary data
+        public static List<Dependency> ScanTable(byte[] data, bool bigEndian, int pointerSize)
+        {
+            List<Dependency> imports = [];
+
+            if (data.Length % Size != 0)
+                return imports;
+
+            using BinaryReader2 br = new(new MemoryStream(data), bigEndian);
+
+            for (int start = data.Length - Size; start >= 0; start -= Size)
+            {
+                br.BaseStream.Position = start;
+                Dependency dep = Read(br);
+
+                if (dep.ID == 0 || dep.ID > uint.MaxValue || dep.EntryPointerOffset % 4 != 0
+                    || (imports.Count > 0 && dep.EntryPointerOffset >= imports[^1].EntryPointerOffset))
+                    break;
+
+                imports.Add(dep);
+            }
+
+            imports.Reverse();
+
+            // Drop leading records until the last pointer slot fits before the table
+            while (imports.Count > 0
+                && imports[^1].EntryPointerOffset + pointerSize > data.Length - imports.Count * Size)
+                imports.RemoveAt(0);
+
+            return imports;
+        }
     }
 
     public struct DebugInfo
