@@ -613,14 +613,17 @@ namespace BundleManager
 
             if (imports == null)
             {
-                imports = Entry.GetDependencies().Select(d => new Dependency { ID = d.EntryID, EntryPointerOffset = (uint)d.EntryPointerOffset }).ToList();
-                if (imports.Count > 0 && !Dependency.EndsWithTable(data, imports, Entry.Console))
+                List<Dependency> current = Entry.GetDependencies().Select(d => new Dependency { ID = d.EntryID, EntryPointerOffset = (uint)d.EntryPointerOffset }).ToList();
+                if (current.Count > 0 && Dependency.EndsWithTable(data, current, Entry.Console))
                 {
-                    bool? keep = AskKeepImports(imports.Count);
-                    if (keep == null)
+                    imports = current;
+                }
+                else
+                {
+                    List<Dependency> found = ResourceImport.ScanImports(data, Entry.Platform);
+                    imports = found.Count == 0 && current.Count == 0 ? [] : AskImports(found, current);
+                    if (imports == null)
                         return;
-                    if (keep == false)
-                        imports = [];
                 }
                 data = Dependency.AppendTable(data, imports, Entry.Console);
             }
@@ -634,25 +637,42 @@ namespace BundleManager
             Task.Run(() => UpdateDisplay());
         }
 
-        // The file alone can't say whether it's missing its import table or has no imports. Null when cancelled
-        private bool? AskKeepImports(int count)
+        private List<Dependency> AskImports(List<Dependency> found, List<Dependency> current)
         {
-            string imports = count == 1 ? "1 import" : $"{count} imports";
-            TaskDialogCommandLinkButton keep = new($"Keep its {imports}", "The file is the resource without its import table.");
+            static string Imports(int count) => count == 1 ? "1 import" : $"{count} imports";
+
+            TaskDialogCommandLinkButton useFound = new($"Use the {Imports(found.Count)} at the end of the file", "The file ends with its own import table.");
+            TaskDialogCommandLinkButton keep = new($"Keep the resource's {Imports(current.Count)}", "The file is the resource without its import table.");
             TaskDialogCommandLinkButton none = new("No imports", "The new resource doesn't import anything.");
 
             TaskDialogPage page = new()
             {
                 Caption = "Import Data",
-                Heading = $"This file doesn't end with the resource's {imports}",
+                Heading = found.Count > 0
+                    ? $"This file seems to end with {Imports(found.Count)}"
+                    : $"This file doesn't end with the resource's {Imports(current.Count)}",
                 Text = "There's no _imports.yaml next to it to say which imports it has.",
                 Icon = TaskDialogIcon.Warning,
-                Buttons = { keep, none, TaskDialogButton.Cancel },
                 AllowCancel = true
             };
 
+            if (found.Count > 0)
+            {
+                page.Buttons.Add(useFound);
+                page.Expander = new TaskDialogExpander(string.Join("\n", found.Select(d =>
+                    $"0x{d.EntryPointerOffset:X8} -> {d.ID:X8}" + (Entry.Archive.GetEntryByID(d.ID) is BundleEntry target ? $" ({target.Type} in this bundle)" : ""))))
+                {
+                    CollapsedButtonText = "Show imports",
+                    ExpandedButtonText = "Hide imports"
+                };
+            }
+            if (current.Count > 0)
+                page.Buttons.Add(keep);
+            page.Buttons.Add(none);
+            page.Buttons.Add(TaskDialogButton.Cancel);
+
             TaskDialogButton result = TaskDialog.ShowDialog(this, page);
-            return result == keep ? true : result == none ? false : null;
+            return result == useFound ? found : result == keep ? current : result == none ? [] : null;
         }
 
         private void exportDataToolStripMenuItem_Click(object sender, EventArgs e)

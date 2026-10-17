@@ -29,7 +29,7 @@ namespace BundleManager
 
             byte[] data = ReadPrimary(path, archive.Console, out List<Dependency> imports);
             string importsSource = imports != null ? Path.GetFileName(GetImportsYamlPath(path)) : null;
-            imports ??= Dependency.ScanTable(data, archive.Console, archive.Platform == BundlePlatform.PCx64 ? 8 : 4);
+            imports ??= ScanImports(data, archive.Platform);
 
             EntryType type = InferEntryType(data[..^(imports.Count * Dependency.Size)], imports.Count, archive.Console);
             return new(data, null, imports, importsSource, type);
@@ -57,6 +57,12 @@ namespace BundleManager
                 File.WriteAllLines(yamlPath, imports.Select(d => $"- 0x{d.EntryPointerOffset:x8}: 0x{d.EntryID:x8}"));
             else if (File.Exists(yamlPath))
                 File.Delete(yamlPath); // From an earlier export of this resource, it would add imports back on import
+        }
+
+        public static List<Dependency> ScanImports(byte[] data, BundlePlatform platform)
+        {
+            bool bigEndian = platform is BundlePlatform.X360 or BundlePlatform.PS3;
+            return Dependency.ScanTable(data, bigEndian, platform == BundlePlatform.PCx64 ? 8 : 4);
         }
 
         public static string GetResourceBaseName(string path)
