@@ -59,6 +59,20 @@ namespace BundleManager
                 File.Delete(yamlPath); // From an earlier export of this resource, it would add imports back on import
         }
 
+        public static void WritePrimaryWithTable(string path, BundleEntry entry)
+        {
+            File.WriteAllBytes(path, entry.EntryBlocks[0].Data);
+
+            string yamlPath = GetImportsYamlPath(path);
+            if (yamlPath == null || !File.Exists(yamlPath))
+                return;
+
+            var listed = LoadDependenciesFromYaml(yamlPath).Select(d => (d.ID, (long)d.EntryPointerOffset));
+            var current = entry.GetDependencies().Select(d => (d.EntryID, (long)d.EntryPointerOffset));
+            if (!listed.SequenceEqual(current))
+                File.Delete(yamlPath);
+        }
+
         public static List<Dependency> ScanImports(byte[] data, BundlePlatform platform)
         {
             bool bigEndian = platform is BundlePlatform.X360 or BundlePlatform.PS3;

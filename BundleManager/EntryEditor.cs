@@ -688,7 +688,7 @@ namespace BundleManager
             if (typeIndex == YAPFilterIndex)
                 ResourceImport.WritePrimary(path, Entry);
             else
-                File.WriteAllBytes(path, Entry.EntryBlocks[0].Data);
+                ResourceImport.WritePrimaryWithTable(path, Entry);
         }
 
         private string[] ExportNames(bool secondary)
