@@ -18,8 +18,8 @@ namespace BundleManager
 {
     public partial class EntryEditor : Form
     {
-        private const string DataFileFilter = "YAP Binary Files|*.dat|Binary Files (Legacy)|*.bin;*.dat";
-        private const int LegacyFilterIndex = 2;
+        private const string DataFileFilter = "Binary Files (Bundle Manager & YAP)|*.dat|Binary Files (Legacy BM & bnd2-manager)|*.bin;*.dat|Binary Files (DGI)|*.dat";
+        private const int YAPFilterIndex = 1; // Legacy and DGI keep the import table at the end of the primary data, without a yaml
 
         private delegate BundleEntry GetEntry();
         private delegate void SetEntry(BundleEntry entry);
@@ -657,25 +657,36 @@ namespace BundleManager
 
         private void exportDataToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SaveFileDialog sfd = new SaveFileDialog();
-            sfd.FileName = $"{_entry.ID.ToString("X8")}_primary";
-            sfd.DefaultExt = "dat";
-            sfd.Filter = DataFileFilter;
-            sfd.FileOk += Sfd_FileOk1;
-            sfd.ShowDialog(this);
-        }
+            string[] names = PrimaryExportNames();
 
-        private void Sfd_FileOk1(object sender, CancelEventArgs e)
-        {
-            SaveFileDialog sfd = (SaveFileDialog)sender;
-
-            if (sfd.FileName == null || sfd.FileName.Length <= 0)
+            // The native dialog so the name can follow the type
+            string path = NativeSaveDialog.Show(this, names[0], "dat", DataFileFilter,
+                (type, name) => NameForType(type, name, names), out int typeIndex);
+            if (path == null)
                 return;
 
-            if (sfd.FilterIndex == LegacyFilterIndex)
-                File.WriteAllBytes(sfd.FileName, Entry.EntryBlocks[0].Data);
+            if (typeIndex == YAPFilterIndex)
+                ResourceImport.WritePrimary(path, Entry);
             else
-                ResourceImport.WritePrimary(sfd.FileName, Entry);
+                File.WriteAllBytes(path, Entry.EntryBlocks[0].Data);
+        }
+
+        private string[] PrimaryExportNames()
+        {
+            string id = _entry.ID.ToString("X8");
+            byte[] bytes = BitConverter.GetBytes((uint)_entry.ID);
+            if (_entry.Console)
+                Array.Reverse(bytes);
+
+            return [$"{id}_primary", id, string.Join("_", bytes.Select(b => b.ToString("X2")))];
+        }
+
+        // Swaps only the default names, keeping any extension in the box
+        private static string NameForType(int type, string name, string[] names)
+        {
+            string extension = Path.GetExtension(name);
+            string stem = name[..^extension.Length];
+            return (names.Contains(stem) ? names[type - 1] : stem) + extension;
         }
 
         private void importExtraToolStripMenuItem_Click(object sender, EventArgs e)
