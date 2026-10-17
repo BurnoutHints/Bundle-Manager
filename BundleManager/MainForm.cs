@@ -420,7 +420,7 @@ namespace BundleManager
         {
             BundleEntry entry = GetEntry(index);
 
-            if (EntryTypeRegistry.IsRegistered(entry.Type) && !forceHex)
+            if (EntryTypeRegistry.IsRegistered(entry.Type) && !forceHex && entry.Platform != BundlePlatform.PCx64)
             {
                 IEntryData data = EntryTypeRegistry.GetHandler(entry.Type);
 

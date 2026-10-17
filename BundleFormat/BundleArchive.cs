@@ -22,7 +22,8 @@ namespace BundleFormat
     {
         PC = 1,
         X360 = 2,// << 24, // Big Endian
-        PS3 = 3// << 24 // Big Endian
+        PS3 = 3, // << 24  // Big Endian
+        PCx64 = 4
     }
 
     public class BundleArchive
@@ -492,11 +493,7 @@ namespace BundleFormat
         {
             br.BaseStream.Position += 4;
 
-            int platform = br.ReadInt32();
-            if (platform != 1)
-                platform = BinaryPrimitives.ReverseEndianness(platform);
-            Platform = (BundlePlatform)platform;
-            br.BigEndian = Console;
+            Platform = ReadPlatform(br);
 
             br.BaseStream.Position -= 8;
             Version = br.ReadInt32();
@@ -694,7 +691,7 @@ namespace BundleFormat
                         bw.Write((uint)0);
                     else
                     {
-                        compressedBlocks[i][j] = entryBlock.Data.Compress();
+                        compressedBlocks[i][j] = Flags.HasFlag(Flags.Compressed) ? entryBlock.Data.Compress() : entryBlock.Data;
                         bw.Write(compressedBlocks[i][j].Length);
                     }
                 }
@@ -723,22 +720,16 @@ namespace BundleFormat
 
                 for (int j = 0; j < Entries.Count; j++)
                 {
-                    BundleEntry entry = Entries[j];
-                    EntryBlock entryBlock = entry.EntryBlocks[i];
-                    bool compressed = Flags.HasFlag(Flags.Compressed);
-                    uint size = compressed ? (compressedBlocks[j][i] == null ? 0 : (uint)compressedBlocks[j][i].Length) : (uint)entryBlock.Data.Length;
+                    byte[] diskData = compressedBlocks[j][i];
 
-                    if (size > 0)
+                    if (diskData != null && diskData.Length > 0)
                     {
                         long pos = bw.BaseStream.Position;
                         bw.BaseStream.Position = entryDataPointerPos[j][i];
                         bw.Write((uint)(pos - blockStart));
                         bw.BaseStream.Position = pos;
 
-                        if (compressed)
-                            bw.Write(compressedBlocks[j][i]);
-                        else
-                            bw.Write(entryBlock.Data);
+                        bw.Write(diskData);
 
                         bw.Align((i != 0 && j != Entries.Count - 1) ? (byte)0x80 : (byte)16);
                     }
@@ -747,6 +738,13 @@ namespace BundleFormat
                 if (i != 2)
                     bw.Align(0x80);
             }
+        }
+
+        private static BundlePlatform ReadPlatform(BinaryReader2 br)
+        {
+            int platform = br.ReadInt32();
+            br.BigEndian = platform > 0xFF;
+            return (BundlePlatform)(br.BigEndian ? BinaryPrimitives.ReverseEndianness(platform) : platform);
         }
 
         public static bool VerifyMagic(BinaryReader2 br, byte[] magic)
@@ -796,11 +794,7 @@ namespace BundleFormat
 
             br.BaseStream.Position += 4;
 
-            int platformInt = br.ReadInt32();
-            if (platformInt != 1)
-                platformInt = BinaryPrimitives.ReverseEndianness(platformInt);
-            BundlePlatform platform = (BundlePlatform)platformInt;
-            br.BigEndian = platform == BundlePlatform.X360 || platform == BundlePlatform.PS3;
+            ReadPlatform(br);
 
             br.BaseStream.Position = 0x10;
             int fileCount = br.ReadInt32();
@@ -838,11 +832,7 @@ namespace BundleFormat
 
             br.BaseStream.Position += 4;
 
-            int platformInt = br.ReadInt32();
-            if (platformInt != 1)
-                platformInt = BinaryPrimitives.ReverseEndianness(platformInt);
-            BundlePlatform platform = (BundlePlatform)platformInt;
-            br.BigEndian = platform == BundlePlatform.X360 || platform == BundlePlatform.PS3;
+            ReadPlatform(br);
             
             br.BaseStream.Position = 0xC;
             uint rstOffset = br.ReadUInt32();
@@ -905,11 +895,7 @@ namespace BundleFormat
             
             br.BaseStream.Position += 4;
 
-            int platformInt = br.ReadInt32();
-            if (platformInt != 1)
-                platformInt = BinaryPrimitives.ReverseEndianness(platformInt);
-            BundlePlatform platform = (BundlePlatform)platformInt;
-            br.BigEndian = platform == BundlePlatform.X360 || platform == BundlePlatform.PS3;
+            ReadPlatform(br);
             
             br.BaseStream.Position = 0x10;
             int fileCount = br.ReadInt32();
