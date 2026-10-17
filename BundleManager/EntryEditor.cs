@@ -598,7 +598,7 @@ namespace BundleManager
         {
             using OpenFileDialog ofd = new()
             {
-                FileName = $"{_entry.ID.ToString("X8")}_primary",
+                FileName = ExportNames(secondary: false)[0],
                 DefaultExt = "dat",
                 Filter = DataFileFilter
             };
@@ -657,7 +657,7 @@ namespace BundleManager
 
         private void exportDataToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            string[] names = PrimaryExportNames();
+            string[] names = ExportNames(secondary: false);
 
             // The native dialog so the name can follow the type
             string path = NativeSaveDialog.Show(this, names[0], "dat", DataFileFilter,
@@ -671,14 +671,27 @@ namespace BundleManager
                 File.WriteAllBytes(path, Entry.EntryBlocks[0].Data);
         }
 
-        private string[] PrimaryExportNames()
+        private string[] ExportNames(bool secondary)
         {
             string id = _entry.ID.ToString("X8");
             byte[] bytes = BitConverter.GetBytes((uint)_entry.ID);
             if (_entry.Console)
                 Array.Reverse(bytes);
+            string dgi = string.Join("_", bytes.Select(b => b.ToString("X2")));
 
-            return [$"{id}_primary", id, string.Join("_", bytes.Select(b => b.ToString("X2")))];
+            if (secondary)
+            {
+                string dgiSuffix = _entry.Type switch
+                {
+                    EntryType.Texture => "_texture",
+                    EntryType.Renderable => "_model",
+                    _ => "_secondary"
+                };
+                return [$"{id}_secondary", $"{id}_secondary", dgi + dgiSuffix];
+            }
+
+            bool hasSecondary = _entry.HasSection(1) || _entry.HasSection(2);
+            return [hasSecondary ? $"{id}_primary" : id, id, dgi];
         }
 
         // Swaps only the default names, keeping any extension in the box
@@ -721,12 +734,12 @@ namespace BundleManager
 
         private void exportExtraToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SaveFileDialog sfd = new SaveFileDialog();
-            sfd.FileName = $"{_entry.ID.ToString("X8")}_secondary";
-            sfd.DefaultExt = "dat";
-            sfd.Filter = DataFileFilter;
-            sfd.FileOk += Sfd_FileOk2;
-            sfd.ShowDialog(this);
+            string[] names = ExportNames(secondary: true);
+
+            string path = NativeSaveDialog.Show(this, names[0], "dat", DataFileFilter,
+                (type, name) => NameForType(type, name, names), out _);
+            if (path != null)
+                File.WriteAllBytes(path, Entry.EntryBlocks[Entry.SecondaryBlock].Data);
         }
 
         private void editId_Click(object sender, EventArgs e)
@@ -749,21 +762,6 @@ namespace BundleManager
             ulong result = Utilities.CalcLookup8(value);
             Task.Run(() => UpdateDisplay());
             MessageBox.Show(this, "The lookup 8 hashed value is: " + result.ToString("X16"), "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
-        private void Sfd_FileOk2(object sender, CancelEventArgs e)
-        {
-            SaveFileDialog sfd = (SaveFileDialog)sender;
-
-            if (sfd.FileName == null || sfd.FileName.Length <= 0)
-                return;
-
-            Stream s = sfd.OpenFile();
-            MemoryStream ms = new MemoryStream(Entry.EntryBlocks[Entry.SecondaryBlock].Data);
-            ms.CopyTo(s);
-            s.Flush();
-            s.Close();
-            ms.Close();
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
