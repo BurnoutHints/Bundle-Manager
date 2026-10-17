@@ -146,6 +146,7 @@ namespace BundleManager
             lstEntries.Items.Clear();
 
             UpdatePluginMenu();
+            addResourcesToBundleToolStripMenuItem.Enabled = CurrentArchive != null;
 
             if (CurrentArchive == null)
             {
@@ -595,6 +596,12 @@ namespace BundleManager
         private void searchForEntryToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Search();
+        }
+
+        private void addResourcesToBundleToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (CurrentArchive != null && ImportResourceForm.ShowImport(this, CurrentArchive))
+                UpdateDisplay();
         }
 
         #endregion

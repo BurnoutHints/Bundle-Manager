@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using BundleUtilities;
 
@@ -92,6 +93,55 @@ namespace BundleFormat
             return null;
         }
 
+        // Replaces any entry with the same ID. Retain ID sorting like retail bundles
+        public void AddEntry(BundleEntry entry)
+        {
+            Entries.RemoveAll(e => e.ID == entry.ID);
+            int index = Entries.FindIndex(e => e.ID > entry.ID);
+            Entries.Insert(index < 0 ? Entries.Count : index, entry);
+            for (int i = 0; i < Entries.Count; i++)
+                Entries[i].Index = i;
+        }
+
+        public BundleEntry CreateEntry(ulong id, EntryType type, string name, byte[] primary, int importCount, byte[] secondary = null)
+        {
+            BundleEntry template = Entries.FirstOrDefault(e => e.Type == type);
+
+            // Secondary data is memory type 2 on PS3 and 1 elsewhere
+            int secondaryBlock = template != null
+                ? (template.HasSection(2) && !template.HasSection(1) ? 2 : 1)
+                : (Platform == BundlePlatform.PS3 ? 2 : 1);
+
+            byte[][] data = new byte[3][];
+            data[0] = primary;
+            data[secondaryBlock] = secondary;
+
+            BundleEntry entry = new(this)
+            {
+                ID = id,
+                Type = type,
+                Platform = Platform,
+                DependencyCount = (short)importCount,
+                DependenciesListOffset = importCount > 0 ? primary.Length - importCount * Dependency.Size : 0,
+                DebugInfo = new() { Name = name, TypeName = type.ToString() },
+                Dirty = true,
+                EntryBlocks = new EntryBlock[3]
+            };
+
+            for (int i = 0; i < entry.EntryBlocks.Length; i++)
+            {
+                EntryBlock block = new() { Compressed = false };
+                if (data[i] != null)
+                {
+                    block.Data = data[i];
+                    block.UncompressedAlignment = template != null && template.HasSection(i) ? template.EntryBlocks[i].UncompressedAlignment : 16;
+                }
+                entry.EntryBlocks[i] = block;
+            }
+
+            return entry;
+        }
+
         public string GetEntryNameByID(ulong id)
         {
             for (int i = 0; i < Entries.Count; i++)
@@ -159,6 +209,45 @@ namespace BundleFormat
                     break;
                 }
             }
+        }
+
+        private void RebuildRST()
+        {
+            XmlDocument doc = new XmlDocument();
+            XmlElement root = doc.CreateElement("ResourceStringTable");
+            doc.AppendChild(root);
+
+            bool hasNamedResources = false;
+
+            foreach (BundleEntry entry in Entries)
+            {
+                string name = entry.DebugInfo.Name?.Trim();
+                if (string.IsNullOrEmpty(name))
+                    continue;
+
+                XmlElement resource = doc.CreateElement("Resource");
+                resource.SetAttribute("id", entry.ID.ToString("X8"));
+                resource.SetAttribute("name", name);
+                resource.SetAttribute(
+                    "type",
+                    string.IsNullOrWhiteSpace(entry.DebugInfo.TypeName)
+                        ? entry.Type.ToString()
+                        : entry.DebugInfo.TypeName
+                );
+
+                root.AppendChild(resource);
+                hasNamedResources = true;
+            }
+
+            if (!hasNamedResources)
+            {
+                ResourceStringTable = null;
+                Flags &= ~Flags.HasResourceStringTable;
+                return;
+            }
+
+            ResourceStringTable = doc.OuterXml;
+            Flags |= Flags.HasResourceStringTable;
         }
 
         public static BundleArchive Read(string path)
@@ -412,15 +501,7 @@ namespace BundleFormat
                     return false;
 
                 for (int j = 0; j < entry.DependencyCount; j++)
-                {
-                    Dependency dep = new Dependency();
-                    dep.ID = br.ReadUInt64();
-                    dep.EntryPointerOffset = br.ReadUInt32();
-
-                    br.ReadUInt32(); // Skip
-
-                    entry.Dependencies.Add(dep);
-                }
+                    entry.Dependencies.Add(Dependency.Read(br));
             }
 
             BundleEntry rst = GetEntryByID(0xC039284A);
@@ -487,7 +568,7 @@ namespace BundleFormat
 
                 entry.ID = br.ReadUInt64();
 
-                entry.References = br.ReadUInt64();
+                br.ReadUInt64(); // Import Resource ID, which we now recompute on write
 
                 entry.EntryBlocks = new EntryBlock[3];
                 for (int j = 0; j < entry.EntryBlocks.Length; j++)
@@ -577,6 +658,8 @@ namespace BundleFormat
 
         public void Write(BinaryWriter2 bw)
         {
+            RebuildRST();
+
             bw.Write(BND2Magic);
             bw.Write(Version);
             bw.Write((int)Platform);
@@ -631,7 +714,7 @@ namespace BundleFormat
                 compressedBlocks.Add(new byte[3][]);
 
                 bw.Write(entry.ID);
-                bw.Write(entry.References);
+                bw.Write(entry.ImportID);
 
                 for (int j = 0; j < entry.EntryBlocks.Length; j++)
                 {
