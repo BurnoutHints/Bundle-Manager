@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Reflection;
-using System.Globalization;
 
 namespace BundleUtilities
 {
@@ -97,83 +96,6 @@ namespace BundleUtilities
                 s = "0x" + s;
             TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
             value = (T)converter.ConvertFromString(s);
-        }
-
-        public static bool TryParseHexUInt(string s, out uint value)
-        {
-            try
-            {
-                Parse<uint>(s, true, out value);
-                return true;
-            }
-            catch
-            {
-                value = 0;
-                return false;
-            }
-        }
-
-        public static ushort ReadUInt16LE(byte[] data, int offset)
-        {
-            return (ushort)(data[offset]
-                | (data[offset + 1] << 8));
-        }
-
-        public static ushort ReadUInt16BE(byte[] data, int offset)
-        {
-            return (ushort)((data[offset] << 8)
-                | data[offset + 1]);
-        }
-
-        public static bool IsValidHex(string s)
-        {
-            if (string.IsNullOrWhiteSpace(s))
-                return false;
-
-            foreach (char c in s)
-                if (!Uri.IsHexDigit(c))
-                    return false;
-
-            return true;
-        }
-
-        public static bool ContainsASCII(byte[] data, string value)
-        {
-            if (data.Length < value.Length)
-                return false;
-
-            byte[] pattern = Encoding.ASCII.GetBytes(value);
-
-            for (int i = 0; i <= data.Length - pattern.Length; i++)
-            {
-                bool match = true;
-
-                for (int j = 0; j < pattern.Length; j++)
-                {
-                    if (data[i + j] != pattern[j])
-                    {
-                        match = false;
-                        break;
-                    }
-                }
-
-                if (match)
-                    return true;
-            }
-
-            return false;
-        }
-
-        public static void CalculateResourceIDFromName(string resourceName, out uint resourceID)
-        {
-            // example: bundlemanager://<selected name>.<selected type>
-            resourceID = Crc32.HashEntryID(resourceName.ToLower());
-        }
-
-        public static void CalculateResourceIDFromName(string resourceName, out string resourceID)
-        {
-            CalculateResourceIDFromName(resourceName, out uint id);
-            resourceID = id.ToString("X8");
         }
     }
 }

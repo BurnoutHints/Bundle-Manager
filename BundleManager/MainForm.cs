@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
 using System.ComponentModel;
-using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -602,44 +600,8 @@ namespace BundleManager
 
         private void addResourcesToBundleToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (CurrentArchive == null)
-                return;
-
-            using OpenFileDialog ofd = new();
-
-            ofd.Title = "Please select the primary resource (or header) to import";
-            ofd.Filter = "Binary Files|*.dat;*.bin|Image Files(*.dds,*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp)|*.dds;*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp|All files (*.*)|*.*";
-
-            if (ofd.ShowDialog(this) != DialogResult.OK)
-                return;
-
-            var path = ofd.FileName;
-
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
-                return;
-
-            Match m = ResourceIDPattern().Match(Path.GetFileNameWithoutExtension(path));
-            uint? id = m.Success ? Convert.ToUInt32(m.Value, 16) : null;
-
-            ImportResourceForm importResourceForm;
-            try
-            {
-                importResourceForm = new(CurrentArchive, path, id);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this, $"Unable to import {path}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            using (importResourceForm)
-            {
-                if (importResourceForm.ShowDialog(this) == DialogResult.OK)
-                {
-                    CurrentArchive = importResourceForm.ResultArchive;
-                    UpdateDisplay();
-                }
-            }
+            if (CurrentArchive != null && ImportResourceForm.ShowImport(this, CurrentArchive))
+                UpdateDisplay();
         }
 
         #endregion
@@ -805,9 +767,6 @@ namespace BundleManager
                 this.Direction = !this.Direction;
             }
         }
-
-        [GeneratedRegex(@"^[0-9A-Fa-f]{8}(?![0-9A-Fa-f])")]
-        private static partial Regex ResourceIDPattern();
 
         #endregion
     }

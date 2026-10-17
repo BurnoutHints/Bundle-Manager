@@ -36,6 +36,8 @@ namespace BurnoutImage
 
     public static class GameImage
     {
+        public const string FileFilter = "Image Files(*.dds,*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp)|*.dds;*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp";
+
         public static ImageInfo SetImage(string path, CompressionType compression, PlatformType platform = PlatformType.Remastered)
         {
             byte[] data;

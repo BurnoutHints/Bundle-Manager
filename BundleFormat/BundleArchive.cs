@@ -92,6 +92,16 @@ namespace BundleFormat
             return null;
         }
 
+        // Replaces any entry with the same ID. Retain ID sorting like retail bundles
+        public void AddEntry(BundleEntry entry)
+        {
+            Entries.RemoveAll(e => e.ID == entry.ID);
+            int index = Entries.FindIndex(e => e.ID > entry.ID);
+            Entries.Insert(index < 0 ? Entries.Count : index, entry);
+            for (int i = 0; i < Entries.Count; i++)
+                Entries[i].Index = i;
+        }
+
         public string GetEntryNameByID(ulong id)
         {
             for (int i = 0; i < Entries.Count; i++)
@@ -451,15 +461,7 @@ namespace BundleFormat
                     return false;
 
                 for (int j = 0; j < entry.DependencyCount; j++)
-                {
-                    Dependency dep = new Dependency();
-                    dep.ID = br.ReadUInt64();
-                    dep.EntryPointerOffset = br.ReadUInt32();
-
-                    br.ReadUInt32(); // Skip
-
-                    entry.Dependencies.Add(dep);
-                }
+                    entry.Dependencies.Add(Dependency.Read(br));
             }
 
             BundleEntry rst = GetEntryByID(0xC039284A);

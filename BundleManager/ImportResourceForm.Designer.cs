@@ -38,13 +38,10 @@ namespace BundleManager
             autoUpdateIDCheckBox = new System.Windows.Forms.CheckBox();
             selectTypeLabel = new System.Windows.Forms.Label();
             resourceTypeComboBox = new System.Windows.Forms.ComboBox();
-            tertiaryDataPathSelectorButton = new System.Windows.Forms.Button();
             primaryImportPathLabel = new System.Windows.Forms.Label();
             primaryResourcePathTextBox = new System.Windows.Forms.TextBox();
             secondaryImportPathLabel = new System.Windows.Forms.Label();
             secondaryResourcePathTextBox = new System.Windows.Forms.TextBox();
-            tertiaryImportPathLabel = new System.Windows.Forms.Label();
-            tertiaryResourcePathTextBox = new System.Windows.Forms.TextBox();
             primaryDataPathSelectorButton = new System.Windows.Forms.Button();
             importsLabel = new System.Windows.Forms.Label();
             importCountUpDown = new System.Windows.Forms.NumericUpDown();
@@ -54,7 +51,7 @@ namespace BundleManager
             // 
             // importButton
             // 
-            importButton.Location = new System.Drawing.Point(562, 344);
+            importButton.Location = new System.Drawing.Point(562, 298);
             importButton.Name = "importButton";
             importButton.Size = new System.Drawing.Size(88, 23);
             importButton.TabIndex = 0;
@@ -146,17 +143,7 @@ namespace BundleManager
             resourceTypeComboBox.Size = new System.Drawing.Size(229, 23);
             resourceTypeComboBox.TabIndex = 10;
             resourceTypeComboBox.Text = "AptData";
-            // 
-            // tertiaryDataPathSelectorButton
-            // 
-            tertiaryDataPathSelectorButton.Location = new System.Drawing.Point(508, 220);
-            tertiaryDataPathSelectorButton.Name = "tertiaryDataPathSelectorButton";
-            tertiaryDataPathSelectorButton.Size = new System.Drawing.Size(140, 23);
-            tertiaryDataPathSelectorButton.TabIndex = 11;
-            tertiaryDataPathSelectorButton.Text = "Select Tertiary Data";
-            tertiaryDataPathSelectorButton.UseVisualStyleBackColor = true;
-            tertiaryDataPathSelectorButton.Click += tertiaryDataPathSelectorButton_Click;
-            // 
+            //
             // primaryImportPathLabel
             // 
             primaryImportPathLabel.AutoSize = true;
@@ -192,25 +179,7 @@ namespace BundleManager
             secondaryResourcePathTextBox.Size = new System.Drawing.Size(490, 23);
             secondaryResourcePathTextBox.TabIndex = 16;
             secondaryResourcePathTextBox.Text = "my_really_cool_and_extremely_long_secondary_resource_path";
-            // 
-            // tertiaryImportPathLabel
-            // 
-            tertiaryImportPathLabel.AutoSize = true;
-            tertiaryImportPathLabel.Location = new System.Drawing.Point(12, 202);
-            tertiaryImportPathLabel.Name = "tertiaryImportPathLabel";
-            tertiaryImportPathLabel.Size = new System.Drawing.Size(101, 15);
-            tertiaryImportPathLabel.TabIndex = 17;
-            tertiaryImportPathLabel.Text = "Tertiary data path:";
-            tertiaryImportPathLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
-            // 
-            // tertiaryResourcePathTextBox
-            // 
-            tertiaryResourcePathTextBox.Location = new System.Drawing.Point(12, 220);
-            tertiaryResourcePathTextBox.Name = "tertiaryResourcePathTextBox";
-            tertiaryResourcePathTextBox.Size = new System.Drawing.Size(490, 23);
-            tertiaryResourcePathTextBox.TabIndex = 18;
-            tertiaryResourcePathTextBox.Text = "my_really_cool_and_extremely_long_tertiary_resource_path";
-            // 
+            //
             // primaryDataPathSelectorButton
             // 
             primaryDataPathSelectorButton.Location = new System.Drawing.Point(508, 132);
@@ -224,7 +193,7 @@ namespace BundleManager
             // importsLabel
             //
             importsLabel.AutoSize = true;
-            importsLabel.Location = new System.Drawing.Point(12, 250);
+            importsLabel.Location = new System.Drawing.Point(12, 204);
             importsLabel.Name = "importsLabel";
             importsLabel.Size = new System.Drawing.Size(51, 15);
             importsLabel.TabIndex = 20;
@@ -232,7 +201,7 @@ namespace BundleManager
             //
             // importCountUpDown
             //
-            importCountUpDown.Location = new System.Drawing.Point(12, 270);
+            importCountUpDown.Location = new System.Drawing.Point(12, 224);
             importCountUpDown.Name = "importCountUpDown";
             importCountUpDown.Size = new System.Drawing.Size(60, 23);
             importCountUpDown.TabIndex = 21;
@@ -241,7 +210,7 @@ namespace BundleManager
             //
             importsListBox.FormattingEnabled = true;
             importsListBox.ItemHeight = 15;
-            importsListBox.Location = new System.Drawing.Point(80, 270);
+            importsListBox.Location = new System.Drawing.Point(80, 224);
             importsListBox.Name = "importsListBox";
             importsListBox.Size = new System.Drawing.Size(568, 64);
             importsListBox.TabIndex = 22;
@@ -250,18 +219,15 @@ namespace BundleManager
             //
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(659, 379);
+            ClientSize = new System.Drawing.Size(659, 333);
             Controls.Add(importsListBox);
             Controls.Add(importCountUpDown);
             Controls.Add(importsLabel);
             Controls.Add(primaryDataPathSelectorButton);
-            Controls.Add(tertiaryResourcePathTextBox);
-            Controls.Add(tertiaryImportPathLabel);
             Controls.Add(secondaryResourcePathTextBox);
             Controls.Add(secondaryImportPathLabel);
             Controls.Add(primaryResourcePathTextBox);
             Controls.Add(primaryImportPathLabel);
-            Controls.Add(tertiaryDataPathSelectorButton);
             Controls.Add(resourceTypeComboBox);
             Controls.Add(selectTypeLabel);
             Controls.Add(autoUpdateIDCheckBox);
@@ -291,13 +257,10 @@ namespace BundleManager
         private System.Windows.Forms.CheckBox autoUpdateIDCheckBox;
         private System.Windows.Forms.Label selectTypeLabel;
         private System.Windows.Forms.ComboBox resourceTypeComboBox;
-        private System.Windows.Forms.Button tertiaryDataPathSelectorButton;
         private System.Windows.Forms.Label primaryImportPathLabel;
         private System.Windows.Forms.TextBox primaryResourcePathTextBox;
         private System.Windows.Forms.Label secondaryImportPathLabel;
         private System.Windows.Forms.TextBox secondaryResourcePathTextBox;
-        private System.Windows.Forms.Label tertiaryImportPathLabel;
-        private System.Windows.Forms.TextBox tertiaryResourcePathTextBox;
         private System.Windows.Forms.Button primaryDataPathSelectorButton;
         private System.Windows.Forms.Label importsLabel;
         private System.Windows.Forms.NumericUpDown importCountUpDown;

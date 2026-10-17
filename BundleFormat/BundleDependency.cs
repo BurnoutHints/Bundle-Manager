@@ -5,7 +5,6 @@ namespace BundleFormat
         public ulong EntryID;
         public int Unknown1;
         public int EntryPointerOffset;
-        public int Unknown2;
 
         public int EntryIndex;
         public BundleEntry Entry;

@@ -55,8 +55,23 @@ namespace BundleFormat
 
     public struct Dependency
     {
+        public const int Size = 0x10; // uint64_t id, uint32_t pointer offset, uint32_t padding
         public ulong ID;
         public uint EntryPointerOffset;
+
+        public static Dependency Read(BinaryReader2 br)
+        {
+            Dependency dep = new() { ID = br.ReadUInt64(), EntryPointerOffset = br.ReadUInt32() };
+            br.ReadUInt32(); // Padding, not always zero on console
+            return dep;
+        }
+
+        public readonly void Write(BinaryWriter2 bw)
+        {
+            bw.Write(ID);
+            bw.Write(EntryPointerOffset);
+            bw.Write(0u); // Padding
+        }
     }
 
     public struct DebugInfo
@@ -172,9 +187,9 @@ namespace BundleFormat
             {
                 BundleDependency bundleDependency = new BundleDependency();
 
-                bundleDependency.EntryID = br.ReadUInt64();
-                bundleDependency.EntryPointerOffset = br.ReadInt32();
-                bundleDependency.Unknown2 = br.ReadInt32();
+                Dependency dep = Dependency.Read(br);
+                bundleDependency.EntryID = dep.ID;
+                bundleDependency.EntryPointerOffset = (int)dep.EntryPointerOffset;
 
                 BundleEntry entry = null;
 
