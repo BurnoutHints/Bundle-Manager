@@ -226,10 +226,28 @@ namespace BundleManager
             BundleEntry sample = _workingArchive.Entries.FirstOrDefault(e => e.Type == EntryType.Texture && e.HasHeader);
             PlatformType? platform = sample != null
                 ? GameImage.DetectPlatform(sample.EntryBlocks[0].Data)
-                : TexturePlatform(_workingArchive.Platform);
+                : _workingArchive.Platform == BundlePlatform.PC
+                    ? AskPCTexturePlatform()
+                    : TexturePlatform(_workingArchive.Platform);
 
             // GameImage.SetImage can only write these
             return platform is PlatformType.PC or PlatformType.PCx64 or PlatformType.Remastered ? platform : null;
+        }
+
+        private static PlatformType AskPCTexturePlatform()
+        {
+            TaskDialogButton original = new ("PC (2009, The Ultimate Box)");
+            TaskDialogButton remastered = new("Remastered");
+
+            TaskDialogPage page = new()
+            {
+                Caption = "Import Resource into Bundle",
+                Heading = "Which version of Burnout Paradise is this bundle for?",
+                Text = "Bundle Manager was unable to infer the platform for this bundle. Please select the version of Burnout Paradise that this bundle is for.\n This will determine how this texture and others are imported.",
+                Buttons = { original, remastered }
+            };
+
+            return TaskDialog.ShowDialog(page) == remastered ? PlatformType.Remastered : PlatformType.PC;
         }
 
         // This really needs to be put in a better spot
