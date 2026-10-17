@@ -551,7 +551,7 @@ namespace BundleManager
         private void importToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "Image Files(*.dds,*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp)|*.dds;*.bmp;*.gif;*.jpg;*.png;*.tif;*.tga;*.webp|All files (*.*)|*.*";
+            ofd.Filter = GameImage.FileFilter + "|All files (*.*)|*.*";
             ofd.FileOk += Ofd_FileOk;
             ofd.ShowDialog(this);
         }
