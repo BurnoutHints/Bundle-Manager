@@ -92,7 +92,7 @@ namespace LangEditor
 
         private void dgvMain_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
-            var grid = (DataGridView)sender;
+            DataGridView grid = (DataGridView)sender;
             _originalCellValue = grid[e.ColumnIndex, e.RowIndex].Value;
         }
 
@@ -101,14 +101,14 @@ namespace LangEditor
             if (_suppressHandlers)
                 return;
 
-            var grid = (DataGridView)sender;
-            var column = grid.Columns[e.ColumnIndex];
+            DataGridView grid = (DataGridView)sender;
+            DataGridViewColumn column = grid.Columns[e.ColumnIndex];
 
             if (column.Name != "colID" && column.Name != "colName")
                 return;
 
             DataGridViewCell cell = grid[e.ColumnIndex, e.RowIndex];
-            var newValue = cell.Value;
+            object newValue = cell.Value;
 
             if (Equals(_originalCellValue, newValue))
                 return;
@@ -117,7 +117,7 @@ namespace LangEditor
             if (!string.IsNullOrEmpty(Convert.ToString(_originalCellValue)))
             {
                 string associated = column.Name == "colName" ? "ID" : "Name";
-                var result = MessageBox.Show(
+                DialogResult result = MessageBox.Show(
                     this,
                     $"Are you sure you want to apply this change to this {column.HeaderText}?" +
                     $"\nThis will update the associated {associated} field!" +
@@ -140,26 +140,26 @@ namespace LangEditor
             _suppressHandlers = true;
             try
             {
-                var row = grid.Rows[e.RowIndex];
+                DataGridViewRow row = grid.Rows[e.RowIndex];
 
                 if (column.Name == "colName")
                 {
-                    var name = Convert.ToString(newValue) ?? string.Empty;
+                    string name = Convert.ToString(newValue) ?? string.Empty;
                     if (name.Length > 0)
                     {
-                        var id = Language.HashID(name);
-                        row.Cells["colID"].Value = "0x" + id.ToString("X8");
+                        uint id = Language.HashID(name);
+                        row.Cells["colID"].Value = $"0x{id:X8}";
                     }
                 }
                 else if (column.Name == "colID")
                 {
-                    var idText = Convert.ToString(newValue) ?? string.Empty;
+                    string idText = Convert.ToString(newValue) ?? string.Empty;
                     idText = idText.Trim();
 
                     if (idText.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-                        idText = idText.Substring(2);
+                        idText = idText[2..];
 
-                    if (!uint.TryParse(idText, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var id))
+                    if (!uint.TryParse(idText, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint id))
                     {
                         MessageBox.Show(
                             this,
@@ -174,9 +174,9 @@ namespace LangEditor
                         return;
                     }
 
-                    row.Cells["colID"].Value = "0x" + id.ToString("X8");
+                    row.Cells["colID"].Value = $"0x{id:X8}";
 
-                    if (dict.TryGetValue(id, out var resolvedName))
+                    if (dict.TryGetValue(id, out string resolvedName))
                         row.Cells["colName"].Value = resolvedName;
                     else
                         row.Cells["colName"].Value = string.Empty;
@@ -244,7 +244,7 @@ namespace LangEditor
             {
                 if (dict.TryGetValue(entry.Key, out string name))
                     resolved++;
-                dgvMain.Rows.Add("0x" + entry.Key.ToString("X8"), name ?? "", entry.Value);
+                dgvMain.Rows.Add($"0x{entry.Key:X8}", name ?? "", entry.Value);
             }
 
             _ignoreChanges = ignoreChanges;
@@ -330,11 +330,11 @@ namespace LangEditor
 
         internal string ImportCSV(string path)
         {
-            Dictionary<uint, string> data = new Dictionary<uint, string>();
+            Dictionary<uint, string> data = [];
             int row = 0;
             try
             {
-                using StreamReader reader = new StreamReader(path, Encoding.UTF8);
+                using StreamReader reader = new(path, Encoding.UTF8);
                 foreach (List<string> fields in ReadCSV(reader))
                 {
                     row++;
@@ -380,8 +380,8 @@ namespace LangEditor
 
         private static IEnumerable<List<string>> ReadCSV(TextReader reader)
         {
-            List<string> fields = new List<string>();
-            StringBuilder field = new StringBuilder();
+            List<string> fields = [];
+            StringBuilder field = new();
             bool quoted = false;
             bool rowStarted = false;
             int c;
@@ -405,7 +405,7 @@ namespace LangEditor
                         fields.Add(field.ToString());
                         yield return fields;
                     }
-                    fields = new List<string>();
+                    fields = [];
                     field.Clear();
                     rowStarted = false;
                     continue;
@@ -451,7 +451,7 @@ namespace LangEditor
         internal string ExportCSV(string path)
         {
             dgvMain.EndEdit(); // Include the cell being edited
-            StringBuilder languageContent = new StringBuilder();
+            StringBuilder languageContent = new();
             foreach (DataGridViewRow row in dgvMain.Rows)
             {
                 if (row.IsNewRow)
@@ -472,7 +472,7 @@ namespace LangEditor
                 // The BOM lets spreadsheet apps detect UTF-8
                 File.WriteAllText(path, languageContent.ToString(), new UTF8Encoding(true));
             }
-            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 return ex.Message;
             }
@@ -523,7 +523,7 @@ namespace LangEditor
                 }
             }
 
-            MessageBox.Show(this, "\"" + searchVal + "\" not found.", "Find", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, $"\"{searchVal}\" not found.", "Find", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void hashToolStripMenuItem_Click(object sender, EventArgs e)
@@ -533,7 +533,7 @@ namespace LangEditor
                 return;
             uint result = Language.HashID(value);
 
-            MessageBox.Show(this, "Hashed value is: 0x" + result.ToString("X8"), "Information",
+            MessageBox.Show(this, $"Hashed value is: 0x{result:X8}", "Information",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
