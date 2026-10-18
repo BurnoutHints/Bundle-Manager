@@ -61,13 +61,13 @@ namespace WorldCollisionHandler
             return result;
         }
 
-        public void Write(BinaryWriter2 bw)
+        public void Write(BinaryWriter2 bw, bool x64)
         {
             // Cap to 0x9D64 for PC
             ushort unknownProperty1 = (ushort)(UnknownProperty & 0xFFFF);
 
             // Patch values that are too high (from console) with Schembri Pass
-            if (unknownProperty1 > 0x9D64 && unknownProperty1 != 0xFFFF)
+            if (!x64 && unknownProperty1 > 0x9D64 && unknownProperty1 != 0xFFFF)
             {
                 // 0x8316, 0x9531,  0x9007, 0x8511, 0x8316, 0xFFFF
                 unknownProperty1 = 0x8316;
@@ -137,14 +137,15 @@ namespace WorldCollisionHandler
             PropertyList = new List<PolygonSoupProperty>();
         }
 
-        public static PolygonSoupChunk Read(BinaryReader2 br)
+        public static PolygonSoupChunk Read(BinaryReader2 br, bool x64)
         {
             PolygonSoupChunk result = new PolygonSoupChunk();
+            long ReadPtr() => x64 ? (long)br.ReadUInt64() : br.ReadUInt32();
 
             result.Position = br.ReadVector3I();
             result.Scale = br.ReadSingle();
-            uint propertyListStart = br.ReadUInt32();
-            uint pointListStart = br.ReadUInt32();
+            long propertyListStart = ReadPtr();
+            long pointListStart = ReadPtr();
             br.ReadInt16(); // Length
             byte propertyListCount = br.ReadByte();
             result.QuadCount = br.ReadByte();
@@ -168,15 +169,17 @@ namespace WorldCollisionHandler
             return result;
         }
 
-        public void Write(BinaryWriter2 bw)
+        public void Write(BinaryWriter2 bw, bool x64)
         {
+            void WritePtr(long ptr) { if (x64) bw.Write((ulong)ptr); else bw.Write((uint)ptr); }
+
             long chunkStartPtr = bw.BaseStream.Position;
             bw.Write(Position);
             bw.Write(Scale);
             long propListStartPtr = bw.BaseStream.Position;
-            bw.Write((uint) 0);
+            WritePtr(0);
             long pointListStartPtr = bw.BaseStream.Position;
-            bw.Write((uint) 0);
+            WritePtr(0);
             long lengthPtr = bw.BaseStream.Position;
             bw.Write((ushort) 0);
             bw.Write((byte)PropertyList.Count);
@@ -187,7 +190,7 @@ namespace WorldCollisionHandler
             
             long cPos = bw.BaseStream.Position;
             bw.BaseStream.Position = pointListStartPtr;
-            bw.Write((uint)cPos);
+            WritePtr(cPos);
             bw.BaseStream.Position = cPos;
 
             for (int i = 0; i < PointList.Count; i++)
@@ -198,12 +201,12 @@ namespace WorldCollisionHandler
             bw.BaseStream.Position = (16 * ((bw.BaseStream.Position + 15) / 16));
             cPos = bw.BaseStream.Position;
             bw.BaseStream.Position = propListStartPtr;
-            bw.Write((uint)cPos);
+            WritePtr(cPos);
             bw.BaseStream.Position = cPos;
 
             for (int i = 0; i < PropertyList.Count; i++)
             {
-                PropertyList[i].Write(bw);
+                PropertyList[i].Write(bw, x64);
             }
             cPos = bw.BaseStream.Position;
             bw.BaseStream.Position = lengthPtr;
@@ -501,16 +504,19 @@ namespace WorldCollisionHandler
             BinaryReader2 br = new BinaryReader2(ms);
             br.BigEndian = entry.Console;
 
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
+            long ReadPtr() => x64 ? (long)br.ReadUInt64() : br.ReadUInt32();
+
             Min = br.ReadVector3F();
             Unknown4 = br.ReadInt32();
             Max = br.ReadVector3F();
             Unknown8 = br.ReadInt32();
-            uint chunkPointerStart = br.ReadUInt32();
-            uint boxListStart = br.ReadUInt32();
+            long chunkPointerStart = ReadPtr();
+            long boxListStart = ReadPtr();
             int chunkCount = br.ReadInt32();
             br.ReadUInt32(); // FileSize
 
-            List<uint> chunkPointers = new List<uint>();
+            List<long> chunkPointers = new List<long>();
 
             // No Data
             if (chunkCount == 0)
@@ -524,7 +530,7 @@ namespace WorldCollisionHandler
 
             for (int i = 0; i < chunkCount; i++)
             {
-                chunkPointers.Add(br.ReadUInt32());
+                chunkPointers.Add(ReadPtr());
             }
 
             for (int i = 0; i < chunkCount; i++)
@@ -562,7 +568,7 @@ namespace WorldCollisionHandler
             {
                 br.BaseStream.Position = chunkPointers[i];
 
-                Chunks.Add(PolygonSoupChunk.Read(br));
+                Chunks.Add(PolygonSoupChunk.Read(br, x64));
             }
 
             br.Close();
@@ -577,14 +583,17 @@ namespace WorldCollisionHandler
             BinaryWriter2 bw = new BinaryWriter2(ms);
             bw.BigEndian = entry.Console;
 
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
+            void WritePtr(long ptr) { if (x64) bw.Write((ulong)ptr); else bw.Write((uint)ptr); }
+
             bw.Write(Min);
             bw.Write(Unknown4);
             bw.Write(Max);
             bw.Write(Unknown8);
             long chunkPointerStartPos = bw.BaseStream.Position;
-            bw.Write((uint)0);
+            WritePtr(0);
             long boxListStartPos = bw.BaseStream.Position;
-            bw.Write((uint)0);
+            WritePtr(0);
             bw.Write(Chunks.Count);
             long fileSizePos = bw.BaseStream.Position;
             bw.Write((uint)0);
@@ -594,6 +603,13 @@ namespace WorldCollisionHandler
             // No Data
             if (Chunks.Count == 0)
             {
+                if (x64)
+                {
+                    bw.BaseStream.Position = fileSizePos;
+                    bw.Write((uint)bw.BaseStream.Length);
+                    bw.BaseStream.SetLength(0x40);
+                }
+
                 bw.Flush();
                 byte[] data2 = ms.ToArray();
                 bw.Close();
@@ -612,14 +628,14 @@ namespace WorldCollisionHandler
 
             for (int i = 0; i < Chunks.Count; i++)
             {
-                bw.Write((uint)0);
+                WritePtr(0);
             }
 
             bw.BaseStream.Position = (16 * ((bw.BaseStream.Position + 15) / 16));
             cPos = bw.BaseStream.Position;
             uint boxListStart = (uint)bw.BaseStream.Position;
             bw.BaseStream.Position = boxListStartPos;
-            bw.Write((uint)cPos);
+            WritePtr(cPos);
 
             for (int i = 0; i < Chunks.Count; i++)
             {
@@ -649,7 +665,7 @@ namespace WorldCollisionHandler
 
             bw.BaseStream.Position = (16 * ((bw.BaseStream.Position + 15) / 16));
 
-            if (Chunks.Count > 0)
+            if (!x64)
             {
                 bw.BaseStream.Position = (128 * ((bw.BaseStream.Position + 127) / 128));
 
@@ -672,20 +688,28 @@ namespace WorldCollisionHandler
 
                 chunkPointers[i] = (uint)bw.BaseStream.Position;
 
-                Chunks[i].Write(bw);
+                Chunks[i].Write(bw, x64);
             }
 
-            bw.BaseStream.Position = (16 * ((bw.BaseStream.Position + 15) / 16)) + 0x5F;
-            bw.Write((byte)0);
+            if (x64)
+            {
+                cPos = bw.BaseStream.Position + 0x60;
+                bw.BaseStream.SetLength(16 * ((cPos + 15) / 16));
+            }
+            else
+            {
+                bw.BaseStream.Position = (16 * ((bw.BaseStream.Position + 15) / 16)) + 0x5F;
+                bw.Write((byte)0);
+                cPos = bw.BaseStream.Position;
+            }
 
-            cPos = bw.BaseStream.Position;
             bw.BaseStream.Position = fileSizePos;
             bw.Write((uint)cPos);
 
             bw.BaseStream.Position = chunkPointerStart;
             for (int i = 0; i < Chunks.Count; i++)
             {
-                bw.Write(chunkPointers[i]);
+                WritePtr(chunkPointers[i]);
             }
 
             bw.Flush();

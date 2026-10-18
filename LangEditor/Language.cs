@@ -56,12 +56,21 @@ namespace LangEditor
             BinaryReader2 br = new BinaryReader2(ms);
             br.BigEndian = entry.Console;
 
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
+
             meLanguageID = (LanguageId)br.ReadUInt32();
             muSize = br.ReadUInt32();
-            ms.Position = br.ReadUInt32();
+            ms.Position = x64 ? (long)br.ReadUInt64() : br.ReadUInt32();
 
             for (int i = 0; i < muSize; ++i)
-                mpEntries.Add(br.ReadUInt32(), br.ReadCStringPtr());
+            {
+                uint hash = br.ReadUInt32();
+                if (x64)
+                    br.ReadUInt32(); // Padding
+                mpEntries.Add(hash, br.ReadCStringPtr());
+                if (x64)
+                    br.ReadUInt32(); // High half of the string pointer
+            }
             mpEntries.Remove(0); // If padding is present, remove it
 
             br.Close();
@@ -75,21 +84,34 @@ namespace LangEditor
             BinaryWriter2 bw = new BinaryWriter2(ms);
             bw.BigEndian = entry.Console;
 
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
+            int entriesPtr = x64 ? 0x10 : 0xC;
+            int entrySize = x64 ? 0x10 : 8;
+
             bw.Write((uint)meLanguageID);
             bw.Write(mpEntries.Count);
-            bw.Write(0xC); // Pointer is always the same for 32-bit systems
+            if (x64) // Pointer is always the same
+                bw.Write((long)entriesPtr);
+            else
+                bw.Write(entriesPtr);
 
             // Write at entries position so string position calculations are not needed later
             // and to avoid double iteration
-            ms.Position = mpEntries.Count * 8 + 0xC - 1;
+            ms.Position = mpEntries.Count * entrySize + entriesPtr - 1;
             bw.Write((byte)0);
-            ms.Position = 0xC;
+            ms.Position = entriesPtr;
 
             long lastPos;
             foreach (KeyValuePair<uint, string> langEntry in mpEntries)
             {
                 bw.Write(langEntry.Key); // Hash + padding
-                bw.Write((uint)ms.Length); // String pointer
+                if (x64)
+                {
+                    bw.Write(0); // Padding
+                    bw.Write(ms.Length); // String pointer
+                }
+                else
+                    bw.Write((uint)ms.Length); // String pointer
                 lastPos = ms.Position;
                 ms.Position = ms.Length;
                 if (langEntry.Value != null)

@@ -419,8 +419,7 @@ namespace BundleManager
         {
             BundleEntry entry = GetEntry(index);
 
-            if (EntryTypeRegistry.IsRegistered(entry.Type) && !forceHex
-                && (entry.Platform != BundlePlatform.PCx64 || entry.Type is EntryType.AttribSysVault or EntryType.ZoneList))
+            if (EntryTypeRegistry.IsRegistered(entry.Type) && !forceHex)
             {
                 IEntryData data = EntryTypeRegistry.GetHandler(entry.Type);
 

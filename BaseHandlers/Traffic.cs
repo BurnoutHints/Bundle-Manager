@@ -102,12 +102,16 @@ namespace BaseHandlers
             BinaryReader2 br = new BinaryReader2(ms);
             br.BigEndian = entry.Console;
 
+            // Decomp has 8-byte pointers, which also pad the fields before them to 8 bytes
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
+            uint ReadPtr() => x64 ? (uint)br.ReadUInt64() : br.ReadUInt32();
+
             Unknown1 = br.ReadInt16();
             Unknown2 = br.ReadInt16();
             FileSize = br.ReadInt32();
-            TrackCount = br.ReadInt32();
-            Unknown3 = br.ReadInt32();
-            PointerOffset = br.ReadInt32();
+            TrackCount = (int)ReadPtr();
+            Unknown3 = (int)ReadPtr();
+            PointerOffset = (int)ReadPtr();
             Unknown4 = br.ReadInt16();
             Unknown5 = br.ReadInt16();
             Unknown6 = br.ReadByte();
@@ -115,24 +119,28 @@ namespace BaseHandlers
             Unknown8 = br.ReadInt16();
             Unknown9 = br.ReadInt16();
             Unknown10 = br.ReadInt16();
-            Section1Offset = br.ReadUInt32();
-            Section2Offset = br.ReadUInt32();
-            Section3Offset = br.ReadUInt32();
-            Section4Offset = br.ReadUInt32();
-            Section5Offset = br.ReadUInt32();
-            Section6Offset = br.ReadUInt32();
-            Section7Offset = br.ReadUInt32();
-            Section8Offset = br.ReadUInt32();
+            if (x64)
+                br.ReadBytes(4); // Padding
+            Section1Offset = ReadPtr();
+            Section2Offset = ReadPtr();
+            Section3Offset = ReadPtr();
+            Section4Offset = ReadPtr();
+            Section5Offset = ReadPtr();
+            Section6Offset = ReadPtr();
+            Section7Offset = ReadPtr();
+            Section8Offset = br.ReadUInt32(); // Not a pointer: two ushort counts
             Unknown11 = br.ReadByte();
             Unknown12 = br.ReadByte();
             Unknown13 = br.ReadInt16();
-            UnknownOffset1 = br.ReadUInt32();
-            UnknownOffset2 = br.ReadUInt32();
-            UnknownOffset3 = br.ReadUInt32();
-            UnknownOffset4 = br.ReadUInt32();
-            UnknownOffset5 = br.ReadUInt32();
-            Unknown14 = br.ReadInt16();
+            UnknownOffset1 = ReadPtr();
+            UnknownOffset2 = ReadPtr();
+            UnknownOffset3 = ReadPtr();
+            UnknownOffset4 = ReadPtr();
+            UnknownOffset5 = ReadPtr();
+            Unknown14 = br.ReadInt16(); // Unknown14 and Unknown15 are one pointer
             Unknown15 = br.ReadInt16();
+            if (x64)
+                br.ReadBytes(4); // Upper half of that pointer
 
             for (int i = 0; i < 128; i++)
             {
