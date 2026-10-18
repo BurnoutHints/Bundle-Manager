@@ -330,44 +330,51 @@ namespace LangEditor
 
         internal string ImportCSV(string path)
         {
-            Dictionary<uint, string> data = [];
-            int row = 0;
+            List<List<string>> rows = [];
             try
             {
                 using StreamReader reader = new(path, Encoding.UTF8);
                 foreach (List<string> fields in ReadCSV(reader))
-                {
-                    row++;
-                    string idText = fields[0].Trim();
-                    string name = fields.Count > 1 ? fields[1].Trim() : "";
-
-                    uint key;
-                    if (idText.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (!uint.TryParse(idText[2..], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out key))
-                            return $"Could not parse ID {idText} on row {row}.";
-                    }
-                    else if (idText.Length != 0)
-                        key = Language.HashID(idText);
-                    else if (name.Length != 0)
-                        key = Language.HashID(name);
-                    else
-                        return $"Row {row} has no ID or name.";
-
-                    string value = string.Join(",", fields.Skip(2)); // An unquoted string may contain commas
-                    value = value.Replace("\\r", "\xD").Replace("\\n", "\xA"); // Convert newlines
-
-                    if (!data.TryAdd(key, value))
-                        return $"ID {idText} on row {row} is a duplicate.";
-                }
+                    rows.Add(fields);
             }
             catch (InvalidDataException)
             {
-                return $"Row {row + 1} has a quote that is never closed.";
+                return $"Row {rows.Count + 1} has a quote that is never closed.";
             }
             catch (IOException ex)
             {
                 return ex.Message;
+            }
+
+            // Exports from before the Name column have two columns, ID (or name) and string.
+            // This is decided per file, since a current-format row missing its string looks the same.
+            bool legacy = rows.All(fields => fields.Count <= 2);
+
+            Dictionary<uint, string> data = [];
+            for (int row = 1; row <= rows.Count; row++)
+            {
+                List<string> fields = rows[row - 1];
+                string idText = fields[0].Trim();
+                string name = !legacy && fields.Count > 1 ? fields[1].Trim() : "";
+
+                uint key;
+                if (idText.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!uint.TryParse(idText[2..], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out key))
+                        return $"Could not parse ID {idText} on row {row}.";
+                }
+                else if (idText.Length != 0)
+                    key = Language.HashID(idText);
+                else if (name.Length != 0)
+                    key = Language.HashID(name);
+                else
+                    return $"Row {row} has no ID or name.";
+
+                string value = string.Join(",", fields.Skip(legacy ? 1 : 2)); // An unquoted string may contain commas
+                value = value.Replace("\\r", "\xD").Replace("\\n", "\xA"); // Convert newlines
+
+                if (!data.TryAdd(key, value))
+                    return $"ID {idText} on row {row} is a duplicate.";
             }
 
             _lang.mpEntries = data;
