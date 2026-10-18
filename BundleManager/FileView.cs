@@ -166,29 +166,26 @@ namespace BundleManager
         {
             if (AlwaysIgnore)
                 return new ConflictChoice(false, true);
-            bool isSet = false;
-            DialogResult result = DialogResult.None;
-            Invoke(new Action(() =>
-            {
-                result = MessageBox.Show(this, "ID Conflict 0x" + entryID.ToString("X8") + " between " +
-                                                            file2 + " and " + file1 +
-                                                            "\n\nWould you like to ignore this issue? (May cause other problems)\n\nAbort = Cancel\nRetry = Ignore Once\nIgnore = Ignore All",
-                    "ID Conflict", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Warning);
-                isSet = true;
-            }));
-            while (!isSet);
-            if (result == DialogResult.Retry)
-            {
-                return new ConflictChoice(false, false);
-            } else if (result == DialogResult.Abort)
-            {
-                return new ConflictChoice(true, false);
-            } else if (result == DialogResult.Ignore)
-            {
-                return new ConflictChoice(false, true);
-            }
 
-            return new ConflictChoice(false, false);
+            return (ConflictChoice)Invoke(new Func<ConflictChoice>(() =>
+            {
+                TaskDialogCommandLinkButton ignoreOnce = new("Ignore this conflict", "Keep the copy that was found first and continue loading.");
+                TaskDialogCommandLinkButton ignoreAll = new("Ignore all conflicts", "Don't ask again while loading this folder.");
+                TaskDialogCommandLinkButton stop = new("Stop loading");
+
+                TaskDialogPage page = new()
+                {
+                    Caption = "ID Conflict",
+                    Heading = $"Resource 0x{entryID:X8} is in more than one bundle",
+                    Text = $"{file2}\n{file1}\n\nIgnoring this may cause other problems.",
+                    Icon = TaskDialogIcon.Warning,
+                    Buttons = { ignoreOnce, ignoreAll, stop },
+                    DefaultButton = stop
+                };
+
+                TaskDialogButton result = TaskDialog.ShowDialog(this, page);
+                return new ConflictChoice(result == stop, result == ignoreAll);
+            }));
         }
 
         private void DoLoadFileList(ILoader loader)

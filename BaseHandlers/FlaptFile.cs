@@ -183,28 +183,37 @@ namespace BaseHandlers
             BinaryReader2 br = new BinaryReader2(ms);
             br.BigEndian = entry.Console;
 
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
+            uint ReadPtr()
+            {
+                if (!x64)
+                    return br.ReadUInt32();
+                br.BaseStream.Position = (br.BaseStream.Position + 7) & ~7;
+                return (uint)br.ReadUInt64();
+            }
+
             br.BaseStream.Position += 4; // magic or something: 0C B0 B0 B0
             FileSize = br.ReadUInt32();
             SecondsPerFrame = br.ReadSingle();
             Section1RecordCount = br.ReadInt32();
-            Section1Offset = br.ReadUInt32();
+            Section1Offset = ReadPtr();
             ImageIDCount = br.ReadInt32();
-            ImageIDListOffset = br.ReadUInt32();
+            ImageIDListOffset = ReadPtr();
             GeometryVerticesCount = br.ReadInt32();
-            GeometryVerticesOffset = br.ReadUInt32();
+            GeometryVerticesOffset = ReadPtr();
             TextStyleCount = br.ReadInt32();
-            TextStyleListOffset = br.ReadUInt32();
+            TextStyleListOffset = ReadPtr();
             Section5And6RecordCount = br.ReadInt32();
-            Section5Offset = br.ReadUInt32();
-            Section6Offset = br.ReadUInt32();
+            Section5Offset = ReadPtr();
+            Section6Offset = ReadPtr();
             EventBindsCount = br.ReadInt32();
-            EventBindsOffset = br.ReadUInt32();
+            EventBindsOffset = ReadPtr();
             TextStringsCount = br.ReadInt32();
-            TextStringsOffset = br.ReadUInt32();
+            TextStringsOffset = ReadPtr();
             DependencyRefStringsCount = br.ReadInt32();
-            DependencyRefStringsOffset = br.ReadUInt32();
+            DependencyRefStringsOffset = ReadPtr();
             CharacterRefStringsCount = br.ReadInt32();
-            CharacterRefStringsOffset = br.ReadUInt32();
+            CharacterRefStringsOffset = ReadPtr();
 
 
             br.BaseStream.Position = Section1Offset;
@@ -222,22 +231,22 @@ namespace BaseHandlers
                 section1Entry.Unknown07 = br.ReadByte();
                 section1Entry.List1Count = br.ReadInt16();
                 section1Entry.Unknown0A = br.ReadInt16();
-                section1Entry.Unknown0C = br.ReadInt32();
+                section1Entry.Unknown0C = (int)ReadPtr(); // File pointer, 0 on disk
 
-                section1Entry.List1Offset = br.ReadUInt32();
-                section1Entry.Unknown14 = br.ReadUInt32();
-                section1Entry.Unknown18 = br.ReadUInt32();
-                section1Entry.Unknown1C = br.ReadUInt32();
-                section1Entry.Unknown20 = br.ReadUInt32();
-                section1Entry.Unknown24 = br.ReadUInt32();
-                section1Entry.Unknown28 = br.ReadUInt32();
-                section1Entry.Unknown2C = br.ReadUInt32();
-                section1Entry.Unknown30 = br.ReadUInt32();
-                section1Entry.Unknown34 = br.ReadUInt32();
-                section1Entry.Unknown38 = br.ReadUInt32();
-                section1Entry.Unknown3C = br.ReadUInt32();
+                section1Entry.List1Offset = ReadPtr();
+                section1Entry.Unknown14 = ReadPtr();
+                section1Entry.Unknown18 = ReadPtr();
+                section1Entry.Unknown1C = ReadPtr();
+                section1Entry.Unknown20 = ReadPtr();
+                section1Entry.Unknown24 = ReadPtr();
+                section1Entry.Unknown28 = ReadPtr();
+                section1Entry.Unknown2C = ReadPtr();
+                section1Entry.Unknown30 = ReadPtr();
+                section1Entry.Unknown34 = ReadPtr();
+                section1Entry.Unknown38 = ReadPtr();
+                section1Entry.Unknown3C = ReadPtr();
 
-                section1Entry.NameOffset = br.ReadUInt32();
+                section1Entry.NameOffset = ReadPtr();
 
 
                 long oldPos = br.BaseStream.Position;
@@ -269,7 +278,7 @@ namespace BaseHandlers
             for (int i = 0; i < ImageIDCount; i++)
             {
                 ImageIDs.Add(br.ReadSByte());
-                br.BaseStream.Position += 3; // Weird padding?
+                br.BaseStream.Position += x64 ? 7 : 3; // Weird padding?
             }
 
 
@@ -293,7 +302,7 @@ namespace BaseHandlers
             {
                 TextStyle textStyle = new TextStyle();
 
-                textStyle.FontNameOffset = br.ReadUInt32();
+                textStyle.FontNameOffset = ReadPtr();
 
                 long oldPos = br.BaseStream.Position;
                 br.BaseStream.Position = textStyle.FontNameOffset;
@@ -313,7 +322,7 @@ namespace BaseHandlers
                 FlaptSection5Entry section5Entry = new FlaptSection5Entry();
 
                 section5Entry.Hash = br.ReadUInt32();
-                section5Entry.CharacterNameOffset = br.ReadUInt32();
+                section5Entry.CharacterNameOffset = ReadPtr();
 
                 long oldPos = br.BaseStream.Position;
                 br.BaseStream.Position = section5Entry.CharacterNameOffset;
@@ -342,10 +351,10 @@ namespace BaseHandlers
             {
                 FlaptEventBinding eventBinding = new FlaptEventBinding();
 
-                eventBinding.CharacterNameOffset = br.ReadUInt32();
-                eventBinding.EventNameOffset = br.ReadUInt32();
-                eventBinding.ActionNameOffset = br.ReadUInt32();
-                eventBinding.UnusedInt = br.ReadInt32();
+                eventBinding.CharacterNameOffset = ReadPtr();
+                eventBinding.EventNameOffset = ReadPtr();
+                eventBinding.ActionNameOffset = ReadPtr();
+                eventBinding.UnusedInt = (int)ReadPtr();
 
                 long oldPos = br.BaseStream.Position;
 
@@ -375,7 +384,7 @@ namespace BaseHandlers
             {
                 StringPointer textString = new StringPointer();
 
-                textString.StringOffset = br.ReadUInt32();
+                textString.StringOffset = ReadPtr();
 
                 long oldPos = br.BaseStream.Position;
                 br.BaseStream.Position = textString.StringOffset;
@@ -391,7 +400,7 @@ namespace BaseHandlers
             {
                 StringPointer dependencyRefString = new StringPointer();
 
-                dependencyRefString.StringOffset = br.ReadUInt32();
+                dependencyRefString.StringOffset = ReadPtr();
 
                 long oldPos = br.BaseStream.Position;
                 br.BaseStream.Position = dependencyRefString.StringOffset;
@@ -407,7 +416,7 @@ namespace BaseHandlers
             {
                 StringPointer characterRefString = new StringPointer();
 
-                characterRefString.StringOffset = br.ReadUInt32();
+                characterRefString.StringOffset = ReadPtr();
 
                 long oldPos = br.BaseStream.Position;
                 br.BaseStream.Position = characterRefString.StringOffset;

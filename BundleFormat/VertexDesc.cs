@@ -47,17 +47,20 @@ namespace BundleFormat
             MemoryStream ms = entry.MakeStream();
             BinaryReader2 br = new BinaryReader2(ms);
             br.BigEndian = entry.Console;
+            bool x64 = entry.Platform == BundlePlatform.PCx64; // decomp is like the X360 layout but little endian
 
             result.Unknown1 = br.ReadInt32();
             result.Unknown2 = br.ReadInt32();
             result.Unknown3 = br.ReadInt32();
             result.AttributeCount = br.ReadInt32();
+            if (x64) // u16 element count @0x08
+                result.AttributeCount = (ushort)result.Unknown3;
 
             for (int i = 0; i < result.AttributeCount; i++)
             {
                 VertexAttribute attribute = new VertexAttribute();
                 
-                if (result.Unknown2 != 0) // BPR
+                if (result.Unknown2 != 0 && !x64) // BPR
                 {
                     attribute.Type = (VertexAttributeType)br.ReadInt32();
                     if (!Enum.IsDefined(typeof(VertexAttributeType), attribute.Type))
@@ -110,6 +113,15 @@ namespace BundleFormat
                     }
 
                     br.BaseStream.Position += 4;
+                }
+
+                if (x64)
+                {
+                    byte[] data = entry.EntryBlocks[0].Data;
+                    int element = 0x10 + 0x10 * i;
+                    attribute.Offset = BitConverter.ToUInt16(data, element + 2);
+                    attribute.Unknown1 = BitConverter.ToUInt32(data, element + 4);
+                    attribute.Size = data[0x10 + 0x10 * result.AttributeCount + i];
                 }
 
                 result.Attributes.Add(attribute);

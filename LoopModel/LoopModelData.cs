@@ -51,6 +51,8 @@ namespace LoopModel
             MemoryStream ms = new(entry.EntryBlocks[0].Data);
             BinaryReader2 br = new(ms, entry.Console);
 
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
+
             UInt32 versionCheck = br.ReadUInt32();
             if (versionCheck != version)
             {
@@ -86,8 +88,8 @@ namespace LoopModel
             // Read LoopModel data
             for (int i = 0; i < numPartials; ++i)
             {
-                br.BaseStream.Position = partialsPointer + i * (is64Bit ? 0x10 : 0xC);
-                _partials.Add(new Partial(br, is64Bit));
+                br.BaseStream.Position = partialsPointer + i * (x64 ? 0x18 : is64Bit ? 0x10 : 0xC);
+                _partials.Add(new Partial(br, is64Bit, x64));
             }
 
             if (!CheckGraphErrors())
@@ -194,23 +196,26 @@ namespace LoopModel
 
         private Dictionary<UInt32, String> GetRegistryWaveStringMap(BundleEntry entry)
         {
-            // Only works on 32-bit platforms. (Not PS4/XB1/NX)
+            // Only works on 32-bit platforms except for decomp. (Not PS4/XB1/NX)
             
             MemoryStream ms = new(entry.EntryBlocks[0].Data);
             BinaryReader2 br = new(ms, entry.Console);
             Dictionary<UInt32, String> dict = new();
 
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
+            long ReadPtr() => x64 ? br.ReadInt64() : br.ReadUInt32();
+
             UInt32 entityCount = br.ReadUInt32();
             UInt32 entityCapacity = br.ReadUInt32();
-            UInt32 entityDataSize = br.ReadUInt32();
-            UInt32 entityDataEnd = br.ReadUInt32();
-            UInt32 stringTableSize = br.ReadUInt32();
-            UInt32 stringTableEnd = br.ReadUInt32();
-            UInt32 nameHashMask = br.ReadUInt32();
-            List<UInt32> entityPointers = new((int)entityCount);
+            long entityDataSize = ReadPtr();
+            long entityDataEnd = ReadPtr();
+            long stringTableSize = ReadPtr();
+            long stringTableEnd = ReadPtr();
+            long nameHashMask = ReadPtr();
+            List<long> entityPointers = new((int)entityCount);
             for (int i = 0; i < entityCapacity; ++i)
             {
-                UInt32 ptr = br.ReadUInt32();
+                long ptr = ReadPtr();
                 if (ptr != 0)
                     entityPointers.Add(ptr);
             }
@@ -221,7 +226,7 @@ namespace LoopModel
                 UInt32 typeNameHash = br.ReadUInt32();
                 if (typeNameHash != 0x511A448B) // ~ContentSpec~
                     continue;
-                UInt32 contentTypeHash = br.ReadUInt32();
+                long contentTypeHash = ReadPtr();
                 if (contentTypeHash != 0x7CCDA2E7) // ~GenericRwacWaveContent::SK_WAVE_DATA_CONTENT_TYPE~
                     continue;
                 UInt16 pathLength = br.ReadUInt16();
@@ -240,6 +245,7 @@ namespace LoopModel
         {
             MemoryStream ms = new();
             BinaryWriter2 bw = new(ms, entry.Console);
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
 
             bw.Write(version);
             bw.Write(magic);
@@ -255,8 +261,8 @@ namespace LoopModel
             int numPriorPoints = 0;
             for (int i = 0; i < _partials.Count; ++i)
             {
-                bw.BaseStream.Position = partialsPointer + i * (is64Bit ? 0x10 : 0xC);
-                _partials[i].Write(bw, is64Bit, partialsPointer, _partials.Count, ref numPriorGraphs, ref numPriorPoints);
+                bw.BaseStream.Position = partialsPointer + i * (x64 ? 0x18 : is64Bit ? 0x10 : 0xC);
+                _partials[i].Write(bw, is64Bit, x64, partialsPointer, _partials.Count, ref numPriorGraphs, ref numPriorPoints);
             }
 
             for (int i = 0; i < 2; ++i) // No idea why, but they write 16 null bytes after everything, and it's consistent
@@ -293,13 +299,19 @@ namespace LoopModel
             _graphs = [];
         }
 
-        public Partial(BinaryReader2 br, bool is64Bit)
+        public Partial(BinaryReader2 br, bool is64Bit, bool x64)
         {
             _graphs = [];
 
             // Position differs between 32-bit and 64-bit
             Int64 graphsPointer = 0;
-            if (is64Bit)
+            if (x64)
+            {
+                _waveNameHash = br.ReadUInt32();
+                br.BaseStream.Position += 4;
+                graphsPointer = br.ReadInt64();
+            }
+            else if (is64Bit)
             {
                 graphsPointer = br.ReadInt64();
                 _waveNameHash = br.ReadUInt32();
@@ -318,10 +330,17 @@ namespace LoopModel
             }
         }
 
-        public void Write(BinaryWriter2 bw, bool is64Bit, Int64 partialsPointer, int numPartials, ref int numPriorGraphs, ref int numPriorPoints)
+        public void Write(BinaryWriter2 bw, bool is64Bit, bool x64, Int64 partialsPointer, int numPartials, ref int numPriorGraphs, ref int numPriorPoints)
         {
             Int64 graphsPointer = partialsPointer;
-            if (is64Bit)
+            if (x64)
+            {
+                graphsPointer += numPartials * 0x18 + numPriorGraphs * 0x10 + numPriorPoints * 8;
+                bw.Write(_waveNameHash);
+                bw.Write(0);
+                bw.Write(graphsPointer);
+            }
+            else if (is64Bit)
             {
                 graphsPointer += numPartials * 0x10 + numPriorGraphs * 0x10 + numPriorPoints * 8;
                 bw.Write(graphsPointer);
@@ -334,7 +353,7 @@ namespace LoopModel
                 bw.Write((Int32)graphsPointer);
             }
             bw.Write((Byte)_graphs.Count);
-            bw.WriteUniquePadding(3);
+            bw.WriteUniquePadding(x64 ? 7 : 3);
 
             bw.BaseStream.Position = graphsPointer;
             int numPriorPointsInGraph = 0;

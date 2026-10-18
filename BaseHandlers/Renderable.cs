@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -246,6 +247,110 @@ namespace BaseHandlers
             }
         }
 
+        private void ReadBodyX64(BinaryReader2 header, BinaryReader2 br)
+        {
+            for (int i = 0; i < Meshes.Count; i++)
+            {
+                RenderableMesh mesh = Meshes[i];
+                mesh.Indices = new List<uint>();
+                mesh.Vertices = new List<VertexData>();
+
+                VertexAttribute position = default, normal = default, uv = default;
+                foreach (VertexDesc desc in mesh.VertexDescriptions)
+                {
+                    if (desc == null)
+                        continue;
+
+                    foreach (VertexAttribute attribute in desc.Attributes)
+                    {
+                        if (attribute.Type == VertexAttributeType.Positions)
+                            position = attribute;
+                        else if (attribute.Type == VertexAttributeType.Normals)
+                            normal = attribute;
+                        else if (attribute.Type == VertexAttributeType.UV1)
+                            uv = attribute;
+                    }
+                }
+
+                if (position.Size == 0)
+                    continue;
+
+                // DrawIndexedParameters
+                header.BaseStream.Position = MeshVertexOffsets[i] + 0x10;
+                mesh.Unknown19 = header.ReadInt32();
+                mesh.Unknown20 = header.ReadInt32();
+                mesh.IndexOffsetCount = header.ReadInt32();
+                int indexCount = header.ReadInt32();
+                header.BaseStream.Position = MeshVertexOffsets[i] + 0x29;
+                int instanceCount = header.ReadByte();
+                if (instanceCount > 1) // only the first instance, the rest index the same vertices
+                    indexCount = (indexCount + 1) / instanceCount;
+
+                header.BaseStream.Position = mesh.NumIndicesOffset;
+                bool index32 = header.ReadInt32() < 0;
+                header.BaseStream.Position = mesh.NumIndicesOffset + 0x18;
+                int indexBase = header.ReadInt32() & ~3;
+                header.BaseStream.Position = mesh.VerticesOffsetPtr + 0x18;
+                int vertexBase = header.ReadInt32() & ~3;
+                header.BaseStream.Position += 4;
+                mesh.NumVertices = header.ReadInt32() / (int)position.Size;
+
+                for (int j = 0; j < mesh.NumVertices; j++)
+                {
+                    long vertex = vertexBase + j * position.Size;
+                    mesh.Vertices.Add(new VertexData()
+                    {
+                        Vertex = ReadElementX64(br, vertex, position),
+                        Normal1 = ReadElementX64(br, vertex, normal),
+                        UV1 = ReadElementX64(br, vertex, uv).Xy
+                    });
+                }
+
+                br.BaseStream.Position = indexBase + mesh.IndexOffsetCount * (index32 ? 4 : 2);
+                uint a = 0, b = 0;
+                for (int j = 0, run = 0; j < indexCount; j++)
+                {
+                    uint index = index32 ? br.ReadUInt32() : br.ReadUInt16();
+                    if (index == (index32 ? uint.MaxValue : ushort.MaxValue)) // strip restart
+                    {
+                        run = 0;
+                        continue;
+                    }
+
+                    index += (uint)mesh.Unknown20;
+                    if (mesh.Unknown19 != 6) // not a strip
+                        mesh.Indices.Add(index);
+                    else if (run >= 2 && a != b && b != index && a != index) // skip degenerates
+                        mesh.Indices.AddRange(run % 2 == 0 ? new[] { a, b, index } : new[] { b, a, index });
+                    a = b;
+                    b = index;
+                    run++;
+                }
+                mesh.NumFaces = mesh.Indices.Count / 3;
+            }
+        }
+
+        private static Vector3 ReadElementX64(BinaryReader2 br, long vertex, VertexAttribute attribute)
+        {
+            float Dec3N(uint value) => Math.Max(((int)(value << 22) >> 22) / 511f, -1f); // signed 10 bits
+
+            br.BaseStream.Position = vertex + attribute.Offset;
+            switch (attribute.Unknown1)
+            {
+                case 0x2A23B9: // FLOAT3
+                    return new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                case 0x2C23A5: // FLOAT2
+                    return new Vector3(br.ReadSingle(), br.ReadSingle(), 0);
+                case 0x2C235F: // FLOAT16_2
+                    return new Vector3((float)br.ReadHalf(), (float)br.ReadHalf(), 0);
+                case 0x2A2187: // DEC3N
+                    uint packed = br.ReadUInt32();
+                    return new Vector3(Dec3N(packed), Dec3N(packed >> 10), Dec3N(packed >> 20));
+            }
+
+            return Vector3.Zero;
+        }
+
         private void Clear()
         {
             _scene = null;
@@ -294,54 +399,70 @@ namespace BaseHandlers
             BinaryReader2 br = new BinaryReader2(ms);
             br.BigEndian = entry.Console;
 
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
+            ulong ImportAt(long offset) => dependencies.Find(d => d.EntryPointerOffset == offset).EntryID;
+
             Unknown1 = br.ReadSingle();
             Unknown2 = br.ReadSingle();
             Unknown3 = br.ReadSingle();
             Unknown4 = br.ReadSingle();
             Unknown5 = br.ReadInt16();
             MeshCount = br.ReadInt16();
-            StartOffset = br.ReadInt32();
-            Unknown8 = br.ReadInt32();
-            Unknown9 = br.ReadInt32();
-            Unknown10 = br.ReadInt16();
-            Unknown10_1 = br.ReadInt16();
-            UnknownOffset = br.ReadInt32();
-            Unknown12 = br.ReadInt32();
-            Unknown13 = br.ReadInt32();
+            if (x64)
+            {
+                br.BaseStream.Position = 0x18;
+                StartOffset = (int)br.ReadInt64();
+                Unknown8 = (int)br.ReadInt64();
+                Unknown9 = br.ReadInt32();
+            }
+            else
+            {
+                StartOffset = br.ReadInt32();
+                Unknown8 = br.ReadInt32();
+                Unknown9 = br.ReadInt32();
+                Unknown10 = br.ReadInt16();
+                Unknown10_1 = br.ReadInt16();
+                UnknownOffset = br.ReadInt32();
+                Unknown12 = br.ReadInt32();
+                Unknown13 = br.ReadInt32();
+            }
 
             br.BaseStream.Position = StartOffset;
 
             for (int i = 0; i < MeshCount; i++)
             {
-                int offset = br.ReadInt32();
+                int offset = x64 ? (int)br.ReadInt64() : br.ReadInt32();
                 MeshVertexOffsets.Add(offset);
             }
 
-            /*if (entry.Platform == BundlePlatform.PS3)
+            if (!x64) // decomp meshes have their own index & vertex buffers
             {
-                br.BaseStream.Position += 16 - (br.BaseStream.Position % 16);
-                result.NumIndices = br.ReadInt16();
-                result.Unknown = br.ReadInt16();
-            }
-            else
-            {*/
-                NumIndices = br.ReadInt32();
-            //}
+                /*if (entry.Platform == BundlePlatform.PS3)
+                {
+                    br.BaseStream.Position += 16 - (br.BaseStream.Position % 16);
+                    result.NumIndices = br.ReadInt16();
+                    result.Unknown = br.ReadInt16();
+                }
+                else
+                {*/
+                    NumIndices = br.ReadInt32();
+                //}
 
-            Unknown15 = br.ReadInt32();
-            Unknown16 = br.ReadInt32();
-            Unknown17 = br.ReadInt32();
-            // some extra data here in BPR
+                Unknown15 = br.ReadInt32();
+                Unknown16 = br.ReadInt32();
+                Unknown17 = br.ReadInt32();
+                // some extra data here in BPR
 
-            br.BaseStream.Position = UnknownOffset;
-            if (NumIndices == 0) // BPR
-            {
-                // ???
-                br.BaseStream.Position += 12;
+                br.BaseStream.Position = UnknownOffset;
+                if (NumIndices == 0) // BPR
+                {
+                    // ???
+                    br.BaseStream.Position += 12;
+                }
+                VertexBlockAddress = br.ReadInt32();
+                Unknown18 = (NumIndices == 0) ? 0 : br.ReadInt32();
+                VertexBlockSize = br.ReadInt32();
             }
-            VertexBlockAddress = br.ReadInt32();
-            Unknown18 = (NumIndices == 0) ? 0 : br.ReadInt32();
-            VertexBlockSize = br.ReadInt32();
 
 
             for (int i = 0; i < MeshCount; i++)
@@ -349,6 +470,25 @@ namespace BaseHandlers
                 br.BaseStream.Position = MeshVertexOffsets[i];
 
                 RenderableMesh mesh = new RenderableMesh();
+
+                if (x64)
+                {
+                    mesh.MaterialID = ImportAt(MeshVertexOffsets[i] + 0x20);
+                    br.BaseStream.Position += 0x28;
+                    int numVD = br.ReadByte();
+                    br.ReadByte(); // instance count
+                    int numVB = br.ReadByte();
+                    br.BaseStream.Position += 5;
+                    mesh.NumIndicesOffset = (int)br.ReadInt64();
+                    mesh.VerticesOffsetPtr = (int)br.ReadInt64(); // first vertex buffer
+
+                    mesh.VertexDescriptionIDs = new ulong[numVD];
+                    for (int j = 0; j < numVD; j++)
+                        mesh.VertexDescriptionIDs[j] = ImportAt(MeshVertexOffsets[i] + 0x38 + 8 * (numVB + j));
+
+                    Meshes.Add(mesh);
+                    continue;
+                }
 
                 mesh.RotationMatrix = br.ReadMatrix4();
                 mesh.Unknown19 = br.ReadInt32();
@@ -430,7 +570,7 @@ namespace BaseHandlers
                         mesh.Material = MaterialEntry.Read(descEntry1);
                 }
 
-                mesh.VertexDescriptions = new VertexDesc[6];
+                mesh.VertexDescriptions = new VertexDesc[mesh.VertexDescriptionIDs.Length];
                 for (int j = 0; j < mesh.VertexDescriptions.Length; j++)
                 {
                     ulong vertexDescID = mesh.VertexDescriptionIDs[j];
@@ -453,7 +593,10 @@ namespace BaseHandlers
             ms = entry.MakeStream(true);
             br = new BinaryReader2(ms);
             br.BigEndian = entry.Console;
-            ReadBody(br);
+            if (x64)
+                ReadBodyX64(new BinaryReader2(entry.MakeStream()), br);
+            else
+                ReadBody(br);
             br.Close();
             ms.Close();
 

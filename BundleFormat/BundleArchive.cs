@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using BundleUtilities;
 
@@ -22,7 +23,8 @@ namespace BundleFormat
     {
         PC = 1,
         X360 = 2,// << 24, // Big Endian
-        PS3 = 3// << 24 // Big Endian
+        PS3 = 3, // << 24  // Big Endian
+        PCx64 = 4
     }
 
     public class BundleArchive
@@ -89,6 +91,52 @@ namespace BundleFormat
                     return entry;
             }
             return null;
+        }
+
+        // Replaces any entry with the same ID. Retain ID sorting like retail bundles
+        public void AddEntry(BundleEntry entry)
+        {
+            Entries.RemoveAll(e => e.ID == entry.ID);
+            int index = Entries.FindIndex(e => e.ID > entry.ID);
+            Entries.Insert(index < 0 ? Entries.Count : index, entry);
+            for (int i = 0; i < Entries.Count; i++)
+                Entries[i].Index = i;
+        }
+
+        public BundleEntry CreateEntry(ulong id, EntryType type, string name, byte[] primary, int importCount, byte[] secondary = null)
+        {
+            BundleEntry template = Entries.FirstOrDefault(e => e.Type == type);
+
+            int secondaryBlock = template?.SecondaryBlock ?? (Platform == BundlePlatform.PS3 ? 2 : 1);
+
+            byte[][] data = new byte[3][];
+            data[0] = primary;
+            data[secondaryBlock] = secondary;
+
+            BundleEntry entry = new(this)
+            {
+                ID = id,
+                Type = type,
+                Platform = Platform,
+                DependencyCount = (short)importCount,
+                DependenciesListOffset = importCount > 0 ? primary.Length - importCount * Dependency.Size : 0,
+                DebugInfo = new() { Name = name, TypeName = type.ToString() },
+                Dirty = true,
+                EntryBlocks = new EntryBlock[3]
+            };
+
+            for (int i = 0; i < entry.EntryBlocks.Length; i++)
+            {
+                EntryBlock block = new() { Compressed = false };
+                if (data[i] != null)
+                {
+                    block.Data = data[i];
+                    block.UncompressedAlignment = template != null && template.HasSection(i) ? template.EntryBlocks[i].UncompressedAlignment : 16;
+                }
+                entry.EntryBlocks[i] = block;
+            }
+
+            return entry;
         }
 
         public string GetEntryNameByID(ulong id)
@@ -158,6 +206,45 @@ namespace BundleFormat
                     break;
                 }
             }
+        }
+
+        private void RebuildRST()
+        {
+            XmlDocument doc = new XmlDocument();
+            XmlElement root = doc.CreateElement("ResourceStringTable");
+            doc.AppendChild(root);
+
+            bool hasNamedResources = false;
+
+            foreach (BundleEntry entry in Entries)
+            {
+                string name = entry.DebugInfo.Name?.Trim();
+                if (string.IsNullOrEmpty(name))
+                    continue;
+
+                XmlElement resource = doc.CreateElement("Resource");
+                resource.SetAttribute("id", entry.ID.ToString("X8"));
+                resource.SetAttribute("name", name);
+                resource.SetAttribute(
+                    "type",
+                    string.IsNullOrWhiteSpace(entry.DebugInfo.TypeName)
+                        ? entry.Type.ToString()
+                        : entry.DebugInfo.TypeName
+                );
+
+                root.AppendChild(resource);
+                hasNamedResources = true;
+            }
+
+            if (!hasNamedResources)
+            {
+                ResourceStringTable = null;
+                Flags &= ~Flags.HasResourceStringTable;
+                return;
+            }
+
+            ResourceStringTable = doc.OuterXml;
+            Flags |= Flags.HasResourceStringTable;
         }
 
         public static BundleArchive Read(string path)
@@ -411,15 +498,7 @@ namespace BundleFormat
                     return false;
 
                 for (int j = 0; j < entry.DependencyCount; j++)
-                {
-                    Dependency dep = new Dependency();
-                    dep.ID = br.ReadUInt64();
-                    dep.EntryPointerOffset = br.ReadUInt32();
-
-                    br.ReadUInt32(); // Skip
-
-                    entry.Dependencies.Add(dep);
-                }
+                    entry.Dependencies.Add(Dependency.Read(br));
             }
 
             BundleEntry rst = GetEntryByID(0xC039284A);
@@ -453,11 +532,7 @@ namespace BundleFormat
         {
             br.BaseStream.Position += 4;
 
-            int platform = br.ReadInt32();
-            if (platform != 1)
-                platform = BinaryPrimitives.ReverseEndianness(platform);
-            Platform = (BundlePlatform)platform;
-            br.BigEndian = Console;
+            Platform = ReadPlatform(br);
 
             br.BaseStream.Position -= 8;
             Version = br.ReadInt32();
@@ -490,7 +565,7 @@ namespace BundleFormat
 
                 entry.ID = br.ReadUInt64();
 
-                entry.References = br.ReadUInt64();
+                br.ReadUInt64(); // Import Resource ID, which we now recompute on write
 
                 entry.EntryBlocks = new EntryBlock[3];
                 for (int j = 0; j < entry.EntryBlocks.Length; j++)
@@ -580,6 +655,8 @@ namespace BundleFormat
 
         public void Write(BinaryWriter2 bw)
         {
+            RebuildRST();
+
             bw.Write(BND2Magic);
             bw.Write(Version);
             bw.Write((int)Platform);
@@ -634,7 +711,7 @@ namespace BundleFormat
                 compressedBlocks.Add(new byte[3][]);
 
                 bw.Write(entry.ID);
-                bw.Write(entry.References);
+                bw.Write(entry.ImportID);
 
                 for (int j = 0; j < entry.EntryBlocks.Length; j++)
                 {
@@ -653,7 +730,7 @@ namespace BundleFormat
                         bw.Write((uint)0);
                     else
                     {
-                        compressedBlocks[i][j] = entryBlock.Data.Compress();
+                        compressedBlocks[i][j] = Flags.HasFlag(Flags.Compressed) ? entryBlock.Data.Compress() : entryBlock.Data;
                         bw.Write(compressedBlocks[i][j].Length);
                     }
                 }
@@ -682,22 +759,16 @@ namespace BundleFormat
 
                 for (int j = 0; j < Entries.Count; j++)
                 {
-                    BundleEntry entry = Entries[j];
-                    EntryBlock entryBlock = entry.EntryBlocks[i];
-                    bool compressed = Flags.HasFlag(Flags.Compressed);
-                    uint size = compressed ? (compressedBlocks[j][i] == null ? 0 : (uint)compressedBlocks[j][i].Length) : (uint)entryBlock.Data.Length;
+                    byte[] diskData = compressedBlocks[j][i];
 
-                    if (size > 0)
+                    if (diskData != null && diskData.Length > 0)
                     {
                         long pos = bw.BaseStream.Position;
                         bw.BaseStream.Position = entryDataPointerPos[j][i];
                         bw.Write((uint)(pos - blockStart));
                         bw.BaseStream.Position = pos;
 
-                        if (compressed)
-                            bw.Write(compressedBlocks[j][i]);
-                        else
-                            bw.Write(entryBlock.Data);
+                        bw.Write(diskData);
 
                         bw.Align((i != 0 && j != Entries.Count - 1) ? (byte)0x80 : (byte)16);
                     }
@@ -706,6 +777,13 @@ namespace BundleFormat
                 if (i != 2)
                     bw.Align(0x80);
             }
+        }
+
+        private static BundlePlatform ReadPlatform(BinaryReader2 br)
+        {
+            int platform = br.ReadInt32();
+            br.BigEndian = platform > 0xFF;
+            return (BundlePlatform)(br.BigEndian ? BinaryPrimitives.ReverseEndianness(platform) : platform);
         }
 
         public static bool VerifyMagic(BinaryReader2 br, byte[] magic)
@@ -755,11 +833,7 @@ namespace BundleFormat
 
             br.BaseStream.Position += 4;
 
-            int platformInt = br.ReadInt32();
-            if (platformInt != 1)
-                platformInt = BinaryPrimitives.ReverseEndianness(platformInt);
-            BundlePlatform platform = (BundlePlatform)platformInt;
-            br.BigEndian = platform == BundlePlatform.X360 || platform == BundlePlatform.PS3;
+            ReadPlatform(br);
 
             br.BaseStream.Position = 0x10;
             int fileCount = br.ReadInt32();
@@ -797,11 +871,7 @@ namespace BundleFormat
 
             br.BaseStream.Position += 4;
 
-            int platformInt = br.ReadInt32();
-            if (platformInt != 1)
-                platformInt = BinaryPrimitives.ReverseEndianness(platformInt);
-            BundlePlatform platform = (BundlePlatform)platformInt;
-            br.BigEndian = platform == BundlePlatform.X360 || platform == BundlePlatform.PS3;
+            ReadPlatform(br);
             
             br.BaseStream.Position = 0xC;
             uint rstOffset = br.ReadUInt32();
@@ -864,11 +934,7 @@ namespace BundleFormat
             
             br.BaseStream.Position += 4;
 
-            int platformInt = br.ReadInt32();
-            if (platformInt != 1)
-                platformInt = BinaryPrimitives.ReverseEndianness(platformInt);
-            BundlePlatform platform = (BundlePlatform)platformInt;
-            br.BigEndian = platform == BundlePlatform.X360 || platform == BundlePlatform.PS3;
+            ReadPlatform(br);
             
             br.BaseStream.Position = 0x10;
             int fileCount = br.ReadInt32();

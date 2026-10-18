@@ -12,7 +12,10 @@ using PluginAPI;
 namespace BaseHandlers
 {
     // Layout reference: https://burnout.wiki/wiki/Street_Data
-    // 32-bit PC only. 64-bit (Remastered) and big-endian (X360/PS3) are not
+    // 32-bit PC and the decomp (PCx64). The decomp is version 5 with 8-byte
+    // pointers (b5-decomp BrnStreetData.h): the header pointers,
+    // Junction::mpaExits and Road::mpaSpans widen, and Road has no trailing
+    // unknown field. 64-bit (Remastered) and big-endian (X360/PS3) are not
     // yet handled.
 
     public class ScoreList
@@ -214,6 +217,9 @@ namespace BaseHandlers
         [Browsable(false)]
         public int miExitCount { get; set; }                           // 0x10 0x4
         public string macName { get; set; }                            // 0x14 0x10
+        // Decomp only, see StreetData.Write.
+        [Browsable(false)]
+        public Exit[] maExits { get; set; } = Array.Empty<Exit>();
 
         public int RoadIndex
         {
@@ -236,28 +242,55 @@ namespace BaseHandlers
             set => macName = value ?? string.Empty;
         }
 
-        public void Read(BinaryReader2 br)
+        public void Read(BinaryReader2 br, bool x64)
         {
             super_SpanBase.Read(br);
-            mpaExits = br.ReadInt32();
+            if (x64)
+                br.ReadInt32(); // padding
+            mpaExits = x64 ? (int)br.ReadInt64() : br.ReadInt32();
             miExitCount = br.ReadInt32();
             macName = Encoding.ASCII.GetString(br.ReadBytes(16));
             // Intentionally NOT reading the exit array. StreetData::FixUp()
             // in retail Burnout Paradise overwrites large parts of that
             // region (see StreetData.Write for the writeup), so the on-disk
             // bytes are not reliable Exit structs.
+            if (!x64)
+                return;
+            br.ReadInt32(); // padding
+
+            // The decomp's are kept as-is
+            long pos = br.BaseStream.Position;
+            br.BaseStream.Position = mpaExits;
+            maExits = new Exit[miExitCount];
+            for (int i = 0; i < miExitCount; i++)
+            {
+                maExits[i] = new Exit();
+                maExits[i].Read(br);
+            }
+            br.BaseStream.Position = pos;
         }
 
-        public void Write(BinaryWriter2 bw)
+        public void Write(BinaryWriter2 bw, bool x64)
         {
             super_SpanBase.Write(bw);
-            // Always emit zeroed pointer + count. The game ignores these
-            // (the responsibilities live in AI Sections / Traffic Data /
-            // Trigger Data / collision resources) and Burnout's FixUp bug
-            // means the original on-disk values point at corrupt memory.
-            bw.Write(0);
-            bw.Write(0);
+            if (x64)
+            {
+                bw.Write(0); // padding
+                bw.Write(0L); // mpaExits, patched by StreetData.Write
+                bw.Write(maExits.Length);
+            }
+            else
+            {
+                // Always emit zeroed pointer + count. The game ignores these
+                // (the responsibilities live in AI Sections / Traffic Data /
+                // Trigger Data / collision resources) and Burnout's FixUp bug
+                // means the original on-disk values point at corrupt memory.
+                bw.Write(0);
+                bw.Write(0);
+            }
             bw.Write(PadName(macName, 16));
+            if (x64)
+                bw.Write(0); // padding
         }
 
         internal static byte[] PadName(string name, int len)
@@ -288,6 +321,9 @@ namespace BaseHandlers
         public int unknown { get; set; }                // 0x40 0x4  (spec: uint32, always 1)
         [Browsable(false)]
         public byte[] padding { get; set; } = new byte[4]; // 0x44 0x4
+        // Decomp only, see StreetData.Write.
+        [Browsable(false)]
+        public short[] maSpans { get; set; } = Array.Empty<short>();
 
         public string DebugName
         {
@@ -325,35 +361,55 @@ namespace BaseHandlers
             }
         }
 
-        public void Read(BinaryReader2 br)
+        public void Read(BinaryReader2 br, bool x64)
         {
             mReferencePosition = br.ReadVector3F();
-            mpaSpans = br.ReadInt32();
+            if (x64)
+                br.ReadInt32(); // padding
+            mpaSpans = x64 ? (int)br.ReadInt64() : br.ReadInt32();
             mId = br.ReadInt64();
             miRoadLimitId0 = br.ReadInt64();
             miRoadLimitId1 = br.ReadInt64();
             macDebugName = Encoding.ASCII.GetString(br.ReadBytes(16));
             mChallenge = br.ReadInt32();
             miSpanCount = br.ReadInt32();
+            if (x64)
+            {
+                // Version 5 ends here. Its span array is kept as-is
+                long pos = br.BaseStream.Position;
+                br.BaseStream.Position = mpaSpans;
+                maSpans = new short[miSpanCount];
+                for (int i = 0; i < miSpanCount; i++)
+                    maSpans[i] = br.ReadInt16();
+                br.BaseStream.Position = pos;
+                return;
+            }
             unknown = br.ReadInt32();
             padding = br.ReadBytes(4);
             // Intentionally NOT reading the per-road span array. See
             // StreetData.Write for the FixUp corruption details.
         }
 
-        public void Write(BinaryWriter2 bw)
+        public void Write(BinaryWriter2 bw, bool x64)
         {
             bw.Write(mReferencePosition.X);
             bw.Write(mReferencePosition.Y);
             bw.Write(mReferencePosition.Z);
-            // Always emit zeroed pointer + count; see Junction.Write.
-            bw.Write(0);
+            if (x64)
+            {
+                bw.Write(0); // padding
+                bw.Write(0L); // mpaSpans, patched by StreetData.Write
+            }
+            else
+                bw.Write(0); // Always emit zeroed pointer + count. See Junction.Write.
             bw.Write(mId);
             bw.Write(miRoadLimitId0);
             bw.Write(miRoadLimitId1);
             bw.Write(Junction.PadName(macDebugName, 16));
             bw.Write(mChallenge);
-            bw.Write(0);
+            bw.Write(x64 ? maSpans.Length : 0);
+            if (x64)
+                return;
             bw.Write(unknown);
             bw.Write(padding != null && padding.Length == 4 ? padding : new byte[4]);
         }
@@ -436,12 +492,15 @@ namespace BaseHandlers
             BinaryReader2 br = new BinaryReader2(ms);
             br.BigEndian = entry.Console;
 
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
+            int ReadPtr() => x64 ? (int)br.ReadInt64() : br.ReadInt32();
+
             miVersion = br.ReadInt32();
             br.ReadInt32(); // miSize, recomputed on write
-            mpaStreets = br.ReadInt32();
-            mpaJunctions = br.ReadInt32();
-            mpaRoads = br.ReadInt32();
-            mpaChallengeParScores = br.ReadInt32();
+            mpaStreets = ReadPtr();
+            mpaJunctions = ReadPtr();
+            mpaRoads = ReadPtr();
+            mpaChallengeParScores = ReadPtr();
             int miStreetCount = br.ReadInt32();
             int miJunctionCount = br.ReadInt32();
             int miRoadCount = br.ReadInt32();
@@ -458,7 +517,7 @@ namespace BaseHandlers
             for (int i = 0; i < miJunctionCount; i++)
             {
                 Junction j = new Junction();
-                j.Read(br);
+                j.Read(br, x64);
                 junctions.Add(j);
             }
 
@@ -466,7 +525,7 @@ namespace BaseHandlers
             for (int i = 0; i < miRoadCount; i++)
             {
                 Road r = new Road();
-                r.Read(br);
+                r.Read(br, x64);
                 roads.Add(r);
             }
 
@@ -502,13 +561,22 @@ namespace BaseHandlers
             BinaryWriter2 bw = new BinaryWriter2(ms);
             bw.BigEndian = entry.Console;
 
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
+            void WritePtr(int ptr)
+            {
+                if (x64)
+                    bw.Write((long)ptr);
+                else
+                    bw.Write(ptr);
+            }
+
             long headerPos = ms.Position;
             bw.Write(miVersion);
             bw.Write(0); // miSize
-            bw.Write(0); // mpaStreets
-            bw.Write(0); // mpaJunctions
-            bw.Write(0); // mpaRoads
-            bw.Write(0); // mpaChallengeParScores
+            WritePtr(0); // mpaStreets
+            WritePtr(0); // mpaJunctions
+            WritePtr(0); // mpaRoads
+            WritePtr(0); // mpaChallengeParScores
             bw.Write(streets.Count);
             bw.Write(junctions.Count);
             bw.Write(roads.Count);
@@ -519,11 +587,11 @@ namespace BaseHandlers
 
             bw.WritePadding();
             int junctionsOffset = (int)ms.Position;
-            for (int i = 0; i < junctions.Count; i++) junctions[i].Write(bw);
+            for (int i = 0; i < junctions.Count; i++) junctions[i].Write(bw, x64);
 
             bw.WritePadding();
             int roadsOffset = (int)ms.Position;
-            for (int i = 0; i < roads.Count; i++) roads[i].Write(bw);
+            for (int i = 0; i < roads.Count; i++) roads[i].Write(bw, x64);
 
             bw.WritePadding();
             int challengesOffset = (int)ms.Position;
@@ -545,6 +613,31 @@ namespace BaseHandlers
             // values are unreliable and the game ignores them. We omit them
             // entirely - per-road / per-junction mpaSpans, miSpanCount,
             // mpaExits, miExitCount are all written as 0.
+            //
+            // The decomp is the exception: its arrays are kept, laid out the
+            // way its data compiler did (one 16-byte-aligned allocation per
+            // road, then per junction) so a round trip is byte-identical.
+            if (x64)
+            {
+                for (int i = 0; i < roads.Count; i++)
+                {
+                    bw.WritePadding();
+                    long spansPtr = ms.Position;
+                    foreach (short span in roads[i].maSpans) bw.Write(span);
+                    ms.Position = roadsOffset + i * 0x48 + 0x10;
+                    bw.Write(spansPtr);
+                    ms.Position = ms.Length;
+                }
+                for (int i = 0; i < junctions.Count; i++)
+                {
+                    bw.WritePadding();
+                    long exitsPtr = ms.Position;
+                    foreach (Exit exit in junctions[i].maExits) exit.Write(bw);
+                    ms.Position = junctionsOffset + i * 0x30 + 0x10;
+                    bw.Write(exitsPtr);
+                    ms.Position = ms.Length;
+                }
+            }
             int fixUpEnd = challengesOffset + junctions.Count * SIZEOF_CHALLENGE_PAR_SCORES_ENTRY;
             while (ms.Position < fixUpEnd) bw.Write((byte)0);
             int miSizeOut = (int)ms.Position;
@@ -552,10 +645,10 @@ namespace BaseHandlers
 
             ms.Position = headerPos + 4;
             bw.Write(miSizeOut);
-            bw.Write(streetsOffset);
-            bw.Write(junctionsOffset);
-            bw.Write(roadsOffset);
-            bw.Write(challengesOffset);
+            WritePtr(streetsOffset);
+            WritePtr(junctionsOffset);
+            WritePtr(roadsOffset);
+            WritePtr(challengesOffset);
 
             bw.Flush();
             byte[] data = ms.ToArray();

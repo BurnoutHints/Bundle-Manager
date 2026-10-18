@@ -166,6 +166,8 @@ namespace VehicleList
             BinaryReader2 br = new BinaryReader2(ms);
             br.BigEndian = entry.Console;
 
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
+
             int count = br.ReadInt32();
             int startOff = br.ReadInt32();
 
@@ -204,9 +206,12 @@ namespace VehicleList
                 vehicle.AIExhaustIndex2 = (AIExhaustIndex)br.ReadByte();
                 vehicle.AIExhaustIndex3 = (AIExhaustIndex)br.ReadByte();
                 vehicle.padding2 = br.ReadByte();
-                vehicle.Unknown[0] = br.ReadInt64();
-                vehicle.Unknown[1] = br.ReadInt64();
-                vehicle.Category = (VehicleCategory)br.ReadInt32();
+                if (!x64)
+                {
+                    vehicle.Unknown[0] = br.ReadInt64();
+                    vehicle.Unknown[1] = br.ReadInt64();
+                    vehicle.Category = (VehicleCategory)br.ReadInt32();
+                }
                 vehicle.VehicleAndBoostType = br.ReadByte();
                 vehicle.FinishType = (FinishType)br.ReadByte();
                 vehicle.MaxSpeedNoBoost = br.ReadByte();
@@ -215,7 +220,8 @@ namespace VehicleList
                 vehicle.DisplayBoost = br.ReadByte();
                 vehicle.Color = br.ReadByte();
                 vehicle.ColorType = (ColorType)br.ReadByte();
-                vehicle.padding3 = br.ReadInt32();
+                if (!x64)
+                    vehicle.padding3 = br.ReadInt32();
 
                 vehicle.VehicleType = (VehicleType)(vehicle.VehicleAndBoostType >> 4 & 0xF); // High nibble
                 vehicle.BoostType = (BoostType)(vehicle.VehicleAndBoostType & 0xF); // Low nibble
@@ -232,6 +238,8 @@ namespace VehicleList
             MemoryStream ms = new MemoryStream();
             BinaryWriter2 bw = new BinaryWriter2(ms);
             bw.BigEndian = entry.Console;
+
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
 
             bw.Write(Entries.Count);
             bw.Write(0x10);
@@ -271,9 +279,12 @@ namespace VehicleList
                 bw.Write((byte)vehicle.AIExhaustIndex2);
                 bw.Write((byte)vehicle.AIExhaustIndex3);
                 bw.Write(vehicle.padding2);
-                bw.Write(vehicle.Unknown[0]);
-                bw.Write(vehicle.Unknown[1]);
-                bw.Write((uint)vehicle.Category);
+                if (!x64)
+                {
+                    bw.Write(vehicle.Unknown[0]);
+                    bw.Write(vehicle.Unknown[1]);
+                    bw.Write((uint)vehicle.Category);
+                }
                 bw.Write(vehicle.VehicleAndBoostType);
                 bw.Write((byte)vehicle.FinishType);
                 bw.Write(vehicle.MaxSpeedNoBoost);
@@ -282,7 +293,8 @@ namespace VehicleList
                 bw.Write(vehicle.DisplayBoost);
                 bw.Write(vehicle.Color);
                 bw.Write((byte)vehicle.ColorType);
-                bw.Write(vehicle.padding3);
+                if (!x64)
+                    bw.Write(vehicle.padding3);
             }
 
             bw.Flush();
