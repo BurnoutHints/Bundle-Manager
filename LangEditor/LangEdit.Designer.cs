@@ -30,9 +30,11 @@ namespace LangEditor
         {
             dgvMain = new System.Windows.Forms.DataGridView();
             colID = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            colName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             colString = new System.Windows.Forms.DataGridViewTextBoxColumn();
             statusStrip1 = new System.Windows.Forms.StatusStrip();
-            menuStrip1 = new System.Windows.Forms.MenuStrip();
+            lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
+menuStrip1 = new System.Windows.Forms.MenuStrip();
             fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -44,20 +46,24 @@ namespace LangEditor
             toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             hashToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)dgvMain).BeginInit();
+            statusStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // dgvMain
             // 
             dgvMain.AllowUserToOrderColumns = true;
+            dgvMain.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             dgvMain.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvMain.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { colID, colString });
+            dgvMain.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { colID, colName, colString });
             dgvMain.Dock = System.Windows.Forms.DockStyle.Fill;
             dgvMain.Location = new System.Drawing.Point(0, 24);
             dgvMain.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            dgvMain.MinimumSize = new System.Drawing.Size(70, 0);
             dgvMain.MultiSelect = false;
             dgvMain.Name = "dgvMain";
-            dgvMain.Size = new System.Drawing.Size(484, 382);
+            dgvMain.RowHeadersWidth = 30;
+            dgvMain.Size = new System.Drawing.Size(648, 384);
             dgvMain.TabIndex = 0;
             dgvMain.RowsAdded += dgvMain_RowsAdded;
             // 
@@ -66,27 +72,38 @@ namespace LangEditor
             colID.HeaderText = "ID";
             colID.Name = "colID";
             // 
+            // colName
+            // 
+            colName.HeaderText = "Name";
+            colName.Name = "colName";
+            // 
             // colString
             // 
             colString.HeaderText = "String";
             colString.Name = "colString";
             // 
             // statusStrip1
-            // 
-            statusStrip1.Location = new System.Drawing.Point(0, 406);
+            //
+            statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { lblStatus });
+            statusStrip1.Location= new System.Drawing.Point(0, 408);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
-            statusStrip1.Size = new System.Drawing.Size(484, 22);
+            statusStrip1.Size = new System.Drawing.Size(648, 22);
             statusStrip1.TabIndex = 1;
             statusStrip1.Text = "statusStrip1";
-            // 
+            //
+            // lblStatus
+            //
+            lblStatus.Name = "lblStatus";
+            lblStatus.Size = new System.Drawing.Size(0, 17);
+// 
             // menuStrip1
             // 
             menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { fileToolStripMenuItem, editToolStripMenuItem, toolsToolStripMenuItem });
             menuStrip1.Location = new System.Drawing.Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Padding = new System.Windows.Forms.Padding(7, 2, 0, 2);
-            menuStrip1.Size = new System.Drawing.Size(484, 24);
+            menuStrip1.Size = new System.Drawing.Size(648, 24);
             menuStrip1.TabIndex = 2;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -119,7 +136,8 @@ namespace LangEditor
             // applyChangesToolStripMenuItem
             // 
             applyChangesToolStripMenuItem.Name = "applyChangesToolStripMenuItem";
-            applyChangesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            applyChangesToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S;
+applyChangesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
             applyChangesToolStripMenuItem.Text = "Apply Changes";
             applyChangesToolStripMenuItem.Click += applyChangesToolStripMenuItem_Click;
             // 
@@ -142,7 +160,7 @@ namespace LangEditor
             // 
             findNextToolStripMenuItem.Enabled = false;
             findNextToolStripMenuItem.Name = "findNextToolStripMenuItem";
-            findNextToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.F;
+            findNextToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
             findNextToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
             findNextToolStripMenuItem.Text = "Find next";
             findNextToolStripMenuItem.Click += findNextToolStripMenuItem_Click;
@@ -165,7 +183,7 @@ namespace LangEditor
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(484, 428);
+            ClientSize = new System.Drawing.Size(648, 430);
             Controls.Add(dgvMain);
             Controls.Add(statusStrip1);
             Controls.Add(menuStrip1);
@@ -174,6 +192,8 @@ namespace LangEditor
             Name = "LangEdit";
             Text = "Language Editor";
             ((System.ComponentModel.ISupportInitialize)dgvMain).EndInit();
+            statusStrip1.ResumeLayout(false);
+            statusStrip1.PerformLayout();
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             ResumeLayout(false);
@@ -184,7 +204,8 @@ namespace LangEditor
 
         private System.Windows.Forms.DataGridView dgvMain;
         private System.Windows.Forms.StatusStrip statusStrip1;
-        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel lblStatus;
+private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportToolStripMenuItem;
@@ -195,6 +216,7 @@ namespace LangEditor
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem applyChangesToolStripMenuItem;
         private System.Windows.Forms.DataGridViewTextBoxColumn colID;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colString;
         private System.Windows.Forms.ToolStripMenuItem findNextToolStripMenuItem;
     }
