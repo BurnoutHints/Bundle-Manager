@@ -33,7 +33,8 @@ namespace LangEditor
             colName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             colString = new System.Windows.Forms.DataGridViewTextBoxColumn();
             statusStrip1 = new System.Windows.Forms.StatusStrip();
-            menuStrip1 = new System.Windows.Forms.MenuStrip();
+            lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
+menuStrip1 = new System.Windows.Forms.MenuStrip();
             fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -45,6 +46,7 @@ namespace LangEditor
             toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             hashToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)dgvMain).BeginInit();
+            statusStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -81,14 +83,20 @@ namespace LangEditor
             colString.Name = "colString";
             // 
             // statusStrip1
-            // 
-            statusStrip1.Location = new System.Drawing.Point(0, 408);
+            //
+            statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { lblStatus });
+            statusStrip1.Location= new System.Drawing.Point(0, 408);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
             statusStrip1.Size = new System.Drawing.Size(648, 22);
             statusStrip1.TabIndex = 1;
             statusStrip1.Text = "statusStrip1";
-            // 
+            //
+            // lblStatus
+            //
+            lblStatus.Name = "lblStatus";
+            lblStatus.Size = new System.Drawing.Size(0, 17);
+// 
             // menuStrip1
             // 
             menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { fileToolStripMenuItem, editToolStripMenuItem, toolsToolStripMenuItem });
@@ -128,7 +136,8 @@ namespace LangEditor
             // applyChangesToolStripMenuItem
             // 
             applyChangesToolStripMenuItem.Name = "applyChangesToolStripMenuItem";
-            applyChangesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            applyChangesToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S;
+applyChangesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
             applyChangesToolStripMenuItem.Text = "Apply Changes";
             applyChangesToolStripMenuItem.Click += applyChangesToolStripMenuItem_Click;
             // 
@@ -151,7 +160,7 @@ namespace LangEditor
             // 
             findNextToolStripMenuItem.Enabled = false;
             findNextToolStripMenuItem.Name = "findNextToolStripMenuItem";
-            findNextToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.F;
+            findNextToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
             findNextToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
             findNextToolStripMenuItem.Text = "Find next";
             findNextToolStripMenuItem.Click += findNextToolStripMenuItem_Click;
@@ -183,6 +192,8 @@ namespace LangEditor
             Name = "LangEdit";
             Text = "Language Editor";
             ((System.ComponentModel.ISupportInitialize)dgvMain).EndInit();
+            statusStrip1.ResumeLayout(false);
+            statusStrip1.PerformLayout();
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             ResumeLayout(false);
@@ -193,7 +204,8 @@ namespace LangEditor
 
         private System.Windows.Forms.DataGridView dgvMain;
         private System.Windows.Forms.StatusStrip statusStrip1;
-        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel lblStatus;
+private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportToolStripMenuItem;
