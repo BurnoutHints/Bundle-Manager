@@ -2,75 +2,74 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace BundleManager
+namespace BundleManager;
+
+public static class SaveData
 {
-    public static class SaveData
+    public static string SaveFolder = Environment.GetEnvironmentVariable("APPDATA") + "\\BurnoutStudio\\";
+    public static string RecentFilesPath = SaveFolder + "RecentFiles.txt";
+
+    public static List<string> RecentPaths = [];
+
+    private static bool _initialized;
+
+    public static void Init()
     {
-        public static string SaveFolder = Environment.GetEnvironmentVariable("APPDATA") + "\\BurnoutStudio\\";
-        public static string RecentFilesPath = SaveFolder + "RecentFiles.txt";
+        if (_initialized)
+            return;
+        _initialized = true;
 
-        public static List<string> RecentPaths = new List<string>();
+        if (!Directory.Exists(SaveFolder))
+            Directory.CreateDirectory(SaveFolder);
+    }
 
-        private static bool _initialized;
+    public static void Load()
+    {
+        Init();
 
-        public static void Init()
+        RecentPaths.Clear();
+
+        if (!File.Exists(RecentFilesPath))
+            return;
+
+        Stream s = File.Open(RecentFilesPath, FileMode.Open, FileAccess.Read);
+        StreamReader sr = new(s);
+
+        while (!sr.EndOfStream)
         {
-            if (_initialized)
-                return;
-            _initialized = true;
-
-            if (!Directory.Exists(SaveFolder))
-                Directory.CreateDirectory(SaveFolder);
+            string line = sr.ReadLine();
+            if (line != null && line.Trim().Length > 0)
+                RecentPaths.Add(line);
         }
 
-        public static void Load()
+        sr.Close();
+        s.Close();
+    }
+
+    public static void Save()
+    {
+        Init();
+
+        Stream s = File.Open(RecentFilesPath, FileMode.Create);
+        StreamWriter sw = new(s);
+
+        for (int i = 0; i < RecentPaths.Count; i++)
         {
-            Init();
-
-            RecentPaths.Clear();
-
-            if (!File.Exists(RecentFilesPath))
-                return;
-
-            Stream s = File.Open(RecentFilesPath, FileMode.Open, FileAccess.Read);
-            StreamReader sr = new StreamReader(s);
-
-            while (!sr.EndOfStream)
-            {
-                string line = sr.ReadLine();
-                if (line != null && line.Trim().Length > 0)
-                    RecentPaths.Add(line);
-            }
-
-            sr.Close();
-            s.Close();
+            sw.WriteLine(RecentPaths[i]);
         }
 
-        public static void Save()
-        {
-            Init();
+        sw.Flush();
+        sw.Close();
+        s.Close();
+    }
 
-            Stream s = File.Open(RecentFilesPath, FileMode.Create);
-            StreamWriter sw = new StreamWriter(s);
-
-            for (int i = 0; i < RecentPaths.Count; i++)
-            {
-                sw.WriteLine(RecentPaths[i]);
-            }
-
-            sw.Flush();
-            sw.Close();
-            s.Close();
-        }
-
-        public static void AddRecentPath(string path)
-        {
-            Load();
-            if (RecentPaths.Contains(path))
-                RecentPaths.Remove(path);
-            RecentPaths.Add(path);
-            if (RecentPaths.Count > 10)
-                RecentPaths.RemoveAt(0);
-        }
+    public static void AddRecentPath(string path)
+    {
+        Load();
+        if (RecentPaths.Contains(path))
+            RecentPaths.Remove(path);
+        RecentPaths.Add(path);
+        if (RecentPaths.Count > 10)
+            RecentPaths.RemoveAt(0);
     }
 }

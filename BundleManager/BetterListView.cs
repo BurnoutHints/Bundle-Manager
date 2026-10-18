@@ -2,38 +2,37 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace BundleManager
+namespace BundleManager;
+
+class BetterListView : System.Windows.Forms.ListView
 {
-    class BetterListView : System.Windows.Forms.ListView
+    public BetterListView()
     {
-        public BetterListView()
-        {
-            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
-            SetStyle(ControlStyles.EnableNotifyMessage, true);
-        }
+        SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
+        SetStyle(ControlStyles.EnableNotifyMessage, true);
+    }
 
-        protected override void OnNotifyMessage(Message m)
+    protected override void OnNotifyMessage(Message m)
+    {
+        // Filter out the WM_ERASEBKGND message
+        if (m.Msg != 0x14) // WM_ERASEBKGND
         {
-            // Filter out the WM_ERASEBKGND message
-            if (m.Msg != 0x14) // WM_ERASEBKGND
-            {
-                base.OnNotifyMessage(m);
-            }
+            base.OnNotifyMessage(m);
         }
+    }
 
 
-        private void ScaleListViewColumns(SizeF factor)
+    private void ScaleListViewColumns(SizeF factor)
+    {
+        foreach (ColumnHeader column in Columns)
         {
-            foreach (ColumnHeader column in Columns)
-            {
-                column.Width = (int)Math.Round(column.Width * factor.Width);
-            }
+            column.Width = (int)Math.Round(column.Width * factor.Width);
         }
+    }
 
-        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
-        {
-            base.ScaleControl(factor, specified);
-            ScaleListViewColumns(factor);
-        }
+    protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+    {
+        base.ScaleControl(factor, specified);
+        ScaleListViewColumns(factor);
     }
 }

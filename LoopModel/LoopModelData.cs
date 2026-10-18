@@ -6,470 +6,469 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 
-namespace LoopModel
+namespace LoopModel;
+
+public class LoopModelData : IEntryData
 {
-    public class LoopModelData : IEntryData
+    private const uint version = 7;
+    private const uint magic = 0x59444E41;
+    private bool is64Bit = false;
+
+    private List<Partial> _partials;
+    public List<Partial> Partials { get => _partials; }
+
+    public LoopModelData()
     {
-        private const UInt32 version = 7;
-        private const UInt32 magic = 0x59444E41;
-        private bool is64Bit = false;
+        _partials = [];
+    }
 
-        private List<Partial> _partials;
-        public List<Partial> Partials { get => _partials; }
+    public void Clear()
+    {
+        _partials.Clear();
+    }
+    
+    public EntryType GetEntryType(BundleEntry entry)
+    {
+        return EntryType.LoopModel;
+    }
 
-        public LoopModelData()
+    public IEntryEditor GetEditor(BundleEntry entry)
+    {
+        LoopModelEditor loopModel = new();
+        loopModel.Data = this;
+        loopModel.Edit += () =>
         {
-            _partials = [];
+            Write(entry);
+        };
+
+        return loopModel;
+    }
+
+    public bool Read(BundleEntry entry, ILoader loader = null)
+    {
+        Clear();
+
+        MemoryStream ms = new(entry.EntryBlocks[0].Data);
+        BinaryReader2 br = new(ms, entry.Console);
+
+        bool x64 = entry.Platform == BundlePlatform.PCx64;
+
+        uint versionCheck = br.ReadUInt32();
+        if (versionCheck != version)
+        {
+            MessageBox.Show("Unknown version: expected " + version.ToString() + ", got " + versionCheck.ToString(), "Failed to read resource", MessageBoxButtons.OK);
+            return false;
         }
 
-        public void Clear()
+        uint magicCheck = br.ReadUInt32();
+        if (magicCheck != magic)
         {
-            _partials.Clear();
-        }
-        
-        public EntryType GetEntryType(BundleEntry entry)
-        {
-            return EntryType.LoopModel;
+            MessageBox.Show("Unknown magic: expected 0x" + magic.ToString("X8") + ", got 0x" + magicCheck.ToString("X8"), "Failed to read resource", MessageBoxButtons.OK);
+            return false;
         }
 
-        public IEntryEditor GetEditor(BundleEntry entry)
+        uint partialsPointer = br.ReadUInt32();
+
+        // The above is actually 64-bit on some systems, but will never exceed 32-bit storage in practice.
+        // Use a hack to make reading/writing cross-platform under the assumption there are no loop models without partials.
+        uint numPartials = br.ReadUInt32();
+        if (numPartials == 0)
         {
-            LoopModelEditor loopModel = new();
-            loopModel.Data = this;
-            loopModel.Edit += () =>
+            numPartials = br.ReadUInt32();
+            is64Bit = true;
+        }
+
+        // Game hardcodes the number of partials to be 10
+        if (numPartials != 10)
+        {
+            MessageBox.Show("Incorrect number of partials: expected 10, got " + numPartials.ToString(), "Error");
+            return false;
+        }
+
+        // Read LoopModel data
+        for (int i = 0; i < numPartials; ++i)
+        {
+            br.BaseStream.Position = partialsPointer + i * (x64 ? 0x18 : is64Bit ? 0x10 : 0xC);
+            _partials.Add(new Partial(br, is64Bit, x64));
+        }
+
+        if (!CheckGraphErrors())
+            return false;
+
+        // Read Registry resource to obtain the wave hashes/strings
+        var registryResources = entry.Archive.Entries.FindAll(e => e.Type == EntryType.Registry);
+        if (registryResources.Count < 1 || registryResources.Count > 1)
+        {
+            MessageBox.Show("Expected 1 Registry resource, but " + registryResources.Count.ToString() + "were found.\n"
+                + "Partial names will fall back to hashes.", "Warning");
+            foreach (Partial partial in _partials)
+                partial.SetWaveNameAsHash();
+        }
+        else
+        {
+            Dictionary<uint, string> waveNameDict = GetRegistryWaveStringMap(registryResources[0]);
+            foreach (Partial partial in _partials)
             {
-                Write(entry);
-            };
-
-            return loopModel;
+                if (waveNameDict.TryGetValue(partial.WaveNameHash, out string waveName))
+                    partial.SetWaveName(waveName);
+                else
+                    partial.SetWaveNameAsHash(); // Should never be hit
+            }
         }
 
-        public bool Read(BundleEntry entry, ILoader loader = null)
+        br.Close();
+        ms.Close();
+        return true;
+    }
+
+    private bool CheckGraphErrors()
+    {
+        for (int i = 0; i < _partials.Count; ++i)
         {
-            Clear();
-
-            MemoryStream ms = new(entry.EntryBlocks[0].Data);
-            BinaryReader2 br = new(ms, entry.Console);
-
-            bool x64 = entry.Platform == BundlePlatform.PCx64;
-
-            UInt32 versionCheck = br.ReadUInt32();
-            if (versionCheck != version)
+            // Game hardcodes the number of graphs in each partial to be 3
+            if (_partials[i].Graphs.Count != 3)
             {
-                MessageBox.Show("Unknown version: expected " + version.ToString() + ", got " + versionCheck.ToString(), "Failed to read resource", MessageBoxButtons.OK);
+                MessageBox.Show("Incorrect number of graphs: expected 3, got " + _partials[i].Graphs.Count.ToString()
+                    + "\nfor partial at index " + i.ToString(), "Error");
                 return false;
             }
 
-            UInt32 magicCheck = br.ReadUInt32();
-            if (magicCheck != magic)
+            for (int j = 0; j < _partials[i].Graphs.Count; ++j)
             {
-                MessageBox.Show("Unknown magic: expected 0x" + magic.ToString("X8") + ", got 0x" + magicCheck.ToString("X8"), "Failed to read resource", MessageBoxButtons.OK);
-                return false;
-            }
-
-            UInt32 partialsPointer = br.ReadUInt32();
-
-            // The above is actually 64-bit on some systems, but will never exceed 32-bit storage in practice.
-            // Use a hack to make reading/writing cross-platform under the assumption there are no loop models without partials.
-            UInt32 numPartials = br.ReadUInt32();
-            if (numPartials == 0)
-            {
-                numPartials = br.ReadUInt32();
-                is64Bit = true;
-            }
-
-            // Game hardcodes the number of partials to be 10
-            if (numPartials != 10)
-            {
-                MessageBox.Show("Incorrect number of partials: expected 10, got " + numPartials.ToString(), "Error");
-                return false;
-            }
-
-            // Read LoopModel data
-            for (int i = 0; i < numPartials; ++i)
-            {
-                br.BaseStream.Position = partialsPointer + i * (x64 ? 0x18 : is64Bit ? 0x10 : 0xC);
-                _partials.Add(new Partial(br, is64Bit, x64));
-            }
-
-            if (!CheckGraphErrors())
-                return false;
-
-            // Read Registry resource to obtain the wave hashes/strings
-            var registryResources = entry.Archive.Entries.FindAll(e => e.Type == EntryType.Registry);
-            if (registryResources.Count < 1 || registryResources.Count > 1)
-            {
-                MessageBox.Show("Expected 1 Registry resource, but " + registryResources.Count.ToString() + "were found.\n"
-                    + "Partial names will fall back to hashes.", "Warning");
-                foreach (Partial partial in _partials)
-                    partial.SetWaveNameAsHash();
-            }
-            else
-            {
-                Dictionary<UInt32, String> waveNameDict = GetRegistryWaveStringMap(registryResources[0]);
-                foreach (Partial partial in _partials)
+                // Game hardcodes the axes of each graph
+                if (j == 0 && _partials[i].Graphs[j].XAxis != 1)
                 {
-                    if (waveNameDict.TryGetValue(partial.WaveNameHash, out String waveName))
-                        partial.SetWaveName(waveName);
-                    else
-                        partial.SetWaveNameAsHash(); // Should never be hit
+                    MessageBox.Show("Incorrect X axis on graph index " + j.ToString() + ", partial index " + i.ToString()
+                        + "\nExpected 1 (E_RPM), got " + _partials[i].Graphs[j].XAxis.ToString(), "Error");
+                    return false;
                 }
-            }
-
-            br.Close();
-            ms.Close();
-            return true;
-        }
-
-        private bool CheckGraphErrors()
-        {
-            for (int i = 0; i < _partials.Count; ++i)
-            {
-                // Game hardcodes the number of graphs in each partial to be 3
-                if (_partials[i].Graphs.Count != 3)
+                if (j == 0 && _partials[i].Graphs[j].YAxis != 2)
                 {
-                    MessageBox.Show("Incorrect number of graphs: expected 3, got " + _partials[i].Graphs.Count.ToString()
-                        + "\nfor partial at index " + i.ToString(), "Error");
+                    MessageBox.Show("Incorrect Y axis on graph index " + j.ToString() + ", partial index " + i.ToString()
+                        + "\nExpected 2 (E_PITCH), got " + _partials[i].Graphs[j].YAxis.ToString(), "Error");
+                    return false;
+                }
+                if (j == 1 && _partials[i].Graphs[j].XAxis != 1)
+                {
+                    MessageBox.Show("Incorrect X axis on graph index " + j.ToString() + ", partial index " + i.ToString()
+                        + "\nExpected 1 (E_RPM), got " + _partials[i].Graphs[j].XAxis.ToString(), "Error");
+                    return false;
+                }
+                if (j == 1 && _partials[i].Graphs[j].YAxis != 1)
+                {
+                    MessageBox.Show("Incorrect Y axis on graph index " + j.ToString() + ", partial index " + i.ToString()
+                        + "\nExpected 2 (E_GAIN), got " + _partials[i].Graphs[j].YAxis.ToString(), "Error");
+                    return false;
+                }
+                if (j == 2 && _partials[i].Graphs[j].XAxis != 3)
+                {
+                    MessageBox.Show("Incorrect X axis on graph index " + j.ToString() + ", partial index " + i.ToString()
+                        + "\nExpected 1 (E_ACCELERATOR), got " + _partials[i].Graphs[j].XAxis.ToString(), "Error");
+                    return false;
+                }
+                if (j == 2 && _partials[i].Graphs[j].YAxis != 1)
+                {
+                    MessageBox.Show("Incorrect Y axis on graph index " + j.ToString() + ", partial index " + i.ToString()
+                        + "\nExpected 1 (E_GAIN), got " + _partials[i].Graphs[j].YAxis.ToString(), "Error");
                     return false;
                 }
 
-                for (int j = 0; j < _partials[i].Graphs.Count; ++j)
+                // Game hardcodes the number of points in Pitch/RPM graph as 2
+                if (j == 0 && _partials[i].Graphs[j].Points.Count != 2)
                 {
-                    // Game hardcodes the axes of each graph
-                    if (j == 0 && _partials[i].Graphs[j].XAxis != 1)
-                    {
-                        MessageBox.Show("Incorrect X axis on graph index " + j.ToString() + ", partial index " + i.ToString()
-                            + "\nExpected 1 (E_RPM), got " + _partials[i].Graphs[j].XAxis.ToString(), "Error");
-                        return false;
-                    }
-                    if (j == 0 && _partials[i].Graphs[j].YAxis != 2)
-                    {
-                        MessageBox.Show("Incorrect Y axis on graph index " + j.ToString() + ", partial index " + i.ToString()
-                            + "\nExpected 2 (E_PITCH), got " + _partials[i].Graphs[j].YAxis.ToString(), "Error");
-                        return false;
-                    }
-                    if (j == 1 && _partials[i].Graphs[j].XAxis != 1)
-                    {
-                        MessageBox.Show("Incorrect X axis on graph index " + j.ToString() + ", partial index " + i.ToString()
-                            + "\nExpected 1 (E_RPM), got " + _partials[i].Graphs[j].XAxis.ToString(), "Error");
-                        return false;
-                    }
-                    if (j == 1 && _partials[i].Graphs[j].YAxis != 1)
-                    {
-                        MessageBox.Show("Incorrect Y axis on graph index " + j.ToString() + ", partial index " + i.ToString()
-                            + "\nExpected 2 (E_GAIN), got " + _partials[i].Graphs[j].YAxis.ToString(), "Error");
-                        return false;
-                    }
-                    if (j == 2 && _partials[i].Graphs[j].XAxis != 3)
-                    {
-                        MessageBox.Show("Incorrect X axis on graph index " + j.ToString() + ", partial index " + i.ToString()
-                            + "\nExpected 1 (E_ACCELERATOR), got " + _partials[i].Graphs[j].XAxis.ToString(), "Error");
-                        return false;
-                    }
-                    if (j == 2 && _partials[i].Graphs[j].YAxis != 1)
-                    {
-                        MessageBox.Show("Incorrect Y axis on graph index " + j.ToString() + ", partial index " + i.ToString()
-                            + "\nExpected 1 (E_GAIN), got " + _partials[i].Graphs[j].YAxis.ToString(), "Error");
-                        return false;
-                    }
+                    MessageBox.Show("Incorrect number of points in Pitch/RPM graph for partial at index " + i.ToString()
+                        + "\nExpected 2, got " + _partials[i].Graphs[j].Points.Count.ToString());
+                    return false;
+                }
 
-                    // Game hardcodes the number of points in Pitch/RPM graph as 2
-                    if (j == 0 && _partials[i].Graphs[j].Points.Count != 2)
-                    {
-                        MessageBox.Show("Incorrect number of points in Pitch/RPM graph for partial at index " + i.ToString()
-                            + "\nExpected 2, got " + _partials[i].Graphs[j].Points.Count.ToString());
-                        return false;
-                    }
-
-                    // Game requires there to be more than 1 point in each graph
-                    if (_partials[i].Graphs[j].Points.Count < 2)
-                    {
-                        MessageBox.Show("Not enough points in graph " + j.ToString() + " in partial " + i.ToString()
-                            + "\nAt least 2 required, but only " + _partials[i].Graphs[j].Points.Count.ToString() + " present", "Error");
-                        return false;
-                    }
+                // Game requires there to be more than 1 point in each graph
+                if (_partials[i].Graphs[j].Points.Count < 2)
+                {
+                    MessageBox.Show("Not enough points in graph " + j.ToString() + " in partial " + i.ToString()
+                        + "\nAt least 2 required, but only " + _partials[i].Graphs[j].Points.Count.ToString() + " present", "Error");
+                    return false;
                 }
             }
-
-            return true;
         }
 
-        private Dictionary<UInt32, String> GetRegistryWaveStringMap(BundleEntry entry)
+        return true;
+    }
+
+    private Dictionary<uint, string> GetRegistryWaveStringMap(BundleEntry entry)
+    {
+        // Only works on 32-bit platforms except for decomp. (Not PS4/XB1/NX)
+        
+        MemoryStream ms = new(entry.EntryBlocks[0].Data);
+        BinaryReader2 br = new(ms, entry.Console);
+        Dictionary<uint, string> dict = [];
+
+        bool x64 = entry.Platform == BundlePlatform.PCx64;
+        long ReadPtr() => x64 ? br.ReadInt64() : br.ReadUInt32();
+
+        uint entityCount = br.ReadUInt32();
+        uint entityCapacity = br.ReadUInt32();
+        long entityDataSize = ReadPtr();
+        long entityDataEnd = ReadPtr();
+        long stringTableSize = ReadPtr();
+        long stringTableEnd = ReadPtr();
+        long nameHashMask = ReadPtr();
+        List<long> entityPointers = new((int)entityCount);
+        for (int i = 0; i < entityCapacity; ++i)
         {
-            // Only works on 32-bit platforms except for decomp. (Not PS4/XB1/NX)
-            
-            MemoryStream ms = new(entry.EntryBlocks[0].Data);
-            BinaryReader2 br = new(ms, entry.Console);
-            Dictionary<UInt32, String> dict = new();
-
-            bool x64 = entry.Platform == BundlePlatform.PCx64;
-            long ReadPtr() => x64 ? br.ReadInt64() : br.ReadUInt32();
-
-            UInt32 entityCount = br.ReadUInt32();
-            UInt32 entityCapacity = br.ReadUInt32();
-            long entityDataSize = ReadPtr();
-            long entityDataEnd = ReadPtr();
-            long stringTableSize = ReadPtr();
-            long stringTableEnd = ReadPtr();
-            long nameHashMask = ReadPtr();
-            List<long> entityPointers = new((int)entityCount);
-            for (int i = 0; i < entityCapacity; ++i)
-            {
-                long ptr = ReadPtr();
-                if (ptr != 0)
-                    entityPointers.Add(ptr);
-            }
-            for (int i = 0; i < entityCount; ++i)
-            {
-                br.BaseStream.Position = entityPointers[i];
-                UInt32 nameHash = br.ReadUInt32();
-                UInt32 typeNameHash = br.ReadUInt32();
-                if (typeNameHash != 0x511A448B) // ~ContentSpec~
-                    continue;
-                long contentTypeHash = ReadPtr();
-                if (contentTypeHash != 0x7CCDA2E7) // ~GenericRwacWaveContent::SK_WAVE_DATA_CONTENT_TYPE~
-                    continue;
-                UInt16 pathLength = br.ReadUInt16();
-                Byte loadMethod = br.ReadByte();
-                Byte loadTime = br.ReadByte();
-                String name = br.ReadLenString(pathLength);
-                if (name.Contains(".GinsuFile"))
-                    continue;
-                dict.TryAdd(nameHash, name); // There will be duplicates that don't get added
-            }
-
-            return dict;
+            long ptr = ReadPtr();
+            if (ptr != 0)
+                entityPointers.Add(ptr);
+        }
+        for (int i = 0; i < entityCount; ++i)
+        {
+            br.BaseStream.Position = entityPointers[i];
+            uint nameHash = br.ReadUInt32();
+            uint typeNameHash = br.ReadUInt32();
+            if (typeNameHash != 0x511A448B) // ~ContentSpec~
+                continue;
+            long contentTypeHash = ReadPtr();
+            if (contentTypeHash != 0x7CCDA2E7) // ~GenericRwacWaveContent::SK_WAVE_DATA_CONTENT_TYPE~
+                continue;
+            ushort pathLength = br.ReadUInt16();
+            byte loadMethod = br.ReadByte();
+            byte loadTime = br.ReadByte();
+            string name = br.ReadLenString(pathLength);
+            if (name.Contains(".GinsuFile"))
+                continue;
+            dict.TryAdd(nameHash, name); // There will be duplicates that don't get added
         }
 
-        public bool Write(BundleEntry entry)
+        return dict;
+    }
+
+    public bool Write(BundleEntry entry)
+    {
+        MemoryStream ms = new();
+        BinaryWriter2 bw = new(ms, entry.Console);
+        bool x64 = entry.Platform == BundlePlatform.PCx64;
+
+        bw.Write(version);
+        bw.Write(magic);
+        int partialsPointer = is64Bit ? 0x18 : 0x14;
+        if (is64Bit)
+            bw.Write((long)partialsPointer);
+        else
+            bw.Write(partialsPointer);
+        bw.Write(_partials.Count);
+
+        // Write partials without graphs pointers
+        int numPriorGraphs = 0;
+        int numPriorPoints = 0;
+        for (int i = 0; i < _partials.Count; ++i)
         {
-            MemoryStream ms = new();
-            BinaryWriter2 bw = new(ms, entry.Console);
-            bool x64 = entry.Platform == BundlePlatform.PCx64;
+            bw.BaseStream.Position = partialsPointer + i * (x64 ? 0x18 : is64Bit ? 0x10 : 0xC);
+            _partials[i].Write(bw, is64Bit, x64, partialsPointer, _partials.Count, ref numPriorGraphs, ref numPriorPoints);
+        }
 
-            bw.Write(version);
-            bw.Write(magic);
-            Int32 partialsPointer = is64Bit ? 0x18 : 0x14;
-            if (is64Bit)
-                bw.Write((Int64)partialsPointer);
-            else
-                bw.Write(partialsPointer);
-            bw.Write(_partials.Count);
+        for (int i = 0; i < 2; ++i) // No idea why, but they write 16 null bytes after everything, and it's consistent
+            bw.Write((ulong)0);
+        uint resourceLength = (uint)bw.BaseStream.Position;
+        bw.Align(0x10);
+        bw.BaseStream.Position = is64Bit ? 0x14 : 0x10;
+        bw.Write(resourceLength);
 
-            // Write partials without graphs pointers
-            int numPriorGraphs = 0;
-            int numPriorPoints = 0;
-            for (int i = 0; i < _partials.Count; ++i)
-            {
-                bw.BaseStream.Position = partialsPointer + i * (x64 ? 0x18 : is64Bit ? 0x10 : 0xC);
-                _partials[i].Write(bw, is64Bit, x64, partialsPointer, _partials.Count, ref numPriorGraphs, ref numPriorPoints);
-            }
+        bw.Flush();
+        byte[] data = ms.ToArray();
+        bw.Close();
+        ms.Close();
 
-            for (int i = 0; i < 2; ++i) // No idea why, but they write 16 null bytes after everything, and it's consistent
-                bw.Write((UInt64)0);
-            UInt32 resourceLength = (UInt32)bw.BaseStream.Position;
-            bw.Align(0x10);
-            bw.BaseStream.Position = is64Bit ? 0x14 : 0x10;
-            bw.Write(resourceLength);
+        entry.EntryBlocks[0].Data = data;
+        entry.Dirty = true;
 
-            bw.Flush();
-            byte[] data = ms.ToArray();
-            bw.Close();
-            ms.Close();
+        return true;
+    }
+}
 
-            entry.EntryBlocks[0].Data = data;
-            entry.Dirty = true;
+public class Partial
+{
+    private uint _waveNameHash = 0; // Name hash
+    internal uint WaveNameHash { get => _waveNameHash; }
+    private string _waveName;
+    public string WaveName { get => _waveName; }
 
-            return true;
+    private List<Graph> _graphs;
+    public List<Graph> Graphs { get => _graphs; }
+
+    public Partial()
+    {
+        _graphs = [];
+    }
+
+    public Partial(BinaryReader2 br, bool is64Bit, bool x64)
+    {
+        _graphs = [];
+
+        // Position differs between 32-bit and 64-bit
+        long graphsPointer = 0;
+        if (x64)
+        {
+            _waveNameHash = br.ReadUInt32();
+            br.BaseStream.Position += 4;
+            graphsPointer = br.ReadInt64();
+        }
+        else if (is64Bit)
+        {
+            graphsPointer = br.ReadInt64();
+            _waveNameHash = br.ReadUInt32();
+        }
+        else
+        {
+            _waveNameHash = br.ReadUInt32();
+            graphsPointer = br.ReadInt32();
+        }
+        byte numGraphs = br.ReadByte();
+
+        for (int i = 0; i < numGraphs; ++i)
+        {
+            br.BaseStream.Position = graphsPointer + i * (is64Bit ? 0x10 : 8);
+            _graphs.Add(new Graph(br, is64Bit));
         }
     }
 
-    public class Partial
+    public void Write(BinaryWriter2 bw, bool is64Bit, bool x64, long partialsPointer, int numPartials, ref int numPriorGraphs, ref int numPriorPoints)
     {
-        private UInt32 _waveNameHash = 0; // Name hash
-        internal UInt32 WaveNameHash { get => _waveNameHash; }
-        private String _waveName;
-        public String WaveName { get => _waveName; }
-
-        private List<Graph> _graphs;
-        public List<Graph> Graphs { get => _graphs; }
-
-        public Partial()
+        long graphsPointer = partialsPointer;
+        if (x64)
         {
-            _graphs = [];
+            graphsPointer += numPartials * 0x18 + numPriorGraphs * 0x10 + numPriorPoints * 8;
+            bw.Write(_waveNameHash);
+            bw.Write(0);
+            bw.Write(graphsPointer);
         }
-
-        public Partial(BinaryReader2 br, bool is64Bit, bool x64)
+        else if (is64Bit)
         {
-            _graphs = [];
-
-            // Position differs between 32-bit and 64-bit
-            Int64 graphsPointer = 0;
-            if (x64)
-            {
-                _waveNameHash = br.ReadUInt32();
-                br.BaseStream.Position += 4;
-                graphsPointer = br.ReadInt64();
-            }
-            else if (is64Bit)
-            {
-                graphsPointer = br.ReadInt64();
-                _waveNameHash = br.ReadUInt32();
-            }
-            else
-            {
-                _waveNameHash = br.ReadUInt32();
-                graphsPointer = br.ReadInt32();
-            }
-            Byte numGraphs = br.ReadByte();
-
-            for (int i = 0; i < numGraphs; ++i)
-            {
-                br.BaseStream.Position = graphsPointer + i * (is64Bit ? 0x10 : 8);
-                _graphs.Add(new Graph(br, is64Bit));
-            }
+            graphsPointer += numPartials * 0x10 + numPriorGraphs * 0x10 + numPriorPoints * 8;
+            bw.Write(graphsPointer);
+            bw.Write(_waveNameHash);
         }
-
-        public void Write(BinaryWriter2 bw, bool is64Bit, bool x64, Int64 partialsPointer, int numPartials, ref int numPriorGraphs, ref int numPriorPoints)
+        else
         {
-            Int64 graphsPointer = partialsPointer;
-            if (x64)
-            {
-                graphsPointer += numPartials * 0x18 + numPriorGraphs * 0x10 + numPriorPoints * 8;
-                bw.Write(_waveNameHash);
-                bw.Write(0);
-                bw.Write(graphsPointer);
-            }
-            else if (is64Bit)
-            {
-                graphsPointer += numPartials * 0x10 + numPriorGraphs * 0x10 + numPriorPoints * 8;
-                bw.Write(graphsPointer);
-                bw.Write(_waveNameHash);
-            }
-            else
-            {
-                graphsPointer += numPartials * 0xC + numPriorGraphs * 8 + numPriorPoints * 8;
-                bw.Write(_waveNameHash);
-                bw.Write((Int32)graphsPointer);
-            }
-            bw.Write((Byte)_graphs.Count);
-            bw.WriteUniquePadding(x64 ? 7 : 3);
-
-            bw.BaseStream.Position = graphsPointer;
-            int numPriorPointsInGraph = 0;
-            for (int i = 0; i < _graphs.Count; ++i)
-            {
-                bw.BaseStream.Position = graphsPointer + i * (is64Bit ? 0x10 : 8);
-                _graphs[i].Write(bw, is64Bit, graphsPointer, _graphs.Count, ref numPriorPoints, ref numPriorPointsInGraph);
-                numPriorGraphs++;
-            }
+            graphsPointer += numPartials * 0xC + numPriorGraphs * 8 + numPriorPoints * 8;
+            bw.Write(_waveNameHash);
+            bw.Write((int)graphsPointer);
         }
+        bw.Write((byte)_graphs.Count);
+        bw.WriteUniquePadding(x64 ? 7 : 3);
 
-        public void Clear()
+        bw.BaseStream.Position = graphsPointer;
+        int numPriorPointsInGraph = 0;
+        for (int i = 0; i < _graphs.Count; ++i)
         {
-            _graphs.Clear();
-        }
-
-        internal void SetWaveNameAsHash()
-        {
-            _waveName = "0x" + _waveNameHash.ToString("X8");
-        }
-
-        internal void SetWaveName(string waveName)
-        {
-            if (waveName.StartsWith("gamedb://"))
-            {
-                var subStrStart = waveName.LastIndexOf('/') + 1;
-                var subStrLen = waveName.IndexOf(".WaveFile") - subStrStart;
-                String shortWaveName = waveName.Substring(subStrStart, subStrLen);
-                _waveName = shortWaveName;
-            }
-            else
-            {
-                _waveName = waveName;
-            }
+            bw.BaseStream.Position = graphsPointer + i * (is64Bit ? 0x10 : 8);
+            _graphs[i].Write(bw, is64Bit, graphsPointer, _graphs.Count, ref numPriorPoints, ref numPriorPointsInGraph);
+            numPriorGraphs++;
         }
     }
 
-    public class Graph
+    public void Clear()
     {
-        private SByte _xAxis = 0;
-        internal SByte XAxis { get => _xAxis; }
-        private SByte _yAxis = 0;
-        internal SByte YAxis { get => _yAxis; }
+        _graphs.Clear();
+    }
 
-        private List<Point> _points;
-        public List<Point> Points { get => _points; }
+    internal void SetWaveNameAsHash()
+    {
+        _waveName = "0x" + _waveNameHash.ToString("X8");
+    }
 
-        public Graph()
+    internal void SetWaveName(string waveName)
+    {
+        if (waveName.StartsWith("gamedb://"))
         {
-            _points = [];
+            var subStrStart = waveName.LastIndexOf('/') + 1;
+            var subStrLen = waveName.IndexOf(".WaveFile") - subStrStart;
+            string shortWaveName = waveName.Substring(subStrStart, subStrLen);
+            _waveName = shortWaveName;
         }
-
-        public Graph(BinaryReader2 br, bool is64Bit)
+        else
         {
-            _points = [];
-            
-            Int64 pointsPointer = is64Bit ? br.ReadInt64() : br.ReadInt32();
-            Byte numPoints = br.ReadByte();
-            _xAxis = br.ReadSByte();
-            _yAxis = br.ReadSByte();
-
-            for (int i = 0; i < numPoints; ++i)
-            {
-                br.BaseStream.Position = pointsPointer + i * 8;
-                _points.Add(new Point(br));
-            }
+            _waveName = waveName;
         }
+    }
+}
 
-        public void Clear()
+public class Graph
+{
+    private sbyte _xAxis = 0;
+    internal sbyte XAxis { get => _xAxis; }
+    private sbyte _yAxis = 0;
+    internal sbyte YAxis { get => _yAxis; }
+
+    private List<Point> _points;
+    public List<Point> Points { get => _points; }
+
+    public Graph()
+    {
+        _points = [];
+    }
+
+    public Graph(BinaryReader2 br, bool is64Bit)
+    {
+        _points = [];
+
+        long pointsPointer = is64Bit ? br.ReadInt64() : br.ReadInt32();
+        byte numPoints = br.ReadByte();
+        _xAxis = br.ReadSByte();
+        _yAxis = br.ReadSByte();
+
+        for (int i = 0; i < numPoints; ++i)
         {
-            _points.Clear();
-        }
-
-        public void Write(BinaryWriter2 bw, bool is64Bit, Int64 graphsPointer, int numGraphs, ref int numPriorPoints, ref int numPriorPointsInGraph)
-        {
-            Int64 pointsPointer = graphsPointer + numGraphs * (is64Bit ? 0x10 : 8) + numPriorPointsInGraph * 8;
-            if (is64Bit)
-                bw.Write(pointsPointer);
-            else
-                bw.Write((Int32)pointsPointer);
-            bw.Write((Byte)_points.Count);
-            bw.Write(_xAxis);
-            bw.Write(_yAxis);
-            if (is64Bit)
-                bw.WriteUniquePadding(5);
-            else
-                bw.WriteUniquePadding(1);
-
-            bw.BaseStream.Position = pointsPointer;
-            for (int i = 0; i < _points.Count; ++i)
-            {
-                _points[i].Write(bw);
-                numPriorPoints++;
-                numPriorPointsInGraph++;
-            }
+            br.BaseStream.Position = pointsPointer + i * 8;
+            _points.Add(new Point(br));
         }
     }
 
-    public class Point
+    public void Clear()
     {
-        private float _x = 0;
-        public float X { get => _x; set => _x = value; }
+        _points.Clear();
+    }
 
-        private float _y = 0;
-        public float Y { get => _y; set => _y = value; }
+    public void Write(BinaryWriter2 bw, bool is64Bit, long graphsPointer, int numGraphs, ref int numPriorPoints, ref int numPriorPointsInGraph)
+    {
+        long pointsPointer = graphsPointer + numGraphs * (is64Bit ? 0x10 : 8) + numPriorPointsInGraph * 8;
+        if (is64Bit)
+            bw.Write(pointsPointer);
+        else
+            bw.Write((int)pointsPointer);
+        bw.Write((byte)_points.Count);
+        bw.Write(_xAxis);
+        bw.Write(_yAxis);
+        if (is64Bit)
+            bw.WriteUniquePadding(5);
+        else
+            bw.WriteUniquePadding(1);
 
-        public Point(BinaryReader2 br)
+        bw.BaseStream.Position = pointsPointer;
+        for (int i = 0; i < _points.Count; ++i)
         {
-            _x = br.ReadSingle();
-            _y = br.ReadSingle();
+            _points[i].Write(bw);
+            numPriorPoints++;
+            numPriorPointsInGraph++;
         }
+    }
+}
 
-        public void Write(BinaryWriter2 bw)
-        {
-            bw.Write(_x);
-            bw.Write(_y);
-        }
+public class Point
+{
+    private float _x = 0;
+    public float X { get => _x; set => _x = value; }
+
+    private float _y = 0;
+    public float Y { get => _y; set => _y = value; }
+
+    public Point(BinaryReader2 br)
+    {
+        _x = br.ReadSingle();
+        _y = br.ReadSingle();
+    }
+
+    public void Write(BinaryWriter2 bw)
+    {
+        bw.Write(_x);
+        bw.Write(_y);
     }
 }

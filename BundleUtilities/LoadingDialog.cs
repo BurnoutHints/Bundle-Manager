@@ -1,125 +1,123 @@
-using BundleUtilities;
 using System;
 using System.ComponentModel;
 using System.Windows.Forms;
 
-namespace BundleUtilities
-{
-    public partial class LoadingDialog : Form, ILoader
-    {
-        public delegate void OnDone(bool cancelled, object value);
-        public event OnDone Done;
+namespace BundleUtilities;
 
-        private delegate object GetObject();
-        private delegate void SetObject(object obj);
-        private object _value;
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-        public object Value
+public partial class LoadingDialog : Form, ILoader
+{
+    public delegate void OnDone(bool cancelled, object value);
+    public event OnDone Done;
+
+    private delegate object GetObject();
+    private delegate void SetObject(object obj);
+    private object _value;
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+    public object Value
+    {
+        get
         {
-            get
+            if (InvokeRequired)
             {
-                if (InvokeRequired)
-                {
-                    GetObject method = () =>
-                    {
-                        return _value;
-                    };
-                    return Invoke(method);
-                }
-                else
+                GetObject method = () =>
                 {
                     return _value;
-                }
+                };
+                return Invoke(method);
             }
-            set
+            else
             {
-                if (InvokeRequired)
-                {
-                    SetObject method = (object obj) =>
-                    {
-                        _value = obj;
-                    };
-                    Invoke(method, value);
-                }
-                else
-                {
-                    _value = value;
-                }
+                return _value;
             }
         }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-        public bool IsDone { get; set; }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-        public string Status
+        set
         {
-            get => lblStatus.Text;
-            set => lblStatus.Text = value;
+            if (InvokeRequired)
+            {
+                SetObject method = (object obj) =>
+                {
+                    _value = obj;
+                };
+                Invoke(method, value);
+            }
+            else
+            {
+                _value = value;
+            }
         }
+    }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-        public int Progress
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+    public bool IsDone { get; set; }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+    public string Status
+    {
+        get => lblStatus.Text;
+        set => lblStatus.Text = value;
+    }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+    public int Progress
+    {
+        get => pboMain.Value;
+        set => pboMain.Value = value;
+    }
+
+    public LoadingDialog()
+    {
+        InitializeComponent();
+
+        IsDone = false;
+    }
+
+    private void btnCancel_Click(object sender, EventArgs e)
+    {
+        Close();
+    }
+
+    private void LoadingDialog_FormClosing(object sender, FormClosingEventArgs e)
+    {
+        Done?.Invoke(!IsDone, Value);
+    }
+
+    private void tmrDoneCheck_Tick(object sender, EventArgs e)
+    {
+        if (IsDone)
         {
-            get => pboMain.Value;
-            set => pboMain.Value = value;
-        }
-
-        public LoadingDialog()
-        {
-            InitializeComponent();
-
-            IsDone = false;
-        }
-
-        private void btnCancel_Click(object sender, EventArgs e)
-        {
+            tmrDoneCheck.Enabled = false;
             Close();
         }
+    }
 
-        private void LoadingDialog_FormClosing(object sender, FormClosingEventArgs e)
+    private delegate void SetStatusDelegate(string status);
+    public void SetStatus(string status)
+    {
+        if (InvokeRequired)
         {
-            Done?.Invoke(!IsDone, Value);
+            Invoke(new SetStatusDelegate(SetStatus), status);
         }
-
-        private void tmrDoneCheck_Tick(object sender, EventArgs e)
+        else
         {
-            if (IsDone)
-            {
-                tmrDoneCheck.Enabled = false;
-                Close();
-            }
+            if (Status != status)
+                Status = status;
         }
+    }
 
-        private delegate void SetStatusDelegate(string status);
-        public void SetStatus(string status)
+    private delegate void SetProgressDelegate(int progress);
+    public void SetProgress(int progress)
+    {
+        if (InvokeRequired)
         {
-            if (InvokeRequired)
-            {
-                Invoke(new SetStatusDelegate(SetStatus), status);
-            }
-            else
-            {
-                if (Status != status)
-                    Status = status;
-            }
+            Invoke(new SetProgressDelegate(SetProgress), progress);
         }
-
-        private delegate void SetProgressDelegate(int progress);
-        public void SetProgress(int progress)
+        else
         {
-            if (InvokeRequired)
+            if (Progress != progress)
+                Progress = progress;
+            if (pboMain.Style == ProgressBarStyle.Marquee)
             {
-                Invoke(new SetProgressDelegate(SetProgress), progress);
-            }
-            else
-            {
-                if (Progress != progress)
-                    Progress = progress;
-                if (pboMain.Style == ProgressBarStyle.Marquee)
-                {
-                    pboMain.Style = ProgressBarStyle.Blocks;
-                }
+                pboMain.Style = ProgressBarStyle.Blocks;
             }
         }
     }

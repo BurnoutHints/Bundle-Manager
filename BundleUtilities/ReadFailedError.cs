@@ -1,17 +1,16 @@
 using System;
 
-namespace BundleUtilities
+namespace BundleUtilities;
+
+public class ReadFailedError : Exception
 {
-    public class ReadFailedError : Exception
+    public ReadFailedError(string msg) : base(msg)
     {
-        public ReadFailedError(string msg) : base(msg)
-        {
 
-        }
+    }
 
-        public ReadFailedError(string msg, Exception innerException) : base(msg, innerException)
-        {
+    public ReadFailedError(string msg, Exception innerException) : base(msg, innerException)
+    {
 
-        }
     }
 }

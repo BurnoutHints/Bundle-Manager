@@ -1,104 +1,103 @@
 using System.Collections.Generic;
 using System.Drawing;
 
-namespace PVSFormat
+namespace PVSFormat;
+
+public class Polygon
 {
-    public class Polygon
+    public PointF[] Points
     {
-        public PointF[] Points
-        {
-            get;
-            set;
-        }
+        get;
+        set;
+    }
 
-        public float MinX
+    public float MinX
+    {
+        get
         {
-            get
+            float min = float.MaxValue;
+
+            foreach (PointF point in Points)
             {
-                float min = float.MaxValue;
+                float current = point.X;
 
-                foreach (PointF point in Points)
-                {
-                    float current = point.X;
-
-                    if (current < min)
-                        min = current;
-                }
-
-                return min;
+                if (current < min)
+                    min = current;
             }
-        }
 
-        public float MinY
+            return min;
+        }
+    }
+
+    public float MinY
+    {
+        get
         {
-            get
+            float min = float.MaxValue;
+
+            foreach (PointF point in Points)
             {
-                float min = float.MaxValue;
+                float current = point.Y;
 
-                foreach (PointF point in Points)
-                {
-                    float current = point.Y;
-
-                    if (current < min)
-                        min = current;
-                }
-
-                return min;
+                if (current < min)
+                    min = current;
             }
-        }
 
-        public float MaxX
+            return min;
+        }
+    }
+
+    public float MaxX
+    {
+        get
         {
-            get
+            float max = float.MinValue;
+
+            foreach (PointF point in Points)
             {
-                float max = float.MinValue;
+                float current = point.X;
 
-                foreach (PointF point in Points)
-                {
-                    float current = point.X;
-
-                    if (current > max)
-                        max = current;
-                }
-
-                return max;
+                if (current > max)
+                    max = current;
             }
-        }
 
-        public float MaxY
+            return max;
+        }
+    }
+
+    public float MaxY
+    {
+        get
         {
-            get
+            float max = float.MinValue;
+
+            foreach (PointF point in Points)
             {
-                float max = float.MinValue;
+                float current = point.Y;
 
-                foreach (PointF point in Points)
-                {
-                    float current = point.Y;
-
-                    if (current > max)
-                        max = current;
-                }
-
-                return max;
+                if (current > max)
+                    max = current;
             }
-        }
 
-        public RectangleF Bounds
-        {
-            get
-            {
-                return new RectangleF(MinX, MinY, MaxX - MinX, MaxY - MinY);
-            }
+            return max;
         }
+    }
 
-        public Polygon(params PointF[] points)
+    public RectangleF Bounds
+    {
+        get
         {
-            Points = points;
+            return new RectangleF(MinX, MinY, MaxX - MinX, MaxY - MinY);
         }
+    }
 
-        public Polygon(List<PointF> points)
-        {
-            Points = points.ToArray();
-        }
+    public Polygon(params PointF[] points)
+    {
+        Points = points;
+    }
+
+    public Polygon(List<PointF> points)
+    {
+        Points = [.. points];
     }
 }

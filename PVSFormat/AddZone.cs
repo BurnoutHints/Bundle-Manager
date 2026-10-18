@@ -1,33 +1,32 @@
 using System;
 using System.Windows.Forms;
 
-namespace PVSFormat
+namespace PVSFormat;
+
+public partial class AddZone : Form
 {
-    public partial class AddZone : Form
+    ulong zone;
+
+    public AddZone()
     {
-        ulong zone;
+        InitializeComponent();
+    }
 
-        public AddZone()
-        {
-            InitializeComponent();
-        }
+    public ulong GetNewZoneId()
+    {
+        ShowDialog();
+        return zone;
+    }
 
-        public ulong GetNewZoneId()
-        {
-            ShowDialog();
-            return zone;
-        }
+    private void okButton_Click(object sender, EventArgs e)
+    {
+        zone = (ulong)zoneIdNumericUpDown.Value;
+        Close();
+    }
 
-        private void okButton_Click(object sender, EventArgs e)
-        {
-            zone = (ulong)zoneIdNumericUpDown.Value;
-            Close();
-        }
-
-        private void cancelButton_Click(object sender, EventArgs e)
-        {
-            zone = ulong.MaxValue;
-            Close();
-        }
+    private void cancelButton_Click(object sender, EventArgs e)
+    {
+        zone = ulong.MaxValue;
+        Close();
     }
 }

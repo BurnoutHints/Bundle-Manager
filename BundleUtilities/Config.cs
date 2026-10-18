@@ -1,7 +1,6 @@
-namespace BundleUtilities
+namespace BundleUtilities;
+
+public static class Config
 {
-    public static class Config
-    {
-        public static bool LoadMaterials;
-    }
+    public static bool LoadMaterials;
 }
