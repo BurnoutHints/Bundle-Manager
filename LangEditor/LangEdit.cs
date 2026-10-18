@@ -1,3 +1,4 @@
+using BundleUtilities;
 using PluginAPI;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using YamlDotNet.RepresentationModel;
 
 namespace LangEditor;
 
@@ -478,6 +480,106 @@ public partial class LangEdit : Form, IEntryEditor
         {
             // The BOM lets spreadsheet apps detect UTF-8
             File.WriteAllText(path, languageContent.ToString(), new UTF8Encoding(true));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return ex.Message;
+        }
+        return null;
+    }
+
+    private void importYamlToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        OpenFileDialog openDialog = new();
+        openDialog.Filter = "YAML files (*.yaml;*.yml)|*.yaml;*.yml|All files (*.*)|*.*";
+        if (openDialog.ShowDialog() == DialogResult.Cancel)
+            return;
+
+        string error = ImportYAML(openDialog.FileName);
+        if (error != null)
+            MessageBox.Show(this, error + " Import cancelled.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+
+    // Reads one "key: string" line per string, as written by ExportYAML. A key is a string name or a 0x ID.
+    // Returns an error message, or null on success.
+    internal string ImportYAML(string path)
+    {
+        Dictionary<uint, string> data = [];
+        try
+        {
+            if (Yaml.Parse(File.ReadAllText(path)) is not YamlMappingNode mapping)
+                return "Expected one \"key: string\" line per string.";
+
+            foreach (KeyValuePair<YamlNode, YamlNode> entry in mapping.Children)
+            {
+                int line = Yaml.Line(entry.Key);
+                string key = (entry.Key as YamlScalarNode)?.Value?.Trim() ?? "";
+                uint id;
+                if (key.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!uint.TryParse(key[2..], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out id))
+                        return $"Line {line}: could not parse ID {key}.";
+                }
+                else if (key.Length != 0)
+                    id = Language.HashID(key);
+                else
+                    return $"Line {line} has no key.";
+
+                if (entry.Value is not YamlScalarNode scalar)
+                    return $"Line {line}: the string for {key} should be a single quoted value.";
+                if (!data.TryAdd(id, Yaml.IsNull(scalar) ? "" : scalar.Value))
+                    return $"Line {line}: {key} is a duplicate.";
+            }
+        }
+        catch (Exception ex) when (ex is FormatException or IOException or UnauthorizedAccessException)
+        {
+            return ex.Message;
+        }
+
+        _lang.mpEntries = data;
+
+        dgvMain.Rows.Clear();
+        UpdateDisplay();
+        _dirty = true;
+        return null;
+    }
+
+    private void exportYamlToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        SaveFileDialog saveDialog = new();
+        saveDialog.Filter = "YAML files (*.yaml)|*.yaml";
+        if (saveDialog.ShowDialog() == DialogResult.Cancel)
+            return;
+
+        string error = ExportYAML(saveDialog.FileName);
+        if (error == null)
+            MessageBox.Show("Export successful.", "Information", MessageBoxButtons.OK);
+        else
+            MessageBox.Show($"There was an issue exporting: {error}", "Error", MessageBoxButtons.OK);
+    }
+
+    // One "key: string" line per row. The key is the name when it hashes to the row's ID, otherwise the 0x ID.
+    // Returns an error message, or null on success.
+    internal string ExportYAML(string path)
+    {
+        dgvMain.EndEdit(); // Include the cell being edited
+        StringBuilder yaml = new();
+        yaml.AppendLine($"# {_lang.LanguageName} strings, keyed by name, or by 0x ID where the name is unknown");
+        foreach (DataGridViewRow row in dgvMain.Rows)
+        {
+            if (row.IsNewRow)
+                continue;
+
+            string id = (string)row.Cells[0].Value ?? "";
+            string name = (string)row.Cells[1].Value;
+            bool useName = !string.IsNullOrEmpty(name) && (id.Length == 0 || $"0x{Language.HashID(name):X8}".Equals(id, StringComparison.OrdinalIgnoreCase));
+            string key = useName ? name : id;
+            yaml.Append(Yaml.Key(key)).Append(": ").AppendLine(Yaml.Quote((string)row.Cells[2].Value ?? ""));
+        }
+
+        try
+        {
+            File.WriteAllText(path, yaml.ToString());
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

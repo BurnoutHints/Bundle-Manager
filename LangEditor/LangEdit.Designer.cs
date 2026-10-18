@@ -34,10 +34,12 @@ namespace LangEditor
             colString = new System.Windows.Forms.DataGridViewTextBoxColumn();
             statusStrip1 = new System.Windows.Forms.StatusStrip();
             lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
-menuStrip1 = new System.Windows.Forms.MenuStrip();
+            menuStrip1 = new System.Windows.Forms.MenuStrip();
             fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            importYamlToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            exportYamlToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             applyChangesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -109,7 +111,7 @@ menuStrip1 = new System.Windows.Forms.MenuStrip();
             // 
             // fileToolStripMenuItem
             // 
-            fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { importToolStripMenuItem, exportToolStripMenuItem, toolStripMenuItem1, applyChangesToolStripMenuItem });
+            fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { importToolStripMenuItem, exportToolStripMenuItem, importYamlToolStripMenuItem, exportYamlToolStripMenuItem, toolStripMenuItem1, applyChangesToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             fileToolStripMenuItem.Text = "File";
@@ -128,6 +130,20 @@ menuStrip1 = new System.Windows.Forms.MenuStrip();
             exportToolStripMenuItem.Text = "Export to CSV";
             exportToolStripMenuItem.Click += exportToolStripMenuItem_Click;
             // 
+            // importYamlToolStripMenuItem
+            // 
+            importYamlToolStripMenuItem.Name = "importYamlToolStripMenuItem";
+            importYamlToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            importYamlToolStripMenuItem.Text = "Import from YAML";
+            importYamlToolStripMenuItem.Click += importYamlToolStripMenuItem_Click;
+            // 
+            // exportYamlToolStripMenuItem
+            // 
+            exportYamlToolStripMenuItem.Name = "exportYamlToolStripMenuItem";
+            exportYamlToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            exportYamlToolStripMenuItem.Text = "Export to YAML";
+            exportYamlToolStripMenuItem.Click += exportYamlToolStripMenuItem_Click;
+            // 
             // toolStripMenuItem1
             // 
             toolStripMenuItem1.Name = "toolStripMenuItem1";
@@ -137,7 +153,7 @@ menuStrip1 = new System.Windows.Forms.MenuStrip();
             // 
             applyChangesToolStripMenuItem.Name = "applyChangesToolStripMenuItem";
             applyChangesToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S;
-applyChangesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            applyChangesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
             applyChangesToolStripMenuItem.Text = "Apply Changes";
             applyChangesToolStripMenuItem.Click += applyChangesToolStripMenuItem_Click;
             // 
@@ -205,10 +221,12 @@ applyChangesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
         private System.Windows.Forms.DataGridView dgvMain;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel lblStatus;
-private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importYamlToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportYamlToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem hashToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
