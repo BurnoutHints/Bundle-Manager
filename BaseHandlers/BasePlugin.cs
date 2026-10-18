@@ -1,3 +1,4 @@
+using BaseHandlers.EnvironmentSettings;
 using BaseHandlers.Flapt;
 using BundleFormat;
 using PluginAPI;
@@ -21,5 +22,6 @@ public class BasePlugin : IPlugin
         EntryTypeRegistry.Register(EntryType.ProgressionData, new ProgressionData());
         EntryTypeRegistry.Register(EntryType.StreetData, new StreetData());
         EntryTypeRegistry.Register(EntryType.FlaptFile, new FlaptFile());
+        EntryTypeRegistry.Register(EntryType.BrnEnvironmentKeyframe, new EnvironmentKeyframe());
     }
 }
