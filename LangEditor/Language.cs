@@ -43,6 +43,8 @@ namespace LangEditor
         private uint muSize; // Number of entries
         internal Dictionary<uint, string> mpEntries;
 
+        internal string LanguageName => meLanguageID.ToString().Replace("E_LANGUAGE_", "");
+
         public Language()
         {
             mpEntries = new Dictionary<uint, string>();
