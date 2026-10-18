@@ -816,35 +816,7 @@ public class FlaptFile : IEntryData
     public IEntryEditor GetEditor(BundleEntry entry)
     {
         Editing = this; // Editors are modal, so only one is open
-        return new PropertyGridEditor("Flapt File Editor", this, () => Serialize(entry, out _), () => Write(entry));
-    }
-}
-
-// Edits a list or array of numbers as "1, 2, 3", the collection editor can't change number items
-public class NumberListConverter : TypeConverter
-{
-    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-        => sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
-
-    public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-    {
-        if (destinationType == typeof(string) && value is System.Collections.IEnumerable items)
-            return string.Join(", ", items.Cast<object>());
-        return base.ConvertTo(context, culture, value, destinationType);
-    }
-
-    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-    {
-        if (value is not string s || context?.PropertyDescriptor == null)
-            return base.ConvertFrom(context, culture, value);
-
-        Type type = context.PropertyDescriptor.PropertyType;
-        Type elementType = type.IsArray ? type.GetElementType() : type.GetGenericArguments()[0];
-        string[] parts = s.Split([',', ' '], StringSplitOptions.RemoveEmptyEntries);
-        Array result = Array.CreateInstance(elementType, parts.Length);
-        for (int i = 0; i < parts.Length; i++)
-            result.SetValue(Convert.ChangeType(parts[i], elementType, CultureInfo.InvariantCulture), i);
-        return type.IsArray ? result : Activator.CreateInstance(type, result);
+        return new PropertyGridEditor("Flapt File Editor", () => Serialize(entry, out _), () => Write(entry), ("Flapt File", this));
     }
 }
 

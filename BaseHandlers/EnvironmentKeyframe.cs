@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
@@ -14,115 +14,195 @@ namespace BaseHandlers.EnvironmentSettings;
 // BrnWorld::EnvironmentSettings::Keyframe, see https://burnout.wiki/wiki/Environment_Keyframe
 // Colours are floats where 1 is full brightness, lighting goes brighter.
 
-[TypeConverter(typeof(ExpandableObjectConverter))]
+// Names, groups and ranges are from the game's environment tweak menu (BrnWorld::Sky::DebugComponent), which
+// doesn't cover bloom, vignette or cloud movement. Those descriptions come from how the game uses the values.
+
 public class BloomData
 {
+    [DisplayName("Luminance"), FieldDescription("Brightness of the bloom. The game's default is 0.98.")]
     public float mfLuminance { get; set; }
-    public float mfThreshold { get; set; }
-    public Vector4 mv4Scale { get; set; }
 
-    public override string ToString() => "BloomData";
+    [DisplayName("Threshold"), FieldDescription("The game's default is 0.77.")]
+    public float mfThreshold { get; set; }
+
+    [DisplayName("Scale"), FieldDescription("Per channel bloom scale.")]
+    public Vector4 mv4Scale { get; set; }
 }
 
-[TypeConverter(typeof(ExpandableObjectConverter))]
 public class VignetteData
 {
+    [DisplayName("Angle"), FieldDescription("Rotation of the vignette.")]
     public float mfAngle { get; set; }
+
+    [DisplayName("Sharpness"), FieldDescription("Hardness of the vignette's gradient. The game's default is 0.33.", -1, 1)]
     public float mfSharpness { get; set; }
+
+    [DisplayName("Amount"), FieldDescription("Size of the vignette on each axis.")]
     public Vector2 mv2Amount { get; set; }
+
+    [DisplayName("Centre"), FieldDescription("Centre of the vignette on screen.")]
     public Vector2 mv2Centre { get; set; }
 
+    [DisplayName("Inner colour"), FieldDescription("Colour at the centre of the vignette.")]
     [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
     public Vector4 mv4InnerColour { get; set; }
 
+    [DisplayName("Outer colour"), FieldDescription("Colour at the edge of the vignette.")]
     [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
     public Vector4 mv4OuterColour { get; set; }
-
-    public override string ToString() => "VignetteData";
 }
 
-[TypeConverter(typeof(ExpandableObjectConverter))]
 public class TintData
 {
-    [Description("ID of the imported Colour Cube resource."), TypeConverter(typeof(HexConverter))]
+    [DisplayName("Colour cube"), FieldDescription("ID of the imported Colour Cube resource, the colour grading this keyframe uses."), TypeConverter(typeof(HexConverter))]
     public ulong mpColourCube { get; set; }
-
-    public override string ToString() => $"0x{mpColourCube:X8}";
 }
 
-[TypeConverter(typeof(ExpandableObjectConverter))]
 public class ScatteringData
 {
+    [Category("Sky colours"), DisplayName("Top colour"), FieldDescription("Colour of the sky overhead.", 0, 10)]
     [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
     public Vector3 mv3SkyTopColour { get; set; }
+
+    [Category("Sky colours"), DisplayName("Horizon colour"), FieldDescription("Colour of the sky at the horizon.", 0, 10)]
     [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
     public Vector3 mv3SkyHorColour { get; set; }
+
+    [Category("Sky colours"), DisplayName("Sun colour"), FieldDescription("Colour of the sky around the sun.", 0, 10)]
     [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
     public Vector3 mv3SkySunColour { get; set; }
+
+    [Category("Sky colours"), DisplayName("Sky shape"), FieldDescription("Shape of the gradient from the horizon to the top.", 0, 10)]
     public float mfSkyHorPow { get; set; }
+
+    [Category("Sky colours"), DisplayName("Sun shape"), FieldDescription("Shape of the glow around the sun.", 0, 50)]
     public float mfSkySunPow { get; set; }
+
+    [Category("Sky colours"), DisplayName("Darkness"), FieldDescription("", 0, 1)]
     public float mfSkyDrk { get; set; }
+
+    [Category("Sky colours"), DisplayName("Horizon bleeding height"), FieldDescription("", 0.01f, 50)]
     public float mfSkyHorBleedScl { get; set; }
+
+    [Category("Sky colours"), DisplayName("Horizon bleeding width"), FieldDescription("", 0.01f, 50)]
     public float mfSkyHorBleedPow { get; set; }
+
+    [Category("Sky colours"), DisplayName("Sun/horizon bleeding balance"), FieldDescription("", 0.01f, 50)]
     public float mfSkySunBleedPow { get; set; }
+
+    [Category("Scattering colours"), DisplayName("Top colour"), FieldDescription("Colour of the haze over distant scenery, looking up.", 0, 10)]
     [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
     public Vector3 mv3ScattTopColour { get; set; }
+
+    [Category("Scattering colours"), DisplayName("Horizon colour"), FieldDescription("Colour of the haze over distant scenery at the horizon.", 0, 10)]
     [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
     public Vector3 mv3ScattHorColour { get; set; }
+
+    [Category("Scattering colours"), DisplayName("Sun colour"), FieldDescription("Colour of the haze over distant scenery towards the sun.", 0, 10)]
     [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
     public Vector3 mv3ScattSunColour { get; set; }
-    public float mfScattHorPow { get; set; }
-    public float mfScattSunPow { get; set; }
-    public float mfScattDrk { get; set; }
-    public float mfScattHorBleedScl { get; set; }
-    public float mfScattHorBleedPow { get; set; }
-    public float mfScattSunBleedPow { get; set; }
-    public float[] mafScattDist { get; set; } = new float[2];
-    public float mfScattPow { get; set; }
-    public float mfScattCap { get; set; }
 
-    public override string ToString() => "ScatteringData";
+    [Category("Scattering colours"), DisplayName("Sky shape"), FieldDescription("", 0, 10)]
+    public float mfScattHorPow { get; set; }
+
+    [Category("Scattering colours"), DisplayName("Sun shape"), FieldDescription("", 0, 50)]
+    public float mfScattSunPow { get; set; }
+
+    [Category("Scattering colours"), DisplayName("Darkness"), FieldDescription("", 0, 1)]
+    public float mfScattDrk { get; set; }
+
+    [Category("Scattering colours"), DisplayName("Horizon bleeding height"), FieldDescription("", 0.01f, 50)]
+    public float mfScattHorBleedScl { get; set; }
+
+    [Category("Scattering colours"), DisplayName("Horizon bleeding width"), FieldDescription("", 0.01f, 50)]
+    public float mfScattHorBleedPow { get; set; }
+
+    [Category("Scattering colours"), DisplayName("Sun/horizon bleeding balance"), FieldDescription("", 0.01f, 50)]
+    public float mfScattSunBleedPow { get; set; }
+
+    [Category("Scattering"), DisplayName("Distances"), FieldDescription("Scattering distances 0 and 1.", 1, 1000000)]
+    [TypeConverter(typeof(NumberListConverter))]
+    public float[] mafScattDist { get; set; } = new float[2];
+
+    [Category("Scattering"), DisplayName("Power"), FieldDescription("", 0, 100)]
+    public float mfScattPow { get; set; }
+
+    [Category("Scattering"), DisplayName("Cap"), FieldDescription("", 0.01f, 1)]
+    public float mfScattCap { get; set; }
 }
 
-[TypeConverter(typeof(ExpandableObjectConverter))]
 public class LightingData
 {
+    [Category("Key light"), DisplayName("Key light colour"), FieldDescription("Colour of the main directional light.", 0, 10)]
     [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
     public Vector3 mv3KeyLightColour { get; set; }
+
+    [Category("Key light"), DisplayName("Specular colour"), FieldDescription("Colour of specular highlights.", 0, 10)]
     [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
     public Vector3 mv3SpecularColour { get; set; }
-    [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
-    public Vector3 mv3KeyFillColour { get; set; }
-    [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
-    public Vector3 mv3ShadowFillColour { get; set; }
-    [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
-    public Vector3 mv3RightFillColour { get; set; }
-    [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
-    public Vector3 mv3LeftFillColour { get; set; }
-    [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
-    public Vector3 mv3UpFillColour { get; set; }
-    [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
-    public Vector3 mv3DownFillColour { get; set; }
+
+    [Category("Irradiance rig"), DisplayName("Irradiance scale"), FieldDescription("Scale of the ambient light from the fill colours.", 0, 5)]
     public float mfAmbientIrradianceScale { get; set; }
 
-    public override string ToString() => "LightingData";
+    [Category("Irradiance rig"), DisplayName("Key fill colour"), FieldDescription("Ambient light from the key light's side.", 0, 10)]
+    [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
+    public Vector3 mv3KeyFillColour { get; set; }
+
+    [Category("Irradiance rig"), DisplayName("Shadow fill colour"), FieldDescription("Ambient light from the side away from the key light.", 0, 10)]
+    [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
+    public Vector3 mv3ShadowFillColour { get; set; }
+
+    [Category("Irradiance rig"), DisplayName("Left fill colour"), FieldDescription("Ambient light from the left.", 0, 10)]
+    [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
+    public Vector3 mv3LeftFillColour { get; set; }
+
+    [Category("Irradiance rig"), DisplayName("Right fill colour"), FieldDescription("Ambient light from the right.", 0, 10)]
+    [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
+    public Vector3 mv3RightFillColour { get; set; }
+
+    [Category("Irradiance rig"), DisplayName("Up fill colour"), FieldDescription("Ambient light from above.", 0, 10)]
+    [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
+    public Vector3 mv3UpFillColour { get; set; }
+
+    [Category("Irradiance rig"), DisplayName("Down fill colour"), FieldDescription("Ambient light from below.", 0, 10)]
+    [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
+    public Vector3 mv3DownFillColour { get; set; }
 }
 
-[TypeConverter(typeof(ExpandableObjectConverter))]
 public class CloudsData
 {
+    [Category("Layer colours"), DisplayName("Lit colours"), FieldDescription("Lit colour of layers 0 and 1.", 0, 1)]
     [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
+    [TypeConverter(typeof(ArrayTextConverter))]
     public Vector3[] mav3LayerLiteColour { get; set; } = new Vector3[2];
-    [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
-    public Vector3[] mav3LayerDarkColour { get; set; } = new Vector3[2];
-    public float[] mafLayerDensity { get; set; } = new float[2];
-    public float[] mafLayerFeathering { get; set; } = new float[2];
-    public float[] mafLayerOpacity { get; set; } = new float[2];
-    public float[] mafLayerSpeed { get; set; } = new float[2];
-    public float[] mafLayerScale { get; set; } = new float[2];
-    public float mfDirectionAngle { get; set; }
 
-    public override string ToString() => "CloudsData";
+    [Category("Layer colours"), DisplayName("Dark colours"), FieldDescription("Dark colour of layers 0 and 1.", 0, 1)]
+    [Editor(typeof(VectorColorEditor), typeof(UITypeEditor))]
+    [TypeConverter(typeof(ArrayTextConverter))]
+    public Vector3[] mav3LayerDarkColour { get; set; } = new Vector3[2];
+
+    [Category("Layers"), DisplayName("Density"), FieldDescription("Layers 0 and 1.", 0, 1)]
+    [TypeConverter(typeof(NumberListConverter))]
+    public float[] mafLayerDensity { get; set; } = new float[2];
+
+    [Category("Layers"), DisplayName("Feathering"), FieldDescription("Layers 0 and 1.", 0, 1)]
+    [TypeConverter(typeof(NumberListConverter))]
+    public float[] mafLayerFeathering { get; set; } = new float[2];
+
+    [Category("Layers"), DisplayName("Opacity"), FieldDescription("Layers 0 and 1.", 0, 1)]
+    [TypeConverter(typeof(NumberListConverter))]
+    public float[] mafLayerOpacity { get; set; } = new float[2];
+
+    [Category("Layers"), DisplayName("Speed"), FieldDescription("Scroll speed of layers 0 and 1. The game's default is 30.")]
+    [TypeConverter(typeof(NumberListConverter))]
+    public float[] mafLayerSpeed { get; set; } = new float[2];
+
+    [Category("Layers"), DisplayName("Scale"), FieldDescription("Size of layers 0 and 1. The game's default is 7000.")]
+    [TypeConverter(typeof(NumberListConverter))]
+    public float[] mafLayerScale { get; set; } = new float[2];
+
+    [Category("Wind"), DisplayName("Direction"), FieldDescription("Direction the clouds move in, in degrees.")]
+    public float mfDirectionAngle { get; set; }
 }
 
 public class EnvironmentKeyframe : IEntryData
@@ -361,6 +441,8 @@ public class EnvironmentKeyframe : IEntryData
 
     public IEntryEditor GetEditor(BundleEntry entry)
     {
-        return new PropertyGridEditor("Environment Keyframe Editor", this, () => Serialize(entry), () => Write(entry));
+        return new PropertyGridEditor("Environment Keyframe Editor", () => Serialize(entry), () => Write(entry),
+            ("Lighting", mLightingData), ("Sky", mScatteringData), ("Clouds", mCloudsData),
+            ("Bloom", mBloomData), ("Vignette", mVignetteData), ("Colour Cube", mTintData));
     }
 }

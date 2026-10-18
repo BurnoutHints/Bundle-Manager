@@ -9,8 +9,8 @@ using System.Windows.Forms.Design;
 
 namespace BaseHandlers;
 
-// Picks float RGB colours for Vector3, Vector4 (alpha kept) and Vector3[] (pick an element from a list) values.
-// Colours brighter than 1 keep their brightness, the picker sets the hue.
+// Picks float RGB colours for Vector3, Vector4 (alpha too) and Vector3[] (pick an element from a list) values with
+// ColourPickerForm, and draws a swatch of each in the grid. Swatches of colours brighter than 1 show their hue.
 public class VectorColorEditor : UITypeEditor
 {
     public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
@@ -18,36 +18,58 @@ public class VectorColorEditor : UITypeEditor
 
     public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
     {
+        if (provider?.GetService(typeof(IWindowsFormsEditorService)) is not IWindowsFormsEditorService service)
+            return value;
+
         switch (value)
         {
             case Vector3 v:
-                return Pick(v);
+                return Pick(service, v, null, out _) ?? v;
             case Vector4 v:
-                return new Vector4(Pick(new Vector3(v.X, v.Y, v.Z)), v.W);
-            case Vector3[] colours when provider?.GetService(typeof(IWindowsFormsEditorService)) is IWindowsFormsEditorService service:
+                return Pick(service, new Vector3(v.X, v.Y, v.Z), v.W, out float alpha) is Vector3 c ? new Vector4(c, alpha) : v;
+            case Vector3[] colours:
                 ListBox list = new() { BorderStyle = BorderStyle.None, IntegralHeight = false, Height = colours.Length * 18 + 4 };
                 list.Items.AddRange([.. colours.Select((c, i) => (object)$"{i}: {c.X:0.###}, {c.Y:0.###}, {c.Z:0.###}")]);
                 list.Click += (_, _) => service.CloseDropDown();
                 service.DropDownControl(list);
-                if (list.SelectedIndex < 0)
+                if (list.SelectedIndex < 0 || Pick(service, colours[list.SelectedIndex], null, out _) is not Vector3 picked)
                     return value;
                 Vector3[] result = (Vector3[])colours.Clone();
-                result[list.SelectedIndex] = Pick(colours[list.SelectedIndex]);
+                result[list.SelectedIndex] = picked;
                 return result;
             default:
                 return value;
         }
     }
 
-    public static Vector3 Pick(Vector3 colour)
+    // Null if cancelled
+    private static Vector3? Pick(IWindowsFormsEditorService service, Vector3 colour, float? alpha, out float newAlpha)
     {
-        float scale = Math.Max(1, Math.Max(colour.X, Math.Max(colour.Y, colour.Z)));
-        Vector3 rgb = Vector3.Clamp(colour / scale, Vector3.Zero, Vector3.One) * 255;
-        Color initial = Color.FromArgb((int)MathF.Round(rgb.X), (int)MathF.Round(rgb.Y), (int)MathF.Round(rgb.Z));
+        using ColourPickerForm form = new(colour, alpha);
+        bool ok = service.ShowDialog(form) == DialogResult.OK;
+        newAlpha = ok && alpha.HasValue ? form.Alpha : alpha ?? 0;
+        return ok ? form.Colour : null;
+    }
 
-        using ColorDialog dialog = new() { Color = initial, FullOpen = true };
-        if (dialog.ShowDialog() != DialogResult.OK || dialog.Color.ToArgb() == initial.ToArgb())
-            return colour; // Unchanged, so rounding to bytes doesn't change it
-        return new Vector3(dialog.Color.R, dialog.Color.G, dialog.Color.B) / 255 * scale;
+    public override bool GetPaintValueSupported(ITypeDescriptorContext context) => true;
+
+    public override void PaintValue(PaintValueEventArgs e)
+    {
+        Vector3[] colours = e.Value switch
+        {
+            Vector3 v => [v],
+            Vector4 v => [new Vector3(v.X, v.Y, v.Z)],
+            Vector3[] a => a,
+            _ => []
+        };
+
+        // Side by side for arrays
+        for (int i = 0; i < colours.Length; i++)
+        {
+            int left = e.Bounds.Left + e.Bounds.Width * i / colours.Length;
+            int right = e.Bounds.Left + e.Bounds.Width * (i + 1) / colours.Length;
+            using SolidBrush brush = new(ColourPickerForm.ToColor(ColourPickerForm.Normalise(colours[i])));
+            e.Graphics.FillRectangle(brush, left, e.Bounds.Top, right - left, e.Bounds.Height);
+        }
     }
 }
