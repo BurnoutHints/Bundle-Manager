@@ -852,6 +852,38 @@ namespace BaseHandlers
                     bw.WriteUniquePadding(4); // Padding
             }
 
+            // The game looks regions up as mppRegions[miRegionIndex], so the table is ordered by index with no gaps.
+            // A region whose index is out of range or already taken (e.g. a newly added one) gets the first free index.
+            List<TriggerRegion> regions = [.. mpVFXBoxRegions, .. mpBlackspots, .. mpGenericRegions, .. mpLandmarks];
+
+            // IDs are unique too (killzones and stunts reference generic regions by mId), so a duplicate gets a new one
+            int nextId = 0;
+            foreach (TriggerRegion region in regions)
+                nextId = Math.Max(nextId, region.mId + 1);
+            HashSet<int> usedIds = new HashSet<int>();
+            foreach (TriggerRegion region in regions)
+                if (!usedIds.Add(region.mId))
+                    region.mId = nextId++;
+
+            TriggerRegion[] regionTable = new TriggerRegion[regions.Count];
+            List<TriggerRegion> unplacedRegions = new List<TriggerRegion>();
+            foreach (TriggerRegion region in regions)
+            {
+                if (region.miRegionIndex >= 0 && region.miRegionIndex < regionTable.Length && regionTable[region.miRegionIndex] == null)
+                    regionTable[region.miRegionIndex] = region;
+                else
+                    unplacedRegions.Add(region);
+            }
+            int freeIndex = 0;
+            foreach (TriggerRegion region in unplacedRegions)
+            {
+                while (regionTable[freeIndex] != null)
+                    freeIndex++;
+                regionTable[freeIndex] = region;
+                region.miRegionIndex = (short)freeIndex;
+            }
+            Dictionary<TriggerRegion, uint> regionOffsets = new Dictionary<TriggerRegion, uint>();
+
             bw.Write(miVersionNumber);
             long SizePosition = bw.BaseStream.Position;
             bw.WriteUniquePadding(4);
@@ -899,10 +931,9 @@ namespace BaseHandlers
             bw.BaseStream.Position = LandmarkOffsetPosition;
             WritePtr(bw, currentPosition, x64);
             bw.BaseStream.Position = currentPosition;
-            List<uint> landmarkOffsets = new List<uint>();
             foreach (Landmark landmark in mpLandmarks)
             {
-                landmarkOffsets.Add((uint)bw.BaseStream.Position);
+                regionOffsets.Add(landmark, (uint)bw.BaseStream.Position);
                 landmark.Write(bw, x64);
             }
             bw.WritePadding();
@@ -925,6 +956,7 @@ namespace BaseHandlers
             foreach (GenericRegion region in mpGenericRegions)
             {
                 genericRegionOffsets.Add(region.mId, (uint)bw.BaseStream.Position);
+                regionOffsets.Add(region, (uint)bw.BaseStream.Position);
                 region.Write(bw);
             }
             bw.WritePadding();
@@ -943,10 +975,9 @@ namespace BaseHandlers
             bw.BaseStream.Position = BlackspotOffsetPosition;
             WritePtr(bw, currentPosition, x64);
             bw.BaseStream.Position = currentPosition;
-            List<uint> blackspotOffsets = new List<uint>();
             foreach (Blackspot blackspot in mpBlackspots)
             {
-                blackspotOffsets.Add((uint)bw.BaseStream.Position);
+                regionOffsets.Add(blackspot, (uint)bw.BaseStream.Position);
                 blackspot.Write(bw);
             }
             bw.WritePadding();
@@ -955,10 +986,9 @@ namespace BaseHandlers
             bw.BaseStream.Position = VFXBoxRegionsOffsetPosition;
             WritePtr(bw, currentPosition, x64);
             bw.BaseStream.Position = currentPosition;
-            List<uint> vfxBoxRegionOffsets = new List<uint>();
             foreach (VFXBoxRegion region in mpVFXBoxRegions)
             {
-                vfxBoxRegionOffsets.Add((uint)bw.BaseStream.Position);
+                regionOffsets.Add(region, (uint)bw.BaseStream.Position);
                 region.Write(bw);
             }
             bw.WritePadding();
@@ -1001,10 +1031,7 @@ namespace BaseHandlers
             bw.BaseStream.Position = TriggerOffsetPosition;
             WritePtr(bw, currentPosition, x64);
             bw.BaseStream.Position = currentPosition;
-            foreach (uint region in vfxBoxRegionOffsets) WritePtr(bw, region, x64);
-            foreach (uint region in blackspotOffsets) WritePtr(bw, region, x64);
-            foreach (uint region in genericRegionOffsets.Values) WritePtr(bw, region, x64);
-            foreach (uint region in landmarkOffsets) WritePtr(bw, region, x64);
+            foreach (TriggerRegion region in regionTable) WritePtr(bw, regionOffsets[region], x64);
 
             if (x64)
                 bw.WritePadding(); // Decomp's size includes the trailing padding
