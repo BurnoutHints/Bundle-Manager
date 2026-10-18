@@ -1,10 +1,9 @@
 using OpenTK.Mathematics;
 
-namespace ModelViewer
+namespace ModelViewer;
+
+public interface ICamera
 {
-    public interface ICamera
-    {
-        Matrix4 LookAtMatrix { get; }
-        void Update();
-    }
+    Matrix4 LookAtMatrix { get; }
+    void Update();
 }

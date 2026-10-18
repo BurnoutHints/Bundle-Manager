@@ -1,8 +1,7 @@
-namespace BundleUtilities
+namespace BundleUtilities;
+
+public interface ILoader
 {
-    public interface ILoader
-    {
-        void SetStatus(string status);
-        void SetProgress(int progress);
-    }
+    void SetStatus(string status);
+    void SetProgress(int progress);
 }

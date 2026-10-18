@@ -1,9 +1,8 @@
 using System.Windows.Forms;
 
-namespace PluginAPI
+namespace PluginAPI;
+
+public interface IEntryEditor
 {
-    public interface IEntryEditor
-    {
-        DialogResult ShowDialog(IWin32Window owner);
-    }
+    DialogResult ShowDialog(IWin32Window owner);
 }

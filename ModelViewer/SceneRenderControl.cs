@@ -5,153 +5,152 @@ using System.Windows.Forms;
 using ModelViewer.SceneData;
 using OpenTK.GLControl;
 
-namespace ModelViewer
+namespace ModelViewer;
+
+public partial class SceneRenderControl : UserControl
 {
-    public partial class SceneRenderControl : UserControl
+    private GLControl glcMain;
+    private GraphicsScene _graphicsScene;
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+    public Scene Scene
     {
-        private GLControl glcMain;
-        private GraphicsScene _graphicsScene;
+        get => _graphicsScene?.Scene;
+        set => InitScene(value);
+    }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-        public Scene Scene
+    private readonly bool _designMode;
+
+    private bool _sceneChanged;
+
+    public SceneRenderControl()
+    {
+        InitializeComponent();
+        _designMode = LicenseManager.UsageMode == LicenseUsageMode.Designtime;
+        if (!_designMode)
+            SetupGLControl();
+        _sceneChanged = true;
+    }
+
+    private void SetupGLControl()
+    {
+        glcMain = new()
         {
-            get => _graphicsScene?.Scene;
-            set => InitScene(value);
+            BackColor = Color.Black,
+            Dock = DockStyle.Fill,
+            Location = new Point(0, 0),
+            Name = "glcMain",
+            Size = new Size(150, 150),
+            TabIndex = 1
+        };
+        glcMain.Paint += new PaintEventHandler(this.glcMain_Paint);
+        Controls.Add(glcMain);
+    }
+
+    protected override void OnResize(EventArgs e)
+    {
+        base.OnResize(e);
+        if (!_designMode)
+        {
+            _graphicsScene?.Resize(glcMain.Width, glcMain.Height);
         }
+    }
 
-        private readonly bool _designMode;
-
-        private bool _sceneChanged;
-
-        public SceneRenderControl()
+    private void InitScene(Scene scene)
+    {
+        if (!_designMode)
         {
-            InitializeComponent();
-            _designMode = LicenseManager.UsageMode == LicenseUsageMode.Designtime;
-            if (!_designMode)
-                SetupGLControl();
+            if (_graphicsScene != null)
+            {
+                _graphicsScene.FrameRendered -= GraphicsSceneOnFrameRendered;
+                _graphicsScene.Cleanup();
+                _graphicsScene = null;
+            }
+            _graphicsScene = new GraphicsScene(scene, glcMain.Width, glcMain.Height);
+            _graphicsScene.FrameRendered += GraphicsSceneOnFrameRendered;
+
+            tmrUpdate.Enabled = true;
+
             _sceneChanged = true;
         }
+    }
 
-        private void SetupGLControl()
+    private void GraphicsSceneOnFrameRendered()
+    {
+        glcMain.SwapBuffers();
+    }
+
+    public void ExportCollada14()
+    {
+        if (Scene == null)
+            return;
+        SaveFileDialog sfd = new();
+        sfd.Filter = "Collada Document|*.dae|All Files|*.*";
+        DialogResult result = sfd.ShowDialog(this);
+        if (result == DialogResult.OK)
         {
-            glcMain = new()
-            {
-                BackColor = Color.Black,
-                Dock = DockStyle.Fill,
-                Location = new Point(0, 0),
-                Name = "glcMain",
-                Size = new Size(150, 150),
-                TabIndex = 1
-            };
-            glcMain.Paint += new PaintEventHandler(this.glcMain_Paint);
-            Controls.Add(glcMain);
-        }
-
-        protected override void OnResize(EventArgs e)
-        {
-            base.OnResize(e);
-            if (!_designMode)
-            {
-                _graphicsScene?.Resize(glcMain.Width, glcMain.Height);
-            }
-        }
-
-        private void InitScene(Scene scene)
-        {
-            if (!_designMode)
-            {
-                if (_graphicsScene != null)
-                {
-                    _graphicsScene.FrameRendered -= GraphicsSceneOnFrameRendered;
-                    _graphicsScene.Cleanup();
-                    _graphicsScene = null;
-                }
-                _graphicsScene = new GraphicsScene(scene, glcMain.Width, glcMain.Height);
-                _graphicsScene.FrameRendered += GraphicsSceneOnFrameRendered;
-
-                tmrUpdate.Enabled = true;
-
-                _sceneChanged = true;
-            }
-        }
-
-        private void GraphicsSceneOnFrameRendered()
-        {
-            glcMain.SwapBuffers();
-        }
-
-        public void ExportCollada14()
-        {
-            if (Scene == null)
+            if (string.IsNullOrEmpty(sfd.FileName))
                 return;
-            SaveFileDialog sfd = new SaveFileDialog();
-            sfd.Filter = "Collada Document|*.dae|All Files|*.*";
-            DialogResult result = sfd.ShowDialog(this);
-            if (result == DialogResult.OK)
-            {
-                if (string.IsNullOrEmpty(sfd.FileName))
-                    return;
 
-                Scene.ExportCollada14(sfd.FileName);
-            }
+            Scene.ExportCollada14(sfd.FileName);
         }
+    }
 
-        public void ExportWavefrontObj()
+    public void ExportWavefrontObj()
+    {
+        if (Scene == null)
+            return;
+        SaveFileDialog sfd = new();
+        sfd.Filter = "Wavefront OBJ|*.obj|All Files|*.*";
+        DialogResult result = sfd.ShowDialog(this);
+        if (result == DialogResult.OK)
         {
-            if (Scene == null)
+            if (string.IsNullOrEmpty(sfd.FileName))
                 return;
-            SaveFileDialog sfd = new SaveFileDialog();
-            sfd.Filter = "Wavefront OBJ|*.obj|All Files|*.*";
-            DialogResult result = sfd.ShowDialog(this);
-            if (result == DialogResult.OK)
-            {
-                if (string.IsNullOrEmpty(sfd.FileName))
-                    return;
 
-                Scene.ExportWavefrontObj(sfd.FileName);
-            }
+            Scene.ExportWavefrontObj(sfd.FileName);
         }
+    }
 
-        private void glcMain_Paint(object sender, PaintEventArgs e)
+    private void glcMain_Paint(object sender, PaintEventArgs e)
+    {
+        if (!_designMode)
         {
-            if (!_designMode)
+            if (_sceneChanged)
             {
-                if (_sceneChanged)
-                {
-                    _graphicsScene?.Init();
-                    _sceneChanged = false;
-                }
-                _graphicsScene?.Render();
+                _graphicsScene?.Init();
+                _sceneChanged = false;
             }
+            _graphicsScene?.Render();
         }
+    }
 
-        public new void Dispose()
+    public new void Dispose()
+    {
+        if (!_designMode)
         {
-            if (!_designMode)
-            {
-                tmrUpdate.Enabled = false;
-                _graphicsScene?.Cleanup();
-            }
-            base.Dispose();
+            tmrUpdate.Enabled = false;
+            _graphicsScene?.Cleanup();
         }
+        base.Dispose();
+    }
 
-        private int _updateCount;
-        private void tmrUpdate_Tick(object sender, EventArgs e)
+    private int _updateCount;
+    private void tmrUpdate_Tick(object sender, EventArgs e)
+    {
+        if (!_designMode)
         {
-            if (!_designMode)
+            if (_updateCount < 2)
+                tmrUpdate.Interval = 17;
+            else
             {
-                if (_updateCount < 2)
-                    tmrUpdate.Interval = 17;
-                else
-                {
-                    tmrUpdate.Interval = 16;
-                    _updateCount = 0;
-                }
-                _updateCount++;
-
-                _graphicsScene?.Update();
-                glcMain.Refresh();
+                tmrUpdate.Interval = 16;
+                _updateCount = 0;
             }
+            _updateCount++;
+
+            _graphicsScene?.Update();
+            glcMain.Refresh();
         }
     }
 }

@@ -1,18 +1,16 @@
-using System.IO;
 using BundleUtilities;
 
-namespace VaultFormat
+namespace VaultFormat;
+
+public interface IAttribute
 {
-    public interface IAttribute
-    {
-        AttributeHeader getHeader();
+    AttributeHeader getHeader();
 
-        SizeAndPositionInformation getInfo();
+    SizeAndPositionInformation getInfo();
 
-        int getDataSize();
+    int getDataSize();
 
-        void Read(ILoader loader, BinaryReader2 br);
+    void Read(ILoader loader, BinaryReader2 br);
 
-        void Write(BinaryWriter2 bw);
-    }
+    void Write(BinaryWriter2 bw);
 }

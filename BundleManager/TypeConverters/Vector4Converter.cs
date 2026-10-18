@@ -17,7 +17,7 @@ sealed class Vector4Converter : ExpandableObjectConverter
         public override Type PropertyType => typeof(float);
         public override object GetValue(object component)
         {
-            var v = (Vector4)component;
+            Vector4 v = (Vector4)component;
             return n == "X" ? v.X : n == "Y" ? v.Y : n == "Z" ? v.Z : v.W;
         }
         public override void SetValue(object component, object value) { }

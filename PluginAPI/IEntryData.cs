@@ -1,16 +1,15 @@
 using BundleFormat;
 using BundleUtilities;
 
-namespace PluginAPI
+namespace PluginAPI;
+
+public interface IEntryData
 {
-    public interface IEntryData
-    {
-        bool Read(BundleEntry entry, ILoader loader = null);
+    bool Read(BundleEntry entry, ILoader loader = null);
 
-        bool Write(BundleEntry entry);
+    bool Write(BundleEntry entry);
 
-        EntryType GetEntryType(BundleEntry entry);
+    EntryType GetEntryType(BundleEntry entry);
 
-        IEntryEditor GetEditor(BundleEntry entry);
-    }
+    IEntryEditor GetEditor(BundleEntry entry);
 }

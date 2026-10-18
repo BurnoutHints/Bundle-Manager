@@ -3,49 +3,47 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
 
-namespace BundleManager
+namespace BundleManager;
+
+public partial class VertexSizePicker : Form
 {
-    public partial class VertexSizePicker : Form
+    public int VertexSize
     {
-        public int VertexSize
+        get
         {
-            get
+            string val = cboSelect.Text;
+
+            if (!int.TryParse(val, out int result))
+                return -1;
+            return result;
+        }
+    }
+
+    private List<int> _vertexSizeList;
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+    public List<int> VertexSizeList
+    {
+        get { return _vertexSizeList; }
+        set
+        {
+            _vertexSizeList = value;
+
+            cboSelect.Items.Clear();
+            foreach (int size in _vertexSizeList)
             {
-                string val = cboSelect.Text;
-
-                int result;
-                if (!int.TryParse(val, out result))
-                    return -1;
-                return result;
+                cboSelect.Items.Add(size);
             }
+            cboSelect.SelectedIndex = 0;
         }
+    }
 
-        private List<int> _vertexSizeList;
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-        public List<int> VertexSizeList
-        {
-            get { return _vertexSizeList; }
-            set
-            {
-                _vertexSizeList = value;
+    public VertexSizePicker()
+    {
+        InitializeComponent();
+    }
 
-                cboSelect.Items.Clear();
-                foreach (int size in _vertexSizeList)
-                {
-                    cboSelect.Items.Add(size);
-                }
-                cboSelect.SelectedIndex = 0;
-            }
-        }
-
-        public VertexSizePicker()
-        {
-            InitializeComponent();
-        }
-
-        private void btnOk_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
+    private void btnOk_Click(object sender, EventArgs e)
+    {
+        Close();
     }
 }

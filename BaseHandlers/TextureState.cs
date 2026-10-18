@@ -5,66 +5,65 @@ using BundleFormat;
 using BundleUtilities;
 using BurnoutImage;
 
-namespace BaseHandlers
+namespace BaseHandlers;
+
+public class TextureState
 {
-    public class TextureState
+    public Image Texture;
+
+    public TextureState()
     {
-        public Image Texture;
+        
+    }
 
-        public TextureState()
+    public static TextureState Read(BundleEntry entry)
+    {
+        TextureState result = new();
+
+        List<BundleDependency> dependencies = entry.GetDependencies();
+        foreach (BundleDependency dependency in dependencies)
         {
-            
-        }
+            ulong id = dependency.EntryID;
 
-        public static TextureState Read(BundleEntry entry)
-        {
-            TextureState result = new TextureState();
-
-            List<BundleDependency> dependencies = entry.GetDependencies();
-            foreach (BundleDependency dependency in dependencies)
+            if (TextureCache.Contains(id))
             {
-                ulong id = dependency.EntryID;
-
-                if (TextureCache.Contains(id))
+                result.Texture = TextureCache.GetTexture(id);
+            }
+            else
+            {
+                BundleEntry descEntry1 = entry.Archive.GetEntryByID(id);
+                if (descEntry1 == null)
                 {
-                    result.Texture = TextureCache.GetTexture(id);
+                    string file = BundleCache.GetFileByEntryID(id);
+                    if (!string.IsNullOrEmpty(file))
+                    {
+                        BundleArchive archive = BundleArchive.Read(file);
+                        if (archive != null)
+                            descEntry1 = archive.GetEntryByID(id);
+                    }
                 }
-                else
+
+                if (descEntry1 != null && descEntry1.Type == EntryType.Texture)
                 {
-                    BundleEntry descEntry1 = entry.Archive.GetEntryByID(id);
-                    if (descEntry1 == null)
-                    {
-                        string file = BundleCache.GetFileByEntryID(id);
-                        if (!string.IsNullOrEmpty(file))
-                        {
-                            BundleArchive archive = BundleArchive.Read(file);
-                            if (archive != null)
-                                descEntry1 = archive.GetEntryByID(id);
-                        }
-                    }
+                    result.Texture = GameImage.GetImage(descEntry1.EntryBlocks[0].Data, descEntry1.EntryBlocks[1].Data);
 
-                    if (descEntry1 != null && descEntry1.Type == EntryType.Texture)
-                    {
-                        result.Texture = GameImage.GetImage(descEntry1.EntryBlocks[0].Data, descEntry1.EntryBlocks[1].Data);
+                    if (result.Texture != null)
+                        TextureCache.AddToCache(id, result.Texture);
 
-                        if (result.Texture != null)
-                            TextureCache.AddToCache(id, result.Texture);
-
-                        break;
-                    }
+                    break;
                 }
             }
-
-            MemoryStream ms = entry.MakeStream();
-            BinaryReader2 br = new BinaryReader2(ms);
-            br.BigEndian = entry.Console;
-
-            // TODO: Read Texture State
-
-            br.Close();
-            ms.Close();
-
-            return result;
         }
+
+        MemoryStream ms = entry.MakeStream();
+        BinaryReader2 br = new(ms);
+        br.BigEndian = entry.Console;
+
+        // TODO: Read Texture State
+
+        br.Close();
+        ms.Close();
+
+        return result;
     }
 }

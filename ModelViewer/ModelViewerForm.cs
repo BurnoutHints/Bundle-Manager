@@ -3,72 +3,71 @@ using System.Windows.Forms;
 using ModelViewer.SceneData;
 using PluginAPI;
 
-namespace ModelViewer
+namespace ModelViewer;
+
+public partial class ModelViewerForm : Form, IEntryEditor
 {
-    public partial class ModelViewerForm : Form, IEntryEditor
+    public SceneRenderControl Renderer => rndMain;
+
+    public ModelViewerForm()
     {
-        public SceneRenderControl Renderer => rndMain;
+        InitializeComponent();
+    }
 
-        public ModelViewerForm()
+    public static void ShowModelViewer(Scene scene)
+    {
+        ModelViewerForm viewer = new();
+        viewer.rndMain.Scene = scene;
+        viewer.ShowDialog();
+    }
+
+    public static void ShowModelViewer(IWin32Window owner, Scene scene)
+    {
+        ModelViewerForm viewer = new();
+        viewer.rndMain.Scene = scene;
+        viewer.ShowDialog(owner);
+    }
+
+    public void ExportCollada14()
+    {
+        SaveFileDialog sfd = new();
+        sfd.Filter = "Collada Document|*.dae|All Files|*.*";
+        DialogResult result = sfd.ShowDialog(this);
+        if (result == DialogResult.OK)
         {
-            InitializeComponent();
-        }
+            if (string.IsNullOrEmpty(sfd.FileName))
+                return;
 
-        public static void ShowModelViewer(Scene scene)
+            rndMain.Scene.ExportCollada14(sfd.FileName);
+        }
+    }
+
+    public void ExportWavefrontObj()
+    {
+        SaveFileDialog sfd = new();
+        sfd.Filter = "Wavefront OBJ|*.obj|All Files|*.*";
+        DialogResult result = sfd.ShowDialog(this);
+        if (result == DialogResult.OK)
         {
-            ModelViewerForm viewer = new ModelViewerForm();
-            viewer.rndMain.Scene = scene;
-            viewer.ShowDialog();
+            if (string.IsNullOrEmpty(sfd.FileName))
+                return;
+
+            rndMain.Scene.ExportWavefrontObj(sfd.FileName);
         }
+    }
 
-        public static void ShowModelViewer(IWin32Window owner, Scene scene)
-        {
-            ModelViewerForm viewer = new ModelViewerForm();
-            viewer.rndMain.Scene = scene;
-            viewer.ShowDialog(owner);
-        }
+    private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        Close();
+    }
 
-        public void ExportCollada14()
-        {
-            SaveFileDialog sfd = new SaveFileDialog();
-            sfd.Filter = "Collada Document|*.dae|All Files|*.*";
-            DialogResult result = sfd.ShowDialog(this);
-            if (result == DialogResult.OK)
-            {
-                if (string.IsNullOrEmpty(sfd.FileName))
-                    return;
+    private void collada14ToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        ExportCollada14();
+    }
 
-                rndMain.Scene.ExportCollada14(sfd.FileName);
-            }
-        }
-
-        public void ExportWavefrontObj()
-        {
-            SaveFileDialog sfd = new SaveFileDialog();
-            sfd.Filter = "Wavefront OBJ|*.obj|All Files|*.*";
-            DialogResult result = sfd.ShowDialog(this);
-            if (result == DialogResult.OK)
-            {
-                if (string.IsNullOrEmpty(sfd.FileName))
-                    return;
-
-                rndMain.Scene.ExportWavefrontObj(sfd.FileName);
-            }
-        }
-
-        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
-        private void collada14ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ExportCollada14();
-        }
-
-        private void wavefrontOBJToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ExportWavefrontObj();
-        }
+    private void wavefrontOBJToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        ExportWavefrontObj();
     }
 }
