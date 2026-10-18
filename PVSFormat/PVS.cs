@@ -78,13 +78,19 @@ namespace PVSFormat
             BinaryReader2 br = new(entry.MakeStream());
             br.BigEndian = entry.Console;
 
+            // Decomp has 8-byte pointers so the zone fields after the pointers shift by 8
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
+            int ptrSize = x64 ? 8 : 4;
+            int zoneIdOffset = x64 ? 0x18 : 0x10;
+            long ReadPtr() => x64 ? (long)br.ReadUInt64() : br.ReadUInt32();
+
             // Get zone count
-            br.BaseStream.Position = 0x10;
+            br.BaseStream.Position = 4 * ptrSize;
             data.TotalZones = br.ReadUInt32();
 
             // Get zones
-            br.BaseStream.Position = 0x4;
-            br.BaseStream.Position = br.ReadUInt32();
+            br.BaseStream.Position = ptrSize;
+            br.BaseStream.Position = ReadPtr();
             long zonePos;
             long unsafeNeighboursPos;
             long unsafeNeighbourZonePos;
@@ -94,7 +100,7 @@ namespace PVSFormat
                 zonePos = br.BaseStream.Position;
 
                 // Get points
-                br.BaseStream.Position = br.ReadUInt32();
+                br.BaseStream.Position = ReadPtr();
                 for (int j = 0; j < 4; ++j)
                 {
                     zone.Points[j] = new(br.ReadSingle(), br.ReadSingle());
@@ -102,25 +108,25 @@ namespace PVSFormat
                 }
 
                 // Get unsafe neighbours
-                br.BaseStream.Position = zonePos + 0x1E;
+                br.BaseStream.Position = zonePos + zoneIdOffset + 0xE;
                 zone.NumUnsafeNeighbours = br.ReadInt16();
-                br.BaseStream.Position = zonePos + 8;
-                unsafeNeighboursPos = br.ReadUInt32();
+                br.BaseStream.Position = zonePos + 2 * ptrSize;
+                unsafeNeighboursPos = ReadPtr();
                 for (int j = 0; j < zone.NumUnsafeNeighbours; ++j)
                 {
                     Neighbour neighbour = new();
                     br.BaseStream.Position = unsafeNeighboursPos + 0x10 * j;
-                    unsafeNeighbourZonePos = br.ReadUInt32();
+                    unsafeNeighbourZonePos = ReadPtr();
                     neighbour.Flags = (NeighbourFlags)br.ReadUInt32();
-                    br.BaseStream.Position = unsafeNeighbourZonePos + 0x10;
+                    br.BaseStream.Position = unsafeNeighbourZonePos + zoneIdOffset;
                     neighbour.ZoneId = br.ReadUInt64();
                     zone.UnsafeNeighbours.Add(neighbour);
                 }
 
                 // Get zone ID
-                br.BaseStream.Position = zonePos + 0x10;
+                br.BaseStream.Position = zonePos + zoneIdOffset;
                 zone.ZoneId = br.ReadUInt64();
-                br.BaseStream.Position += 0x18; // Seek to next zone
+                br.BaseStream.Position = zonePos + 0x30; // Seek to next zone
 
                 data.Zones.Add(zone);
             }
@@ -138,6 +144,15 @@ namespace PVSFormat
             BinaryWriter2 bw = new BinaryWriter2(ms);
             bw.BigEndian = entry.Console;
 
+            bool x64 = entry.Platform == BundlePlatform.PCx64;
+            void WritePtr(uint ptr)
+            {
+                if (x64)
+                    bw.Write((ulong)ptr);
+                else
+                    bw.Write(ptr);
+            }
+
             // Update neighbours in case of zone deletion
             for (int i = 0; i < data.TotalZones; ++i)
             {
@@ -154,7 +169,7 @@ namespace PVSFormat
             }
 
             // Get necessary information before writing
-            uint zonesPtr = 0x20;
+            uint zonesPtr = x64 ? 0x30u : 0x20u;
             uint zonesLength = data.TotalZones * 0x30;
             uint neighboursPtr = zonesPtr + zonesLength;
             uint neighborsLength = 0;
@@ -169,10 +184,10 @@ namespace PVSFormat
                 zoneCountsPtr = (zoneCountsPtr & 0xFFFFFFF0) + 0x10;
 
             // Write ZoneList
-            bw.Write(pointsPtr);
-            bw.Write(zonesPtr);
-            bw.Write(zoneStartsPtr);
-            bw.Write(zoneCountsPtr);
+            WritePtr(pointsPtr);
+            WritePtr(zonesPtr);
+            WritePtr(zoneStartsPtr);
+            WritePtr(zoneCountsPtr);
             bw.Write(data.TotalZones);
             bw.Write(data.TotalZones * 0x4);
 
@@ -181,13 +196,14 @@ namespace PVSFormat
             for (int i = 0; i < data.TotalZones; ++i)
             {
                 bw.BaseStream.Position = zonesPtr + i * 0x30;
-                bw.Write((uint)(pointsPtr + i * 0x4 * 0x10)); // Points
-                bw.Write(0); // Safe neighbours
+                WritePtr((uint)(pointsPtr + i * 0x4 * 0x10)); // Points
+                WritePtr(0); // Safe neighbours
                 if (data.Zones[i].NumUnsafeNeighbours == 0) // Unsafe neighbours
-                    bw.Write(0);
+                    WritePtr(0);
                 else
-                    bw.Write(neighboursPtr + neighboursPosition);
-                bw.Write(0); // Padding
+                    WritePtr(neighboursPtr + neighboursPosition);
+                if (!x64)
+                    bw.Write(0); // Padding
                 bw.Write(data.Zones[i].ZoneId);
                 bw.Write((short)0); // Zone type
                 bw.Write((short)4); // Point count
@@ -205,15 +221,14 @@ namespace PVSFormat
                 }
 
                 // Write neighbours
-                bw.BaseStream.Position = neighboursPtr + neighboursPosition;
                 for (int j = 0; j < data.Zones[i].NumUnsafeNeighbours; ++j)
                 {
+                    bw.BaseStream.Position = neighboursPtr + neighboursPosition;
                     ulong zoneId = data.Zones[i].UnsafeNeighbours[j].ZoneId;
                     int neighbourZoneIndex = data.Zones.FindIndex(z => z.ZoneId == zoneId);
                     uint neighbourZonePtr = (uint)(zonesPtr + neighbourZoneIndex * 0x30);
-                    bw.Write(neighbourZonePtr);
+                    WritePtr(neighbourZonePtr);
                     bw.Write((uint)data.Zones[i].UnsafeNeighbours[j].Flags);
-                    bw.BaseStream.Position += 0x8;
                     neighboursPosition += 0x10;
                 }
             }
