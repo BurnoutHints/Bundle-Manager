@@ -29,6 +29,7 @@ public static class Program
     {
         CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
 
+        TypeDescriptor.AddAttributes(typeof(Vector2), new TypeConverterAttribute(typeof(Vector2Converter)));
         TypeDescriptor.AddAttributes(typeof(Vector4), new TypeConverterAttribute(typeof(Vector4Converter)));
 
         Application.EnableVisualStyles();
