@@ -174,6 +174,9 @@ namespace VaultFormat
 
         public byte[] Data;
 
+        // Decomp stores DepN/ExpN counts as {uint32_t pad, uint32_t count}
+        private bool _x64;
+
         public AttribSys()
         {
             Dependencies = new List<string>();
@@ -192,7 +195,7 @@ namespace VaultFormat
                     VersionHash = br.ReadUInt64();
                     break;
                 case 0x4465704E: // DepN
-                    long entryCount = br.ReadInt64();
+                    long entryCount = ReadCount(br);
                     DepHash1 = br.ReadUInt64();
                     DepHash2 = br.ReadUInt64();
                     DepNop = br.ReadInt32();
@@ -211,7 +214,7 @@ namespace VaultFormat
                     // Handled in ExpN
                     break;
                 case 0x4578704E: // ExpN
-                    long nestedChunkCount = br.ReadInt64();
+                    long nestedChunkCount = ReadCount(br);
                     for (long i = 0; i < nestedChunkCount; i++)
                     {
                         SizeAndPositionInformation chunk = new SizeAndPositionInformation();
@@ -280,6 +283,10 @@ namespace VaultFormat
 
             br.BaseStream.Position = initialPos + size;
         }
+
+        private long ReadCount(BinaryReader2 br) => _x64 ? br.ReadInt64() >> 32 : br.ReadInt64();
+
+        private void WriteCount(BinaryWriter2 bw, int count) => bw.Write(_x64 ? (ulong)count << 32 : (ulong)count);
 
         private void ReadVlt(ILoader loader, BinaryReader2 br)
         {
@@ -483,7 +490,7 @@ namespace VaultFormat
 
                 bw.Write(0x4465704E); // DepN
                 bw.Write(getSizeOfDepN());
-                bw.Write((UInt64)Dependencies.Count());
+                WriteCount(bw, Dependencies.Count);
                 bw.Write(DepHash1);
                 bw.Write(DepHash2);
                 bw.Write(DepNop);
@@ -527,7 +534,7 @@ namespace VaultFormat
 
                 bw.Write(0x4578704E); // ExpN
                 bw.Write(getSizeOfExpN());
-                bw.Write((ulong)Attributes.Select(x => x.getInfo()).Count());
+                WriteCount(bw, Attributes.Count);
                 foreach (SizeAndPositionInformation chunk in Attributes.Select(x => x.getInfo()))
                 {
                     bw.Write(chunk.Hash);
@@ -572,6 +579,7 @@ namespace VaultFormat
         public bool Read(BundleEntry entry, ILoader loader = null)
         {
             Clear();
+            _x64 = entry.Platform == BundlePlatform.PCx64;
 
             MemoryStream ms = entry.MakeStream();
             BinaryReader2 br = new BinaryReader2(ms);
