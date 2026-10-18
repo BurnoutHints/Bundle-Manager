@@ -15,13 +15,16 @@ public partial class ImportResourceForm : Form
     private const string BinaryFilter = "Binary Files|*.dat;*.bin|All files (*.*)|*.*";
     private const string PrimaryFileFilter = "Binary Files|*.dat;*.bin|" + GameImage.FileFilter + "|All files (*.*)|*.*";
 
+    // These resources are named without a type suffix, so their IDs hash the bare name
+    private static readonly EntryType[] BareNameTypes = [EntryType.AptData, EntryType.PolygonSoupList];
+
     private readonly BundleArchive _workingArchive;
 
     private string _primaryPath;
     private PrimaryResource _primary;
 
     private EntryType SelectedType => resourceTypeComboBox.SelectedItem is EntryType type ? type : EntryType.Invalid;
-    private string FullName => $"{resourceNameTextBox.Text}.{SelectedType}";
+    private string FullName => BareNameTypes.Contains(SelectedType) ? resourceNameTextBox.Text : $"{resourceNameTextBox.Text}.{SelectedType}";
 
     public ImportResourceForm(BundleArchive destination, string primaryDataPath)
     {
