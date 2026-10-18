@@ -21,7 +21,7 @@ public class FieldDescriptionAttribute(string description, float min = float.NaN
     public float Max => max;
 }
 
-// Edits a resource in property grids, one tab per page, and saves it on close if it changed
+// Edits a resource in property grids (or given controls), one tab per page, and saves it on close if it changed
 public class PropertyGridEditor : Form, IEntryEditor
 {
     // serialize gives the bytes write would save. Collection editors change lists in place without telling the grid,
@@ -42,15 +42,18 @@ public class PropertyGridEditor : Form, IEntryEditor
             return grid;
         }
 
+        // A page that's already a control is shown as it is
+        Control MakePage(object data) => data is Control control ? control : MakeGrid(data);
+
         if (pages.Length == 1)
         {
-            Controls.Add(MakeGrid(pages[0].Data));
+            Controls.Add(MakePage(pages[0].Data));
         }
         else
         {
             TabControl tabs = new() { Dock = DockStyle.Fill };
             foreach ((string name, object data) in pages)
-                tabs.TabPages.Add(new TabPage(name) { Controls = { MakeGrid(data) } });
+                tabs.TabPages.Add(new TabPage(name) { Controls = { MakePage(data) } });
             Controls.Add(tabs);
         }
         Controls.Add(warning);
