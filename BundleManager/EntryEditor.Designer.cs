@@ -120,7 +120,7 @@ namespace BundleManager
             // hexData
             // 
             hexData.AutoScroll = true;
-            hexData.BackColor = System.Drawing.Color.White;
+            hexData.BackColor = System.Drawing.SystemColors.Window;
             hexData.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             hexData.Dock = System.Windows.Forms.DockStyle.Fill;
             hexData.Font = new System.Drawing.Font("Courier New", 10F);
@@ -146,7 +146,7 @@ namespace BundleManager
             // hexExtraData
             // 
             hexExtraData.AutoScroll = true;
-            hexExtraData.BackColor = System.Drawing.Color.White;
+            hexExtraData.BackColor = System.Drawing.SystemColors.Window;
             hexExtraData.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             hexExtraData.Dock = System.Windows.Forms.DockStyle.Fill;
             hexExtraData.Font = new System.Drawing.Font("Courier New", 10F);

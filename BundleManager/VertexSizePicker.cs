@@ -19,17 +19,16 @@ public partial class VertexSizePicker : Form
         }
     }
 
-    private List<int> _vertexSizeList;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public List<int> VertexSizeList
     {
-        get { return _vertexSizeList; }
+        get;
         set
         {
-            _vertexSizeList = value;
+            field = value;
 
             cboSelect.Items.Clear();
-            foreach (int size in _vertexSizeList)
+            foreach (int size in field)
             {
                 cboSelect.Items.Add(size);
             }

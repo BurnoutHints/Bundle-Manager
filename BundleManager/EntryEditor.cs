@@ -21,44 +21,14 @@ public partial class EntryEditor : Form
     private const string DataFileFilter = "Binary Files (Bundle Manager & YAP)|*.dat|Binary Files (Legacy BM & bnd2-manager)|*.bin;*.dat|Binary Files (DGI)|*.dat";
     private const int YAPFilterIndex = 1; // Legacy and DGI keep the import table at the end of the primary data, without a yaml
 
-    private delegate BundleEntry GetEntry();
-    private delegate void SetEntry(BundleEntry entry);
-
-    private BundleEntry _entry;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public BundleEntry Entry
     {
-        get
-        {
-            if (InvokeRequired)
-            {
-                GetEntry method = () =>
-                {
-                    return _entry;
-                };
-                return (BundleEntry)Invoke(method);
-            }
-            else
-            {
-                return _entry;
-            }
-        }
+        get;
         set
         {
-            if (InvokeRequired)
-            {
-                SetEntry method = (BundleEntry entry) =>
-                {
-                    _entry = entry;
-                    Task.Run(() => UpdateDisplay());
-                };
-                Invoke(method, value);
-            }
-            else
-            {
-                _entry = value;
-                UpdateDisplay();
-            }
+            field = value;
+            UpdateDisplay();
         }
     }
 
@@ -79,6 +49,7 @@ public partial class EntryEditor : Form
         ImageVisible = false;
         ImageStatusPanelVisible = false;
         TabsVisible = false;
+        MenuVisible = false; // Until UpdateDisplay has the entry
 
         //txtData.MaxLength = int.MaxValue;
         //txtExtraData.MaxLength = int.MaxValue;
@@ -95,391 +66,47 @@ public partial class EntryEditor : Form
         }
     }
 
-    private delegate byte[] GetDataHex();
-    private delegate void SetDataHex(byte[] hex);
     private byte[] DataHex
     {
-        get
-        {
-            if (hexData.InvokeRequired)
-            {
-                GetDataHex method = () =>
-                {
-                    return hexData.HexData;
-                };
-                return (byte[])Invoke(method);
-            }
-            else
-            {
-                return hexData.HexData;
-            }
-        }
-        set
-        {
-            if (hexData.InvokeRequired)
-            {
-                SetDataHex method = (byte[] hex) =>
-                {
-                    hexData.HexData = hex;
-                };
-                Invoke(method, value);
-            }
-            else
-            {
-                hexData.HexData = value;
-            }
-        }
+        get => hexData.HexData;
+        set => hexData.HexData = value;
     }
 
     private byte[] ExtraDataHex
     {
-        get
-        {
-            if (hexExtraData.InvokeRequired)
-            {
-                GetDataHex method = () =>
-                {
-                    return hexExtraData.HexData;
-                };
-                return (byte[])Invoke(method);
-            }
-            else
-            {
-                return hexExtraData.HexData;
-            }
-        }
-        set
-        {
-            if (hexExtraData.InvokeRequired)
-            {
-                SetDataHex method = (byte[] hex) =>
-                {
-                    hexExtraData.HexData = hex;
-                };
-                Invoke(method, value);
-            }
-            else
-            {
-                hexExtraData.HexData = value;
-            }
-        }
-    }
-
-    private delegate Image GetImage();
-    private delegate void SetImage(Image img);
-    private Image Image
-    {
-        get
-        {
-            if (pboImage.InvokeRequired)
-            {
-                GetImage method = () =>
-                {
-                    return pboImage.Image;
-                };
-                return (Image)Invoke(method);
-            }
-            else
-            {
-                return pboImage.Image;
-            }
-        }
-        set
-        {
-            if (pboImage.InvokeRequired)
-            {
-                Invoke(new SetImage(ReplaceImage), value);
-            }
-            else
-            {
-                ReplaceImage(value);
-            }
-        }
+        get => hexExtraData.HexData;
+        set => hexExtraData.HexData = value;
     }
 
     // The previous image is this editor's own decode, so nothing else holds it
-    private void ReplaceImage(Image image)
+    private Image Image
     {
-        Image old = pboImage.Image;
-        pboImage.Image = image;
-        if (old != image)
-            old?.Dispose();
-    }
-
-    private delegate bool GetBool();
-    private delegate void SetBool(bool visible);
-    private delegate string GetString();
-    private delegate void SetString(string text);
-    private delegate TabControl.TabPageCollection GetTabPages();
-    private delegate TabControl GetTabControl();
-    private delegate TabPage GetTabPage();
-    private bool ImageVisible
-    {
-        get
-        {
-            if (pboImage.InvokeRequired)
-            {
-                GetBool method = () =>
-                {
-                    return pboImage.Visible;
-                };
-                return (bool)Invoke(method);
-            }
-            else
-            {
-                return pboImage.Visible;
-            }
-        }
+        get => pboImage.Image;
         set
         {
-            if (pboImage.InvokeRequired)
-            {
-                SetBool method = (bool visible) =>
-                {
-                    pboImage.Visible = visible;
-                };
-                Invoke(method, value);
-            }
-            else
-            {
-                pboImage.Visible = value;
-            }
+            Image old = pboImage.Image;
+            pboImage.Image = value;
+            if (old != value)
+                old?.Dispose();
         }
     }
 
-    private delegate void SetTitleText(string val);
-    private string Title
-    {
-        set
-        {
-            if (InvokeRequired)
-            {
-                SetTitleText method = (string val) =>
-                {
-                    Text = val;
-                };
-                Invoke(method, value);
-            }
-            else
-            {
-                Text = value;
-            }
-        }
-    }
+    private bool ImageVisible { set => pboImage.Visible = value; }
+    private bool TabsVisible { set => tabList.Visible = value; }
+    private bool ImageStatusPanelVisible { set => imageStatusLabel.Visible = value; }
+    private bool ImageMenuVisible { set => imageToolStripMenuItem.Visible = value; }
+    private bool BinaryMenuVisible { set => binaryToolStripMenuItem.Visible = value; }
+    private bool MenuVisible { set => mnuBar.Visible = value; }
 
-    private bool TabsVisible
-    {
-        get
-        {
-            if (tabList.InvokeRequired)
-            {
-                GetBool method = () =>
-                {
-                    return tabList.Visible;
-                };
-                return (bool)Invoke(method);
-            }
-            else
-            {
-                return tabList.Visible;
-            }
-        }
-        set
-        {
-            if (tabList.InvokeRequired)
-            {
-                SetBool method = (bool visible) =>
-                {
-                    tabList.Visible = visible;
-                };
-                Invoke(method, value);
-            }
-            else
-            {
-                tabList.Visible = value;
-            }
-        }
-    }
-
-    private bool ImageStatusPanelVisible
-    {
-        get
-        {
-            if (mnuBar.InvokeRequired)
-            {
-                GetBool method = () =>
-                {
-                    return imageStatusLabel.Visible;
-                };
-                return (bool)Invoke(method);
-            }
-            else
-            {
-                return imageStatusLabel.Visible;
-            }
-        }
-        set
-        {
-            if (mnuBar.InvokeRequired)
-            {
-                SetBool method = (bool enabled) =>
-                {
-                    imageStatusLabel.Visible = enabled;
-                };
-                Invoke(method, value);
-            }
-            else
-            {
-                imageStatusLabel.Visible = value;
-            }
-        }
-    }
-
-    private bool ImageMenuVisible
-    {
-        get
-        {
-            if (mnuBar.InvokeRequired)
-            {
-                GetBool method = () =>
-                {
-                    return imageToolStripMenuItem.Visible;
-                };
-                return (bool)Invoke(method);
-            }
-            else
-            {
-                return imageToolStripMenuItem.Visible;
-            }
-        }
-        set
-        {
-            if (mnuBar.InvokeRequired)
-            {
-                SetBool method = (bool enabled) =>
-                {
-                    imageToolStripMenuItem.Visible = enabled;
-                };
-                Invoke(method, value);
-            }
-            else
-            {
-                imageToolStripMenuItem.Visible = value;
-            }
-        }
-    }
-
-    private bool BinaryMenuVisible
-    {
-        get
-        {
-            if (mnuBar.InvokeRequired)
-            {
-                GetBool method = () =>
-                {
-                    return binaryToolStripMenuItem.Visible;
-                };
-                return (bool)Invoke(method);
-            }
-            else
-            {
-                return mnuBar.Visible;
-            }
-        }
-        set
-        {
-            if (mnuBar.InvokeRequired)
-            {
-                SetBool method = (bool visible) =>
-                {
-                    binaryToolStripMenuItem.Visible = visible;
-                };
-                Invoke(method, value);
-            }
-            else
-            {
-                mnuBar.Visible = value;
-            }
-        }
-    }
-
-    private bool MenuVisible
-    {
-        get
-        {
-            if (mnuBar.InvokeRequired)
-            {
-                GetBool method = () =>
-                {
-                    return mnuBar.Visible;
-                };
-                return (bool)Invoke(method);
-            }
-            else
-            {
-                return mnuBar.Visible;
-            }
-        }
-        set
-        {
-            if (mnuBar.InvokeRequired)
-            {
-                SetBool method = (bool visible) =>
-                {
-                    mnuBar.Visible = visible;
-                };
-                Invoke(method, value);
-            }
-            else
-            {
-                mnuBar.Visible = value;
-            }
-        }
-    }
-
-    private string InfoText
-    {
-        get
-        {
-            if (mnuBar.InvokeRequired)
-            {
-                GetString method = () =>
-                {
-                    return txtInfo.Text;
-                };
-                return (string)Invoke(method);
-            }
-            else
-            {
-                return txtInfo.Text;
-            }
-        }
-        set
-        {
-            if (mnuBar.InvokeRequired)
-            {
-                SetString method = (string text) =>
-                {
-                    txtInfo.Text = text;
-                };
-                Invoke(method, value);
-            }
-            else
-            {
-                txtInfo.Text = value;
-            }
-        }
-    }
-
-    private string GetInfo()
+    private static string GetInfo(BundleEntry entry)
     {
         StringBuilder sb = new();
 
-        sb.AppendLine("ID: 0x" + _entry.ID.ToString("X8"));
-        sb.AppendLine("Type: " + _entry.Type);
-        sb.AppendLine("Has Header: " + _entry.HasHeader);
-        sb.AppendLine("Has Body: " + _entry.HasBody);
-        List<BundleDependency> dependencies = _entry.GetDependencies();
+        sb.AppendLine("ID: 0x" + entry.ID.ToString("X8"));
+        sb.AppendLine("Type: " + entry.Type);
+        sb.AppendLine("Has Header: " + entry.HasHeader);
+        sb.AppendLine("Has Body: " + entry.HasBody);
+        List<BundleDependency> dependencies = entry.GetDependencies();
         if (dependencies.Count > 0)
         {
             sb.AppendLine("Dependencies[" + dependencies.Count + "] = {");
@@ -498,44 +125,52 @@ public partial class EntryEditor : Form
         return sb.ToString();
     }
 
-    private void UpdateDisplay()
+    // Counts calls, so an older display that finishes decoding late doesn't replace a newer one
+    private int _displayVersion;
+
+    // A texture decodes, and the info resolves its dependencies, off the UI thread
+    private async void UpdateDisplay()
     {
-        Title = "Edit Entry: " + _entry.Index.ToString("d3");
+        int version = ++_displayVersion;
+        BundleEntry entry = Entry;
+        bool texture = !ForceHex && entry.Type == EntryType.Texture;
+        Text = "Edit Entry: " + entry.Index.ToString("d3");
 
-        if (ForceHex)
+        (Image image, ImageHeader header, string info) = await Task.Run(() =>
         {
-            ImageVisible = false;
+            Image decoded = texture ? GameImage.GetImage(entry.EntryBlocks[0].Data, entry.EntryBlocks[1].Data, entry.Platform) : null;
+            return (decoded, decoded != null ? GameImage.GetImageHeader(entry.EntryBlocks[0].Data, entry.Platform) : null, GetInfo(entry));
+        });
+        if (IsDisposed || version != _displayVersion)
+        {
+            image?.Dispose();
+            return;
         }
-        else if (_entry.Type == EntryType.Texture)
+
+        bool showImage = image != null;
+        Image = image;
+        ImageVisible = showImage;
+        TabsVisible = !showImage;
+        ImageMenuVisible = showImage;
+        ImageStatusPanelVisible = showImage;
+        BinaryMenuVisible = !showImage;
+
+        if (showImage)
         {
-            Image = GameImage.GetImage(_entry.EntryBlocks[0].Data, _entry.EntryBlocks[1].Data, _entry.Platform);
-
-            ImageVisible = Image != null;
-
-        }
-        TabsVisible = !ImageVisible;
-        ImageMenuVisible = ImageVisible;
-        ImageStatusPanelVisible = ImageVisible;
-        BinaryMenuVisible = TabsVisible;
-
-        if (ImageStatusPanelVisible)
-        {
-            ImageHeader header = GameImage.GetImageHeader(_entry.EntryBlocks[0].Data, _entry.Platform);
-            imageStatusLabel.Text = 
+            imageStatusLabel.Text =
                 $"Platform: {header.Platform}    " +
                 $"Size: {header.Width}x{header.Height}    " +
                 $"Format: {header.CompressionType}";
         }
-
-        if (TabsVisible)
+        else
         {
-            DataHex = _entry.EntryBlocks[0].Data;
-            ExtraDataHex = _entry.EntryBlocks[_entry.SecondaryBlock].Data;
+            DataHex = entry.EntryBlocks[0].Data;
+            ExtraDataHex = entry.EntryBlocks[entry.SecondaryBlock].Data;
         }
 
         MenuVisible = true;
 
-        InfoText = GetInfo();
+        txtInfo.Text = info;
     }
 
     private void exportToolStripMenuItem_Click(object sender, EventArgs e)
@@ -565,11 +200,11 @@ public partial class EntryEditor : Form
             return;
 
         string path = ofd.FileName;
-        byte[] oldHeader = _entry.EntryBlocks[0].Data;
+        byte[] oldHeader = Entry.EntryBlocks[0].Data;
         ImageInfo info;
         try
         {
-            ImageHeader header = GameImage.GetImageHeader(oldHeader, _entry.Platform);
+            ImageHeader header = GameImage.GetImageHeader(oldHeader, Entry.Platform);
             CompressionType? compression = null; // DDS files keep their own format
             if (!string.Equals(Path.GetExtension(path), ".dds", StringComparison.OrdinalIgnoreCase)
                 && (compression = ImageImportDialog.AskCompression(this, path)) == null)
@@ -583,15 +218,15 @@ public partial class EntryEditor : Form
             return;
         }
 
-        _entry.Dirty = true;
-        _entry.EntryBlocks[0].Data = info.Header;
-        _entry.EntryBlocks[1].Data = info.Data;
+        Entry.Dirty = true;
+        Entry.EntryBlocks[0].Data = info.Header;
+        Entry.EntryBlocks[1].Data = info.Data;
 
         ImageVisible = false;
         TabsVisible = false;
         ImageMenuVisible = false;
         BinaryMenuVisible = false;
-        Task.Run(() => UpdateDisplay());
+        UpdateDisplay();
     }
 
     private void importDataToolStripMenuItem_Click(object sender, EventArgs e)
@@ -634,7 +269,7 @@ public partial class EntryEditor : Form
         Entry.DependenciesListOffset = imports.Count > 0 ? data.Length - imports.Count * Dependency.Size : 0;
         Entry.Dirty = true;
 
-        Task.Run(() => UpdateDisplay());
+        UpdateDisplay();
     }
 
     private List<Dependency> AskImports(List<Dependency> found, List<Dependency> current)
@@ -693,15 +328,15 @@ public partial class EntryEditor : Form
 
     private string[] ExportNames(bool secondary)
     {
-        string id = _entry.ID.ToString("X8");
-        byte[] bytes = BitConverter.GetBytes((uint)_entry.ID);
-        if (_entry.Console)
+        string id = Entry.ID.ToString("X8");
+        byte[] bytes = BitConverter.GetBytes((uint)Entry.ID);
+        if (Entry.Console)
             Array.Reverse(bytes);
         string dgi = string.Join("_", bytes.Select(b => b.ToString("X2")));
 
         if (secondary)
         {
-            string dgiSuffix = _entry.Type switch
+            string dgiSuffix = Entry.Type switch
             {
                 EntryType.Texture => "_texture",
                 EntryType.Renderable => "_model",
@@ -710,7 +345,7 @@ public partial class EntryEditor : Form
             return [$"{id}_secondary", $"{id}_secondary", dgi + dgiSuffix];
         }
 
-        bool hasSecondary = _entry.HasSection(1) || _entry.HasSection(2);
+        bool hasSecondary = Entry.HasSection(1) || Entry.HasSection(2);
         return [hasSecondary ? $"{id}_primary" : id, id, dgi];
     }
 
@@ -725,7 +360,7 @@ public partial class EntryEditor : Form
     private void importExtraToolStripMenuItem_Click(object sender, EventArgs e)
     {
         OpenFileDialog ofd = new();
-        ofd.FileName = $"{_entry.ID.ToString("X8")}_secondary";
+        ofd.FileName = $"{Entry.ID.ToString("X8")}_secondary";
         ofd.DefaultExt = "dat";
         ofd.Filter = DataFileFilter;
         ofd.FileOk += Ofd_FileOk2;
@@ -749,7 +384,7 @@ public partial class EntryEditor : Form
         Entry.EntryBlocks[Entry.SecondaryBlock].Data = data;
         Entry.Dirty = true;
 
-        Task.Run(() => UpdateDisplay());
+        UpdateDisplay();
     }
 
     private void exportExtraToolStripMenuItem_Click(object sender, EventArgs e)
@@ -768,9 +403,9 @@ public partial class EntryEditor : Form
         if (value == null)
             return;
         ulong result = Crc32.HashCrc32B(value.ToLower());
-        _entry.Dirty = true;
+        Entry.Dirty = true;
         Entry.ID = result;
-        Task.Run(() => UpdateDisplay());
+        UpdateDisplay();
         MessageBox.Show(this, "The new hashed value is: " + result.ToString("X8"), "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
@@ -780,7 +415,7 @@ public partial class EntryEditor : Form
         if (value == null)
             return;
         ulong result = Utilities.CalcLookup8(value);
-        Task.Run(() => UpdateDisplay());
+        UpdateDisplay();
         MessageBox.Show(this, "The lookup 8 hashed value is: " + result.ToString("X16"), "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 

@@ -7,7 +7,7 @@ using PluginAPI;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace BaseHandlers;
@@ -17,15 +17,14 @@ public partial class InstanceListEditor : Form, IEntryEditor
     public delegate void OnChanged();
     public event OnChanged Changed;
 
-    private InstanceList _instanceList;
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public InstanceList InstanceList
     {
-        get => _instanceList;
+        get;
         set
         {
-            _instanceList = value;
+            field = value;
             UpdateDisplay();
         }
     }
@@ -129,7 +128,7 @@ public partial class InstanceListEditor : Form, IEntryEditor
         return name;
     }
 
-    private void ViewSelectedModel()
+    private async Task ViewSelectedModel()
     {
         if (lstMain.SelectedIndices.Count <= 0)
             return;
@@ -137,60 +136,32 @@ public partial class InstanceListEditor : Form, IEntryEditor
         int selectedIndex = lstMain.SelectedIndices[0];
         ModelInstance model = InstanceList.Instances[selectedIndex];
 
-        LoadingDialog loader = new();
-        BundleEntry renderableEntry = null;
-        Renderable renderable = null;
-
-        Thread loadInstanceThread = null;
-        bool failure = false;
-
-        loader.Done += (cancelled, value) =>
+        (Renderable renderable, BundleEntry renderableEntry) loaded;
+        try
         {
-            if (cancelled)
-                loadInstanceThread?.Interrupt();
-            else
+            loaded = await LoadingDialog.RunAsync(this, "Loading model", (loader, _) =>
             {
-                loader.Hide();
-                if (!failure)
-                {
-                    IEntryEditor editor = renderable.GetEditor(renderableEntry);
-                    editor.ShowDialog(this);
-                }
-            }
-        };
-
-        loadInstanceThread = new Thread(() =>
-        {
-            try
-            {
-                BundleEntry modelEntry = InstanceList.Entry.Archive.GetEntryByID(model.ModelEntryID);
+                BundleEntry modelEntry = InstanceList.Entry.Archive.GetEntryByID(model.ModelEntryID)
+                    ?? BundleCache.GetEntryByID(model.ModelEntryID);
                 if (modelEntry == null)
-                {
-                    string file = BundleCache.GetFileByEntryID(model.ModelEntryID);
-                    if (!string.IsNullOrEmpty(file))
-                    {
-                        BundleArchive archive = BundleArchive.Read(file);
-                        modelEntry = archive.GetEntryByID(model.ModelEntryID);
-                    }
-                }
+                    return default;
 
-                if (modelEntry != null)
-                {
-                    renderableEntry = modelEntry.GetDependencies()[0].Entry;
-                    renderable = new Renderable();
-                    renderable.Read(renderableEntry, loader);
-                }
-                if (renderable == null)
-                    failure = true;
-            }
-            catch (Exception)
-            {
-                failure = true;
-            }
-            loader.IsDone = true;
-        });
-        loadInstanceThread.Start();
-        loader.ShowDialog(this);
+                BundleEntry renderableEntry = modelEntry.GetDependencies()[0].Entry;
+                Renderable renderable = new();
+                renderable.Read(renderableEntry, loader);
+                return (renderable, renderableEntry);
+            });
+        }
+        catch (Exception) // Including cancelling
+        {
+            return;
+        }
+        if (loaded.renderable == null)
+            return;
+
+        IEntryEditor editor = loaded.renderable.GetEditor(loaded.renderableEntry);
+        editor.ShowDialog(this);
+        (editor as IDisposable)?.Dispose();
     }
 
     private void InstanceListEditor_Load(object sender, EventArgs e)
@@ -198,42 +169,19 @@ public partial class InstanceListEditor : Form, IEntryEditor
         UpdateColumnWidth();
     }
 
-    private void RenderToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void RenderToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        LoadingDialog loader = new();
-        Scene scene = null;
-
-        Thread loadInstanceThread = null;
-        bool failure = false;
-
-        loader.Done += (cancelled, value) =>
+        Scene scene;
+        try
         {
-            if (cancelled)
-                loadInstanceThread?.Interrupt();
-            else
-            {
-                loader.Hide();
-                if (!failure)
-                    ModelViewerForm.ShowModelViewer(this, scene);
-            }
-        };
-
-        loadInstanceThread = new Thread(() =>
+            scene = await LoadingDialog.RunAsync(this, "Loading instances", (loader, _) => InstanceList.MakeScene(loader));
+        }
+        catch (Exception) // Including cancelling
         {
-            try
-            {
-                scene = InstanceList.MakeScene(loader);
-                if (scene == null)
-                    failure = true;
-            }
-            catch (Exception)
-            {
-                failure = true;
-            }
-            loader.IsDone = true;
-        });
-        loadInstanceThread.Start();
-        loader.ShowDialog(this);
+            return;
+        }
+        if (scene != null)
+            ModelViewerForm.ShowModelViewer(this, scene);
     }
 
     private void DebugToolStripMenuItem_Click(object sender, EventArgs e)
@@ -246,8 +194,8 @@ public partial class InstanceListEditor : Form, IEntryEditor
         UpdateColumnWidth();
     }
 
-    private void LstMain_MouseDoubleClick(object sender, MouseEventArgs e)
+    private async void LstMain_MouseDoubleClick(object sender, MouseEventArgs e)
     {
-        ViewSelectedModel();
+        await ViewSelectedModel();
     }
 }

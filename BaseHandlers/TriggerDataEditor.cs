@@ -11,16 +11,15 @@ public partial class TriggerDataEditor : Form, IEntryEditor
 {
     public event Notify EditEvent;
 
-    private TriggerData _trigger;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public TriggerData trigger
     {
-        get => _trigger;
+        get;
         set
         {
-            _trigger = value;
+            field = value;
             Console.WriteLine(value.muSize);
-            Console.WriteLine(_trigger.muSize);
+            Console.WriteLine(field.muSize);
             Console.WriteLine(trigger.muSize);
             
             UpdateComponent();

@@ -9,14 +9,13 @@ namespace PVSFormat;
 
 public class PVSEditControl : Control
 {
-    private PVS _pvsFile;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public PVS PVS
     {
-        get => _pvsFile;
+        get;
         set
         {
-            _pvsFile = value;
+            field = value;
             OnPVSUpdated();
         }
     }

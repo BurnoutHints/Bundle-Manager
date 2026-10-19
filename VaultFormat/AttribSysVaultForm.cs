@@ -26,14 +26,13 @@ public partial class AttribSysVaultForm : Form, IEntryEditor
    
     public event Notify EditEvent;
 
-    private AttribSys _attribSys;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public AttribSys AttribSys
     {
-        get => _attribSys;
+        get;
         set
         {
-            _attribSys = value;
+            field = value;
             UpdateDisplay();
         }
     }

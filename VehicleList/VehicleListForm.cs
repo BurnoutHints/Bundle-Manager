@@ -15,16 +15,15 @@ public partial class VehicleListForm : Form, IEntryEditor
     public delegate void OnEdit();
     public event OnEdit Edit;
 
-    private VehicleListData _list;
     private System.Windows.Forms.Timer _searchTimer;
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public VehicleListData List
     {
-        get => _list;
+        get;
         set
         {
-            _list = value;
+            field = value;
             UpdateDisplay();
         }
     }

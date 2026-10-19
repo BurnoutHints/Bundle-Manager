@@ -9,14 +9,13 @@ public partial class LuaListEditor : Form, IEntryEditor
 {
     public event Notify EditEvent;
 
-    private LuaList _luaList;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public LuaList LuaList
     {
-        get => _luaList;
+        get;
         set
         {
-            _luaList = value;
+            field = value;
             UpdateComponent();
         }
     }

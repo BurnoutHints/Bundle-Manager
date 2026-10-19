@@ -16,14 +16,13 @@ public partial class MainForm : Form
 {
     #region Variables and Properties
 
-    private bool _subForm;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public bool SubForm
     {
-        get { return _subForm; }
+        get;
         set
         {
-            _subForm = value;
+            field = value;
 
             tsbNew.Visible = !value;
             toolStripSeparator1.Visible = !value;
@@ -42,96 +41,16 @@ public partial class MainForm : Form
         }
     }
 
-    private BundleArchive _archive;
+    // Only touched on the UI thread: loading and saving hand their work to LoadingDialog.RunAsync
+    private BundleArchive CurrentArchive { get; set; }
 
-    private delegate BundleArchive GetArchive();
-
-    private delegate void SetArchive(BundleArchive archive);
-
-    private BundleArchive CurrentArchive
-    {
-        get
-        {
-            if (InvokeRequired)
-            {
-                GetArchive method = () =>
-                {
-                    return _archive;
-                };
-                return (BundleArchive)Invoke(method);
-            }
-            else
-            {
-                return _archive;
-            }
-        }
-        set
-        {
-            if (InvokeRequired)
-            {
-                SetArchive method = (BundleArchive archive) =>
-                {
-                    _archive = archive;
-                };
-                Invoke(method, value);
-            }
-            else
-            {
-                _archive = value;
-            }
-        }
-    }
-
-    private string _currentFileName;
-
-    private delegate string GetString();
-
-    private delegate void SetString(string archive);
-
-    private string CurrentFileName
-    {
-        get
-        {
-            if (InvokeRequired)
-            {
-                GetString method = () =>
-                {
-                    return _currentFileName;
-                };
-                return (string)Invoke(method);
-            }
-            else
-            {
-                return _currentFileName;
-            }
-        }
-        set
-        {
-            if (InvokeRequired)
-            {
-                SetString method = (string filename) =>
-                {
-                    _currentFileName = filename;
-                };
-                Invoke(method, value);
-            }
-            else
-            {
-                _currentFileName = value;
-            }
-        }
-    }
-
-    private delegate bool GetBool();
-
-    private delegate void SetBool(bool value);
+    private string CurrentFileName { get; set; }
 
     public bool _console => CurrentArchive.Console;
 
     public bool ForceOnlySpecificEntry = false;
 
-    private Thread _openSaveThread;
-    private Thread _saveThread;
+    private readonly Lock _saveLock = new();
 
     private const int NameColumn = 1;
     private readonly Font _inferredNameFont;
@@ -186,7 +105,11 @@ public partial class MainForm : Form
             ListViewItem item = new(values) { UseItemStyleForSubItems = false };
             Color color = BundleEntry.GetColor(entry.Type);
             foreach (ListViewItem.ListViewSubItem subItem in item.SubItems)
+            {
                 subItem.BackColor = color;
+                if (color != Color.Transparent)
+                    subItem.ForeColor = Color.Black; // Readable on the light type colours in dark mode too
+            }
             ShowName(item, entry);
             lstEntries.Items.Add(item);
         }
@@ -240,9 +163,9 @@ public partial class MainForm : Form
         }
     }
 
-    private void DoNew()
+    private async Task DoNew()
     {
-        if (!CheckSave())
+        if (!await CheckSave())
             return;
         //CurrentArchive = new BundleArchive();
         //UpdateDisplay();
@@ -252,9 +175,9 @@ public partial class MainForm : Form
             "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
     }
 
-    private void Open()
+    private async Task Open()
     {
-        if (!CheckSave())
+        if (!await CheckSave())
             return;
         OpenFileDialog ofd = new();
         ofd.Filter = "Supported Files|*.BUNDLE;*.BIN;*.BNDL;*.DAT;*.TEX|All Files|*.*";
@@ -264,67 +187,35 @@ public partial class MainForm : Form
             if (!Utilities.FileExists(ofd.FileName))
                 return;
 
-            Open(ofd.FileName);
+            await Open(ofd.FileName);
         }
     }
 
-    public void Open(string path)
+    public async Task Open(string path)
     {
-        LoadingDialog loader = new();
-        loader.Status = "Loading: " + path;
-        loader.Done += Loader_OpenDone;
-        _openSaveThread = new Thread(() => DoOpenBundle(loader, path));
-        _openSaveThread.Start();
-        loader.ShowDialog(this);
-    }
-
-    private void Loader_OpenDone(bool cancelled, object value)
-    {
-        if (cancelled)
+        try
         {
-            _openSaveThread?.Interrupt();
+            CurrentArchive = await LoadingDialog.RunAsync(this, "Loading: " + path, (_, _) => BundleArchive.Open(path));
+            CurrentFileName = path;
+            Text = "Bundle Manager - " + CurrentFileName;
+        }
+        catch (OperationCanceledException)
+        {
             CurrentArchive = null;
             CurrentFileName = null;
         }
-        else
+        catch (Exception ex)
         {
-            object[] values = (object[])value;
-            CurrentArchive = (BundleArchive)values[0];
-
-            if (CurrentArchive == null)
-            {
-                MessageBox.Show(this, $"There was an error opening {values[1]}:\n{values[2]}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                CurrentFileName = null;
-                Text = "Bundle Manager";
-            }
-            else
-            {
-                CurrentFileName = (string)values[1];
-                Text = "Bundle Manager - " + CurrentFileName;
-            }
+            MessageBox.Show(this, $"There was an error opening {path}:\n{ex.Message}", "Error",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            CurrentArchive = null;
+            CurrentFileName = null;
+            Text = "Bundle Manager";
         }
         UpdateDisplay();
     }
 
-    public void DoOpenBundle(LoadingDialog loader, string path)
-    {
-        BundleArchive archive = null;
-        string error = null;
-        try
-        {
-            archive = BundleArchive.Open(path);
-        }
-        catch (Exception ex)
-        {
-            error = ex.Message;
-        }
-
-        loader.Value = new object[] { archive, path, error };
-        loader.IsDone = true;
-    }
-
-    public bool Save()
+    public async Task<bool> Save()
     {
         if (CurrentArchive == null)
         {
@@ -333,13 +224,13 @@ public partial class MainForm : Form
         }
         if (string.IsNullOrEmpty(CurrentFileName))
         {
-            return SaveAs();
+            return await SaveAs();
         }
 
-        return SaveTo(CurrentFileName);
+        return await SaveTo(CurrentFileName);
     }
 
-    public bool SaveAs()
+    public async Task<bool> SaveAs()
     {
         if (CurrentArchive == null)
         {
@@ -351,7 +242,7 @@ public partial class MainForm : Form
         DialogResult result = sfd.ShowDialog(this);
         if (result == DialogResult.OK)
         {
-            if (!Utilities.IsValidPath(sfd.FileName) || !SaveTo(sfd.FileName))
+            if (!Utilities.IsValidPath(sfd.FileName) || !await SaveTo(sfd.FileName))
                 return false;
 
             CurrentFileName = sfd.FileName;
@@ -363,43 +254,25 @@ public partial class MainForm : Form
     }
 
     // True only once the bundle is written. Cancelling, or an error, leaves the file as it was
-    private bool SaveTo(string path)
+    private async Task<bool> SaveTo(string path)
     {
-        _saveThread?.Join(); // A cancelled save may still be stopping. It never waits on the UI thread, so this can't deadlock
-
         BundleArchive archive = CurrentArchive;
-        CancellationTokenSource cancel = new();
-        Exception error = null;
-        bool cancelled = false;
-
-        LoadingDialog loader = new();
-        loader.Status = "Saving: " + path;
-        loader.Done += (wasCancelled, _) =>
+        try
         {
-            cancelled = wasCancelled;
-            if (wasCancelled)
-                cancel.Cancel();
-        };
-        _saveThread = new Thread(() =>
+            await LoadingDialog.RunAsync(this, "Saving: " + path, (_, cancel) =>
+            {
+                lock (_saveLock)
+                    archive.Write(path, cancel);
+                return true;
+            });
+        }
+        catch (OperationCanceledException)
         {
-            try
-            {
-                archive.Write(path, cancel.Token);
-            }
-            catch (Exception ex)
-            {
-                error = ex;
-            }
-            loader.IsDone = true;
-        });
-        _saveThread.Start();
-        loader.ShowDialog(this);
-
-        if (cancelled)
             return false;
-        if (error != null)
+        }
+        catch (Exception ex)
         {
-            MessageBox.Show(this, $"{path} wasn't saved, and is unchanged:\n{error.Message}", "Error",
+            MessageBox.Show(this, $"{path} wasn't saved, and is unchanged:\n{ex.Message}", "Error",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
         }
@@ -413,21 +286,9 @@ public partial class MainForm : Form
         Application.Exit();
     }
 
-    private delegate BundleEntry GetEntryDelegate(int index);
-    public BundleEntry GetEntry(int index)
-    {
-        if (InvokeRequired)
-        {
-            GetEntryDelegate del = GetEntry;
-            return (BundleEntry)Invoke(del, index);
-        }
-        else
-        {
-            return CurrentArchive.Entries[index];
-        }
-    }
+    public BundleEntry GetEntry(int index) => CurrentArchive.Entries[index];
 
-    public void EditSelectedEntry(bool forceHex = false, bool forceDebug = false)
+    public async Task EditSelectedEntry(bool forceHex = false, bool forceDebug = false)
     {
         int count = lstEntries.SelectedIndices.Count;
         if (count <= 0)
@@ -436,123 +297,88 @@ public partial class MainForm : Form
         if (!int.TryParse(lstEntries.SelectedItems[0].Text, out int index))
             return;
 
-        EditEntry(index, forceHex, forceDebug);
+        await EditEntry(index, forceHex, forceDebug);
     }
 
-    public void EditEntry(int index, bool forceHex = false, bool forceDebug = false)
+    public async Task EditEntry(int index, bool forceHex = false, bool forceDebug = false)
     {
+        if (CurrentArchive == null || index < 0 || index >= CurrentArchive.Entries.Count) // From the command line
+            return;
         BundleEntry entry = GetEntry(index);
 
-        if (EntryTypeRegistry.IsRegistered(entry.Type) && !forceHex)
+        if (!EntryTypeRegistry.IsRegistered(entry.Type) || forceHex)
         {
-            IEntryData data = EntryTypeRegistry.GetHandler(entry.Type);
-
-            TextureCache.ResetCache();
-            LoadingDialog loader = new();
-            loader.Status = "Loading: " + entry.ID.ToString("X8");
-
-            Thread loadInstanceThread = null;
-            bool failure = false;
-
-            loader.Done += (cancelled, value) =>
-            {
-                if (cancelled)
-                    loadInstanceThread?.Interrupt();
-                else
-                {
-                    if (failure)
-                    {
-                        MessageBox.Show(this, "Failed to load Entry", "Error", MessageBoxButtons.OK,
-                            MessageBoxIcon.Error);
-                    }
-                    else
-                    {
-                        loader.Hide();
-                        if (forceDebug)
-                        {
-                            DebugUtil.ShowDebug(this, data);
-                        }
-                        IEntryEditor editor = data.GetEditor(entry);
-                        if (editor != null)
-                        {
-                            editor.ShowDialog(this);
-                            (editor as IDisposable)?.Dispose(); // Closing a dialog doesn't dispose it, and model viewers hold their scene and a running timer
-                        }
-                        else
-                            DebugUtil.ShowDebug(this, data);
-                        if (ForceOnlySpecificEntry)
-                            Environment.Exit(0);
-                    }
-                }
-                TextureCache.ResetCache();
-                BundleCache.ClearArchives();
-            };
-
-            loadInstanceThread = new Thread(() =>
-            {
-                try
-                {
-                    try
-                    {
-                        failure = !data.Read(entry, loader);
-                    }
-                    catch (ReadFailedError ex)
-                    {
-
-                        Console.Out.WriteLine(ex.ToString());
-                        MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        failure = true;
-
-                        throw;
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.Out.WriteLine(e.ToString());
-                    MessageBox.Show("Failed to load Entry", "Error", MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                    failure = true;
-                }
-                loader.IsDone = true;
-            });
-            loadInstanceThread.Start();
-            loader.ShowDialog(this);
-        }
-        else
-        {
-            using EntryEditor editor = new();
-            editor.ForceHex = forceHex;
-            Task.Run(() => openEditor(editor, index));
+            using EntryEditor editor = new() { ForceHex = forceHex };
+            editor.Entry = entry;
             editor.ShowDialog(this);
+            return;
         }
-    }
 
+        IEntryData data = EntryTypeRegistry.GetHandler(entry.Type);
+        TextureCache.ResetCache();
+        try
+        {
+            bool loaded;
+            try
+            {
+                loaded = await LoadingDialog.RunAsync(this, "Loading: " + entry.ID.ToString("X8"), (loader, _) => data.Read(entry, loader));
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                Console.Out.WriteLine(ex.ToString());
+                MessageBox.Show(this, ex is ReadFailedError ? ex.Message : "Failed to load Entry", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (!loaded)
+            {
+                MessageBox.Show(this, "Failed to load Entry", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
-    public void openEditor(EntryEditor editor, int index)
-    {
-        editor.Entry = GetEntry(index);
+            if (forceDebug)
+                DebugUtil.ShowDebug(this, data);
+            IEntryEditor editor = data.GetEditor(entry);
+            if (editor != null)
+            {
+                editor.ShowDialog(this);
+                (editor as IDisposable)?.Dispose(); // Closing a dialog doesn't dispose it, and model viewers hold their scene and a running timer
+            }
+            else
+                DebugUtil.ShowDebug(this, data);
+            if (ForceOnlySpecificEntry)
+                Environment.Exit(0);
+        }
+        finally
+        {
+            TextureCache.ResetCache();
+            BundleCache.ClearArchives();
+        }
     }
 
     #region Event Handlers
 
-    private void newToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void newToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        DoNew();
+        await DoNew();
     }
 
-    private void openToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void openToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        Open();
+        await Open();
     }
 
-    private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void saveToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        Save();
+        await Save();
     }
 
-    private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        SaveAs();
+        await SaveAs();
     }
 
     private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -560,39 +386,39 @@ public partial class MainForm : Form
         Exit();
     }
 
-    private void tsbNew_Click(object sender, EventArgs e)
+    private async void tsbNew_Click(object sender, EventArgs e)
     {
-        DoNew();
+        await DoNew();
     }
 
-    private void tsbOpen_Click(object sender, EventArgs e)
+    private async void tsbOpen_Click(object sender, EventArgs e)
     {
-        Open();
+        await Open();
     }
 
-    private void tsbSave_Click(object sender, EventArgs e)
+    private async void tsbSave_Click(object sender, EventArgs e)
     {
-        Save();
+        await Save();
     }
 
-    private void lstEntries_MouseDoubleClick(object sender, MouseEventArgs e)
+    private async void lstEntries_MouseDoubleClick(object sender, MouseEventArgs e)
     {
-        EditSelectedEntry(false);
+        await EditSelectedEntry(false);
     }
 
-    private void previewToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void previewToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        EditSelectedEntry(false);
+        await EditSelectedEntry(false);
     }
 
-    private void viewDataToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void viewDataToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        EditSelectedEntry(true);
+        await EditSelectedEntry(true);
     }
 
-    private void viewDebugMenuStripMenuItem_Click(object sender, EventArgs e)
+    private async void viewDebugMenuStripMenuItem_Click(object sender, EventArgs e)
     {
-        EditSelectedEntry(false, true);
+        await EditSelectedEntry(false, true);
     }
 
     private void renameToolStripMenuItem_Click(object sender, EventArgs e)
@@ -683,21 +509,33 @@ public partial class MainForm : Form
             MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
+    // Closing can't wait for a save, so with unsaved changes it stops, asks (and saves), then closes again
+    private bool _closeConfirmed;
+
     private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
     {
-        if (!CheckSave())
+        if (!_closeConfirmed && CurrentArchive?.Dirty == true)
         {
             e.Cancel = true;
-            return; // Application.Exit would close again and ask a second time
+            BeginInvoke(CloseAfterCheckingSave);
+            return;
         }
 
         if (!SubForm)
             Application.Exit();
     }
 
-    private void tsbSwitchMode_Click(object sender, EventArgs e)
+    private async void CloseAfterCheckingSave()
     {
-        SwitchMode();
+        if (!await CheckSave())
+            return;
+        _closeConfirmed = true;
+        Close();
+    }
+
+    private async void tsbSwitchMode_Click(object sender, EventArgs e)
+    {
+        await SwitchMode();
     }
 
     private void closeToolStripMenuItem_Click(object sender, EventArgs e)
@@ -725,7 +563,7 @@ public partial class MainForm : Form
 
     #region Utility
 
-    private bool CheckSave()
+    private async Task<bool> CheckSave()
     {
         if (CurrentArchive == null)
         {
@@ -749,7 +587,7 @@ public partial class MainForm : Form
             TaskDialogButton result = TaskDialog.ShowDialog(this, page);
             if (result == save)
             {
-                return Save();
+                return await Save();
             }
             else if (result == dontSave)
             {
@@ -807,9 +645,9 @@ public partial class MainForm : Form
         search.ShowDialog(this);
     }
 
-    private void SwitchMode()
+    private async Task SwitchMode()
     {
-        if (!CheckSave())
+        if (!await CheckSave())
             return;
 
         CurrentArchive = null;

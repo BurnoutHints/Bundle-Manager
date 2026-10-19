@@ -1,55 +1,13 @@
 using System;
 using System.ComponentModel;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace BundleUtilities;
 
 public partial class LoadingDialog : Form, ILoader
 {
-    public delegate void OnDone(bool cancelled, object value);
-    public event OnDone Done;
-
-    private delegate object GetObject();
-    private delegate void SetObject(object obj);
-    private object _value;
-    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-    public object Value
-    {
-        get
-        {
-            if (InvokeRequired)
-            {
-                GetObject method = () =>
-                {
-                    return _value;
-                };
-                return Invoke(method);
-            }
-            else
-            {
-                return _value;
-            }
-        }
-        set
-        {
-            if (InvokeRequired)
-            {
-                SetObject method = (object obj) =>
-                {
-                    _value = obj;
-                };
-                Invoke(method, value);
-            }
-            else
-            {
-                _value = value;
-            }
-        }
-    }
-
-    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-    public bool IsDone { get; set; }
-
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public string Status
     {
@@ -57,18 +15,42 @@ public partial class LoadingDialog : Form, ILoader
         set => lblStatus.Text = value;
     }
 
-    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-    public int Progress
-    {
-        get => pboMain.Value;
-        set => pboMain.Value = value;
-    }
-
     public LoadingDialog()
     {
         InitializeComponent();
 
-        IsDone = false;
+        System.Windows.Forms.Timer refresh = new(components) { Interval = 50, Enabled = true };
+        refresh.Tick += (_, _) => ShowProgress();
+    }
+
+    // Shows the dialog while work runs on a worker thread
+    public static async Task<T> RunAsync<T>(IWin32Window owner, string status, Func<ILoader, CancellationToken, T> work)
+    {
+        using LoadingDialog dialog = new() { Status = status };
+        CancellationTokenSource cancel = new(); // Not disposed, as abandoned work may still read its token
+        Task<T> task = Task.Run(() => work(dialog, cancel.Token));
+
+        dialog.Shown += async (_, _) =>
+        {
+            try
+            {
+                await task;
+            }
+            catch
+            {
+                // The caller gets it below
+            }
+            if (dialog.Visible)
+                dialog.Close();
+        };
+        await dialog.ShowDialogAsync(owner);
+
+        if (!task.IsCompleted)
+        {
+            cancel.Cancel();
+            throw new OperationCanceledException();
+        }
+        return await task;
     }
 
     private void btnCancel_Click(object sender, EventArgs e)
@@ -76,49 +58,24 @@ public partial class LoadingDialog : Form, ILoader
         Close();
     }
 
-    private void LoadingDialog_FormClosing(object sender, FormClosingEventArgs e)
-    {
-        Done?.Invoke(!IsDone, Value);
-    }
+    private volatile string _status;
+    private volatile int _progress = -1;
 
-    private void tmrDoneCheck_Tick(object sender, EventArgs e)
-    {
-        if (IsDone)
-        {
-            tmrDoneCheck.Enabled = false;
-            Close();
-        }
-    }
+    public void SetStatus(string status) => _status = status;
 
-    private delegate void SetStatusDelegate(string status);
-    public void SetStatus(string status)
-    {
-        if (InvokeRequired)
-        {
-            Invoke(new SetStatusDelegate(SetStatus), status);
-        }
-        else
-        {
-            if (Status != status)
-                Status = status;
-        }
-    }
+    public void SetProgress(int progress) => _progress = progress;
 
-    private delegate void SetProgressDelegate(int progress);
-    public void SetProgress(int progress)
+    private void ShowProgress()
     {
-        if (InvokeRequired)
+        string status = _status;
+        if (status != null && lblStatus.Text != status)
+            lblStatus.Text = status;
+
+        int progress = _progress;
+        if (progress >= 0 && pboMain.Value != progress)
         {
-            Invoke(new SetProgressDelegate(SetProgress), progress);
-        }
-        else
-        {
-            if (Progress != progress)
-                Progress = progress;
-            if (pboMain.Style == ProgressBarStyle.Marquee)
-            {
-                pboMain.Style = ProgressBarStyle.Blocks;
-            }
+            pboMain.Style = ProgressBarStyle.Blocks;
+            pboMain.Value = progress;
         }
     }
 }

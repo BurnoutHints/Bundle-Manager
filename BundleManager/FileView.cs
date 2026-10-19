@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using BundleFormat;
 using BundleUtilities;
@@ -10,14 +11,13 @@ namespace BundleManager;
 
 public partial class FileView : Form
 {
-    private static bool _loadMaterials;
     public static bool LoadMaterials
     {
-        get => _loadMaterials;
+        get;
         set
         {
-            _loadMaterials = value;
-            Config.LoadMaterials = _loadMaterials;
+            field = value;
+            Config.LoadMaterials = value;
         }
     }
 
@@ -29,8 +29,6 @@ public partial class FileView : Form
     }
 
     private bool HasPath => Utilities.IsValidPath(_currentPath);
-
-    private Thread _updateDisplayThread;
 
     public FileView()
     {
@@ -83,7 +81,7 @@ public partial class FileView : Form
                 string path = paths[i];
 
                 ToolStripItem item = new ToolStripMenuItem(path);
-                item.Click += (sender, args) => Open(path);
+                item.Click += async (sender, args) => await Open(path);
 
                 fileToolStripMenuItem.DropDownItems.Insert(index + i, item);
             }
@@ -92,7 +90,7 @@ public partial class FileView : Form
 
     private void UpdateDisplay()
     {
-        Invoke(new Action(UpdateRecentFiles));
+        UpdateRecentFiles();
 
         if (!Utilities.IsValidPath(_currentPath))
         {
@@ -116,63 +114,44 @@ public partial class FileView : Form
         public readonly List<string> Paths = [];
         public readonly Dictionary<ulong, int> Files = [];
         public readonly Dictionary<ulong, EntryInfo> EntryInfos = [];
-        public bool Stopped;
-        public Exception Error;
     }
 
-    private void LoadFileList()
+    private async Task LoadFileList()
     {
         lstMain.Items.Clear();
-        if (HasPath)
-        {
-            // A cancelled load may still be finishing its current file, but only into its own discarded result
-            string root = _currentPath;
-            CancellationTokenSource cancel = new();
-            FileList result = new();
+        if (!HasPath)
+            return;
 
-            LoadingDialog loader = new();
-            loader.Status = "Loading: " + root;
-            loader.Done += (cancelled, value) =>
+        // A cancelled load may still be finishing its current file, but only into its own discarded result
+        string root = _currentPath;
+        try
+        {
+            FileList result = await LoadingDialog.RunAsync(this, "Loading: " + root, (loader, cancel) =>
             {
-                cancel.Cancel();
-                if (cancelled || result.Stopped || result.Error != null)
-                {
-                    _currentPath = null;
-                    if (result.Error != null)
-                        MessageBox.Show(this, $"Couldn't load {root}:\n{result.Error.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                else
-                {
-                    BundleCache.Paths.Clear();
-                    BundleCache.Paths.AddRange(result.Paths);
-                    BundleCache.Files.Clear();
-                    foreach (var file in result.Files)
-                        BundleCache.Files.Add(file.Key, file.Value);
-                    BundleCache.EntryInfos.Clear();
-                    foreach (var info in result.EntryInfos)
-                        BundleCache.EntryInfos.Add(info.Key, info.Value);
-                }
-                UpdateDisplay();
-            };
-            _updateDisplayThread = new Thread(() =>
-            {
-                try
-                {
-                    DoLoadFileList(loader, root, result, cancel.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    result.Stopped = true; // Cancelled, or stopped at an ID conflict
-                }
-                catch (Exception ex)
-                {
-                    result.Error = ex;
-                }
-                loader.IsDone = true;
+                FileList found = new();
+                DoLoadFileList(loader, root, found, cancel);
+                return found;
             });
-            _updateDisplayThread.Start();
-            loader.ShowDialog(this);
+
+            BundleCache.Paths.Clear();
+            BundleCache.Paths.AddRange(result.Paths);
+            BundleCache.Files.Clear();
+            foreach (var file in result.Files)
+                BundleCache.Files.Add(file.Key, file.Value);
+            BundleCache.EntryInfos.Clear();
+            foreach (var info in result.EntryInfos)
+                BundleCache.EntryInfos.Add(info.Key, info.Value);
         }
+        catch (OperationCanceledException) // Cancelled, or stopped at an ID conflict
+        {
+            _currentPath = null;
+        }
+        catch (Exception ex)
+        {
+            _currentPath = null;
+            MessageBox.Show(this, $"Couldn't load {root}:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        UpdateDisplay();
     }
 
     private struct ConflictChoice
@@ -192,7 +171,7 @@ public partial class FileView : Form
         if (AlwaysIgnore)
             return new ConflictChoice(false, true);
 
-        return (ConflictChoice)Invoke(new Func<ConflictChoice>(() =>
+        return Invoke(() =>
         {
             TaskDialogCommandLinkButton ignoreOnce = new("Ignore this conflict", "Keep the copy that was found first and continue loading.");
             TaskDialogCommandLinkButton ignoreAll = new("Ignore all conflicts", "Don't ask again while loading this folder.");
@@ -210,7 +189,7 @@ public partial class FileView : Form
 
             TaskDialogButton result = TaskDialog.ShowDialog(this, page);
             return new ConflictChoice(result == stop, result == ignoreAll);
-        }));
+        });
     }
 
     // Runs on a worker thread, so it only touches its own result until the UI thread publishes it
@@ -306,11 +285,11 @@ public partial class FileView : Form
         }
         catch (IOException ex)
         {
-            Invoke(new Action(() => MessageBox.Show(this, "Failed to cache file types:\n" + ex.Message + "\n" + ex.StackTrace)));
+            _ = InvokeAsync(() => MessageBox.Show(this, "Failed to cache file types:\n" + ex.Message + "\n" + ex.StackTrace));
         }
     }
 
-    public void Open(string path = "")
+    public async Task Open(string path = "")
     {
         if (string.IsNullOrEmpty(path))
         {
@@ -324,7 +303,7 @@ public partial class FileView : Form
                 _currentPath = fbd.SelectedPath;
                 SaveData.AddRecentPath(_currentPath);
                 SaveData.Save();
-                LoadFileList();
+                await LoadFileList();
             }
         }
         else
@@ -332,7 +311,7 @@ public partial class FileView : Form
             _currentPath = path;
             SaveData.AddRecentPath(_currentPath);
             SaveData.Save();
-            LoadFileList();
+            await LoadFileList();
         }
     }
 
@@ -341,7 +320,7 @@ public partial class FileView : Form
         string file = BundleCache.Paths[index];
         MainForm form = new();
         form.SubForm = true;
-        form.Open(file);
+        form.Shown += async (_, _) => await form.Open(file); // Once it's showing, so the loading dialog has a window to sit over
         form.ShowDialog(this);
     }
 
@@ -350,9 +329,9 @@ public partial class FileView : Form
         Application.Exit();
     }
 
-    private void openFolderToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void openFolderToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        Open();
+        await Open();
     }
 
     private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -360,9 +339,9 @@ public partial class FileView : Form
         Exit();
     }
 
-    private void tsbOpen_Click(object sender, EventArgs e)
+    private async void tsbOpen_Click(object sender, EventArgs e)
     {
-        Open();
+        await Open();
     }
 
     private void tsbSwitchMode_Click(object sender, EventArgs e)

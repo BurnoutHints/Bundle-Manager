@@ -9,17 +9,13 @@ public partial class VehicleEditor : Form
 {
     public delegate void Done(Vehicle vehicle);
     public event Done OnDone;
-    private Vehicle _vehicle;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public Vehicle Vehicle
     {
-        get
-        {
-            return _vehicle;
-        }
+        get;
         set
         {
-            _vehicle = value;
+            field = value;
             UpdateDisplay();
         }
     }

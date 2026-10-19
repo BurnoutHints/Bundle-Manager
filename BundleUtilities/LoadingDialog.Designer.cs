@@ -1,4 +1,4 @@
-﻿namespace BundleUtilities
+namespace BundleUtilities
 {
     partial class LoadingDialog
     {
@@ -33,7 +33,6 @@
             this.pboMain = new System.Windows.Forms.ProgressBar();
             this.lblStatus = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.tmrDoneCheck = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // pboMain
@@ -68,12 +67,6 @@
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
-            // tmrDoneCheck
-            // 
-            this.tmrDoneCheck.Enabled = true;
-            this.tmrDoneCheck.Interval = 10;
-            this.tmrDoneCheck.Tick += new System.EventHandler(this.tmrDoneCheck_Tick);
-            // 
             // LoadingDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -90,7 +83,6 @@
             this.Name = "LoadingDialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Loading";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.LoadingDialog_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -101,6 +93,5 @@
         private System.Windows.Forms.ProgressBar pboMain;
         private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.Timer tmrDoneCheck;
     }
 }

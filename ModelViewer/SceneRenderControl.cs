@@ -60,12 +60,8 @@ public partial class SceneRenderControl : UserControl
     {
         if (!_designMode)
         {
-            if (_graphicsScene != null)
-            {
-                _graphicsScene.FrameRendered -= GraphicsSceneOnFrameRendered;
-                _graphicsScene.Cleanup();
-                _graphicsScene = null;
-            }
+            _graphicsScene?.FrameRendered -= GraphicsSceneOnFrameRendered;
+            _graphicsScene?.Cleanup();
             _graphicsScene = new GraphicsScene(scene, glcMain.Width, glcMain.Height);
             _graphicsScene.FrameRendered += GraphicsSceneOnFrameRendered;
 

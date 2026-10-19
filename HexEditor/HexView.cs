@@ -8,21 +8,17 @@ namespace HexEditor;
 
 public class HexView : UserControl
 {
-    private byte[] _hexData;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public byte[] HexData
     {
-        get
-        {
-            return _hexData;
-        }
+        get;
         set
         {
-            _hexData = value;
-            if (_hexData != null)
+            field = value;
+            if (field != null)
             {
                 vScroll.Minimum = 0;
-                vScroll.Maximum = _hexData.Length / 16;
+                vScroll.Maximum = field.Length / 16;
             }
             Invalidate();
         }
@@ -36,7 +32,7 @@ public class HexView : UserControl
 
         BorderStyle = BorderStyle.FixedSingle;
 
-        BackColor = Color.White;
+        BackColor = SystemColors.Window; // Follows the light or dark colour mode
 
         Width = 100;
         Height = 100;
@@ -114,7 +110,7 @@ public class HexView : UserControl
 
             PointF point = new(xP, yP);
 
-            g.DrawString(byteString, Font, Brushes.Black, point);
+            g.DrawString(byteString, Font, SystemBrushes.WindowText, point);
 
             string ascii = Encoding.ASCII.GetString([b]);
             char aChar = ascii[0];
@@ -131,7 +127,7 @@ public class HexView : UserControl
 
             PointF pointA = new(xPAscii + asciiXStart, yP);
 
-            g.DrawString(ascii, Font, Brushes.Black, pointA);
+            g.DrawString(ascii, Font, SystemBrushes.WindowText, pointA);
         }
     }
 

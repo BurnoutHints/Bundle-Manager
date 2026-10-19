@@ -39,6 +39,7 @@ public static class Program
         Application.EnableVisualStyles();
         Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
         Application.SetCompatibleTextRenderingDefault(false);
+        Application.SetColorMode(SystemColorMode.System); // Dark when Windows is set to dark apps
 
         PluginLoader.InitializePlugins();
 
@@ -106,21 +107,20 @@ public static class Program
                 string path = args[0];
                 if (File.GetAttributes(path).HasFlag(FileAttributes.Directory))
                 {
-                    folderModeForm.Open(path);
+                    folderModeForm.Shown += async (_, _) => await folderModeForm.Open(path);
                     Application.Run(folderModeForm);
                 }
                 else
                 {
-                    fileModeForm.Open(path);
-                    if (args.Length >= 2)
+                    fileModeForm.Shown += async (_, _) =>
                     {
-                        string indexString = args[1];
-                        if (int.TryParse(indexString, out int index))
+                        await fileModeForm.Open(path);
+                        if (args.Length >= 2 && int.TryParse(args[1], out int index))
                         {
                             fileModeForm.ForceOnlySpecificEntry = true;
-                            fileModeForm.EditEntry(index);
+                            await fileModeForm.EditEntry(index);
                         }
-                    }
+                    };
                     Application.Run(fileModeForm);
                 }
             }

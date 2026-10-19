@@ -15,13 +15,12 @@ public class EntryBlock
     public uint UncompressedAlignment = 1; // default depending on file type, 1 (what empty blocks use) so new blocks never write alignment 0
 
     // As stored in the bundle, so saving can write unchanged compressed blocks without recompressing them
-    private byte[] _rawData;
     public byte[] RawData
     {
-        get => _rawData;
+        get;
         set
         {
-            _rawData = value;
+            field = value;
             _data = null;
         }
     }

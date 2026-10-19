@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 
 namespace BundleFormat;
 
@@ -37,10 +38,11 @@ public static class BundleCache
     }
 
     private static readonly Dictionary<string, BundleArchive> Archives = [];
+    private static readonly Lock ArchivesLock = new();
 
     public static BundleArchive GetArchive(string path)
     {
-        lock (Archives)
+        lock (ArchivesLock)
         {
             if (!Archives.TryGetValue(path, out BundleArchive archive))
                 Archives[path] = archive = BundleArchive.Read(path);
@@ -50,7 +52,7 @@ public static class BundleCache
 
     public static void ClearArchives()
     {
-        lock (Archives)
+        lock (ArchivesLock)
             Archives.Clear();
     }
 

@@ -9,17 +9,13 @@ public partial class WheelEditor : Form
 {
     public delegate void Done(Wheel wheel);
     public event Done OnDone;
-    private Wheel _wheel;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public Wheel Wheel
     {
-        get
-        {
-            return _wheel;
-        }
+        get;
         set
         {
-            _wheel = value;
+            field = value;
             UpdateDisplay();
         }
     }

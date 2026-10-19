@@ -13,14 +13,13 @@ public partial class WheelListForm : Form, IEntryEditor
     public delegate void OnEdit();
     public event OnEdit Edit;
 
-    private WheelListData _list;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public WheelListData List
     {
-        get => _list;
+        get;
         set
         {
-            _list = value;
+            field = value;
             UpdateDisplay();
         }
     }
