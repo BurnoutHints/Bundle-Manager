@@ -2,6 +2,8 @@ using System;
 using System.Buffers.Binary;
 using System.Drawing;
 using System.IO;
+using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using BCnEncoder.Shared;
 using BundleUtilities;
@@ -258,7 +260,16 @@ public static class GameImage
             PlatformType platform = DetectPlatform(data);
             if (platform == PlatformType.X360)
             {
-                throw new Exception("Xbox 360 textures are not supported yet.");
+                X360Fetch f = new(data);
+                CompressionType type = (f.Format, f.Swizzle) switch
+                {
+                    (18, _) => CompressionType.DXT1,     // GPUTEXTUREFORMAT_DXT1
+                    (20, _) => CompressionType.DXT5,     // GPUTEXTUREFORMAT_DXT4_5
+                    (6, 0x688) => CompressionType.RGBA,  // GPUTEXTUREFORMAT_8_8_8_8, named by the order
+                    (6, 0x60A) => CompressionType.BGRA,  // its swizzle reads the bytes in
+                    _ => CompressionType.UNKNOWN
+                };
+                return new ImageHeader(type, f.Width, f.Height, PlatformType.X360);
             }
             else if (platform == PlatformType.Remastered)
             {
@@ -360,77 +371,153 @@ public static class GameImage
             ImageHeader header = GetImageHeader(data);
 
             if (header.Platform == PlatformType.X360)
+                extraData = LinearX360(data, extraData, header.CompressionType);
+
+            byte[] pixels = header.CompressionType switch
             {
-                throw new Exception("Xbox 360 textures are not supported yet.");
-            }
-            else
+                CompressionType.DXT1 => ImageUtil.DecompressImage(extraData, header.Width, header.Height, CompressionFormat.Bc1),
+                CompressionType.DXT5 => ImageUtil.DecompressImage(extraData, header.Width, header.Height, CompressionFormat.Bc3),
+                _ => extraData
+            };
+
+            DirectBitmap bitmap = new(header.Width, header.Height);
+
+            int rO, gO, bO, aO;
+
+            if (header.CompressionType == CompressionType.DXT1
+             || header.CompressionType == CompressionType.DXT5)
             {
-                byte[] pixels = header.CompressionType switch
+                if (header.Platform == PlatformType.PS3)
                 {
-                    CompressionType.DXT1 => ImageUtil.DecompressImage(extraData, header.Width, header.Height, CompressionFormat.Bc1),
-                    CompressionType.DXT5 => ImageUtil.DecompressImage(extraData, header.Width, header.Height, CompressionFormat.Bc3),
-                    _ => extraData
-                };
-
-                DirectBitmap bitmap = new(header.Width, header.Height);
-
-                int rO, gO, bO, aO;
-
-                if (header.CompressionType == CompressionType.DXT1
-                 || header.CompressionType == CompressionType.DXT5)
-                {
-                    if (header.Platform == PlatformType.PS3)
-                    {
-                        rO = 1; gO = 2; bO = 3; aO = 0; // ARGB
-                    }
-                    else
-                    {
-                        rO = 0; gO = 1; bO = 2; aO = 3; // RGBA
-                    }
+                    rO = 1; gO = 2; bO = 3; aO = 0; // ARGB
                 }
                 else
                 {
-                    switch (header.CompressionType)
-                    {
-                        case CompressionType.BGRA:
-                            rO = 2; gO = 1; bO = 0; aO = 3;
-                            break;
-                        case CompressionType.ARGB:
-                            rO = 1; gO = 2; bO = 3; aO = 0;
-                            break;
-                        default:
-                            rO = 0; gO = 1; bO = 2; aO = 3;
-                            break;
-                    }
+                    rO = 0; gO = 1; bO = 2; aO = 3; // RGBA
                 }
-
-                int srcIndex = 0;
-                int dstIndex = 0;
-                int pixelCount = header.Width * header.Height;
-
-                for (int i = 0; i < pixelCount; i++)
-                {
-                    byte r = pixels[srcIndex + rO];
-                    byte g = pixels[srcIndex + gO];
-                    byte b = pixels[srcIndex + bO];
-                    byte a = pixels[srcIndex + aO];
-
-                    int argb = (a << 24) | (r << 16) | (g << 8) | b;
-
-                    bitmap.Bits[dstIndex] = argb;
-
-                    srcIndex += 4;
-                    dstIndex++;
-                }
-
-                return bitmap.Bitmap;
             }
+            else
+            {
+                switch (header.CompressionType)
+                {
+                    case CompressionType.BGRA:
+                        rO = 2; gO = 1; bO = 0; aO = 3;
+                        break;
+                    case CompressionType.ARGB:
+                        rO = 1; gO = 2; bO = 3; aO = 0;
+                        break;
+                    default:
+                        rO = 0; gO = 1; bO = 2; aO = 3;
+                        break;
+                }
+            }
+
+            int srcIndex = 0;
+            int dstIndex = 0;
+            int pixelCount = header.Width * header.Height;
+
+            for (int i = 0; i < pixelCount; i++)
+            {
+                byte r = pixels[srcIndex + rO];
+                byte g = pixels[srcIndex + gO];
+                byte b = pixels[srcIndex + bO];
+                byte a = pixels[srcIndex + aO];
+
+                int argb = (a << 24) | (r << 16) | (g << 8) | b;
+
+                bitmap.Bits[dstIndex] = argb;
+
+                srcIndex += 4;
+                dstIndex++;
+            }
+
+            return bitmap.Bitmap;
         }
         catch (Exception ex)
         {
             MessageBox.Show(ex.Message + "\r\n" + ex.StackTrace);
             return null;
         }
+    }
+
+    // Xbox 360 GPUTEXTURE_FETCH_CONSTANT. Fields as in Volatility's TextureX360
+    private readonly struct X360Fetch(byte[] header)
+    {
+        private uint Word(int i) => BinaryPrimitives.ReadUInt32BigEndian(header.AsSpan(0x1C + i * 4));
+        public bool Tiled => Word(0) >> 31 != 0;
+        public int Pitch => (int)(Word(0) >> 22 & 0x1FF) * 32; // Texels
+        public int Endian => (int)(Word(1) >> 6 & 3);
+        public int Format => (int)(Word(1) & 0x3F);
+        public int Width => (int)(Word(2) & 0x1FFF) + 1;
+        public int Height => (int)(Word(2) >> 13 & 0x1FFF) + 1;
+        public int Swizzle => (int)(Word(3) >> 1 & 0xFFF);
+        public bool PackedMips => (Word(5) >> 11 & 1) != 0;
+    }
+
+    // Copies the top mip of an Xbox 360 texture (cube face 0) out of its tiling and GPU byte order into the
+    // layout the other platforms use. Tiling and mip packing follow Xenia's texture_address.h and texture_util.cc
+    private static byte[] LinearX360(byte[] header, byte[] data, CompressionType type)
+    {
+        X360Fetch f = new(header);
+        int bytesPerBlock = type switch
+        {
+            CompressionType.DXT1 => 8,
+            CompressionType.DXT5 => 16,
+            CompressionType.RGBA or CompressionType.BGRA => 4,
+            _ => throw new NotSupportedException($"Xbox 360 texture format {f.Format} with swizzle {f.Swizzle:X3} is not supported yet.")
+        };
+        int blockSize = bytesPerBlock == 4 ? 1 : 4;
+        int width = (f.Width + blockSize - 1) / blockSize, height = (f.Height + blockSize - 1) / blockSize;
+        int pitch = (f.Pitch / blockSize + 31) & ~31; // Rows are padded to whole 32 block tiles
+
+        // Mips of 16 texels or less share one tile, and when the texture is that small its top mip is in there too
+        int offsetX = 0, offsetY = 0;
+        if (f.PackedMips && Math.Min(f.Width, f.Height) <= 16)
+        {
+            if (BitOperations.RoundUpToPowerOf2((uint)f.Width) > BitOperations.RoundUpToPowerOf2((uint)f.Height))
+                offsetY = 16 / blockSize;
+            else
+                offsetX = 16 / blockSize;
+        }
+
+        byte[] linear = new byte[width * height * bytesPerBlock];
+        int log2Bpb = BitOperations.Log2((uint)bytesPerBlock);
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                int src = f.Tiled ? Tiled2D(x + offsetX, y + offsetY, pitch, log2Bpb) : ((y + offsetY) * pitch + x + offsetX) << log2Bpb;
+                if (src + bytesPerBlock <= data.Length)
+                    Array.Copy(data, src, linear, (y * width + x) * bytesPerBlock, bytesPerBlock);
+            }
+        }
+
+        Span<uint> words = MemoryMarshal.Cast<byte, uint>(linear.AsSpan());
+        switch (f.Endian)
+        {
+            case 1: // 8in16
+                Span<ushort> halves = MemoryMarshal.Cast<byte, ushort>(linear.AsSpan());
+                BinaryPrimitives.ReverseEndianness(halves, halves);
+                break;
+            case 2: // 8in32
+                BinaryPrimitives.ReverseEndianness(words, words);
+                break;
+            case 3: // 16in32
+                foreach (ref uint word in words)
+                    word = BitOperations.RotateLeft(word, 16);
+                break;
+        }
+        return linear;
+    }
+
+    // Byte offset of block (x, y) in a tiled surface whose rows are pitch blocks long
+    private static int Tiled2D(int x, int y, int pitch, int log2Bpb)
+    {
+        int outerInner = ((((y >> 5) * (pitch >> 5) + (x >> 5)) << 6) | ((y >> 1 & 7) << 3) | (x & 7)) << log2Bpb;
+        int bank = y >> 4 & 1;
+        int pipe = (x >> 3 & 3) ^ ((y >> 3 & 1) << 1);
+        return (y & 1) << 4 | pipe << 6 | bank << 11
+             | (outerInner & 0xF) | (outerInner >> 4 & 1) << 5 | (outerInner >> 5 & 7) << 8 | outerInner >> 8 << 12;
     }
 
     public static PlatformType DetectPlatform(byte[] data)
