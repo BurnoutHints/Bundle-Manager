@@ -72,6 +72,7 @@ public partial class EntryEditor : Form
     public EntryEditor()
     {
         InitializeComponent();
+        Disposed += (_, _) => pboImage.Image?.Dispose(); // A PictureBox doesn't dispose its image
 
         ImageMenuVisible = false;
         BinaryMenuVisible = false;
@@ -187,17 +188,22 @@ public partial class EntryEditor : Form
         {
             if (pboImage.InvokeRequired)
             {
-                SetImage method = (Image img) =>
-                {
-                    pboImage.Image = img;
-                };
-                Invoke(method, value);
+                Invoke(new SetImage(ReplaceImage), value);
             }
             else
             {
-                pboImage.Image = value;
+                ReplaceImage(value);
             }
         }
+    }
+
+    // The previous image is this editor's own decode, so nothing else holds it
+    private void ReplaceImage(Image image)
+    {
+        Image old = pboImage.Image;
+        pboImage.Image = image;
+        if (old != image)
+            old?.Dispose();
     }
 
     private delegate bool GetBool();
@@ -502,7 +508,7 @@ public partial class EntryEditor : Form
         }
         else if (_entry.Type == EntryType.Texture)
         {
-            Image = GameImage.GetImage(_entry.EntryBlocks[0].Data, _entry.EntryBlocks[1].Data);
+            Image = GameImage.GetImage(_entry.EntryBlocks[0].Data, _entry.EntryBlocks[1].Data, _entry.Platform);
 
             ImageVisible = Image != null;
 
@@ -514,7 +520,7 @@ public partial class EntryEditor : Form
 
         if (ImageStatusPanelVisible)
         {
-            ImageHeader header = GameImage.GetImageHeader(_entry.EntryBlocks[0].Data);
+            ImageHeader header = GameImage.GetImageHeader(_entry.EntryBlocks[0].Data, _entry.Platform);
             imageStatusLabel.Text = 
                 $"Platform: {header.Platform}    " +
                 $"Size: {header.Width}x{header.Height}    " +
@@ -563,7 +569,7 @@ public partial class EntryEditor : Form
         ImageInfo info;
         try
         {
-            ImageHeader header = GameImage.GetImageHeader(oldHeader);
+            ImageHeader header = GameImage.GetImageHeader(oldHeader, _entry.Platform);
             CompressionType? compression = null; // DDS files keep their own format
             if (!string.Equals(Path.GetExtension(path), ".dds", StringComparison.OrdinalIgnoreCase)
                 && (compression = ImageImportDialog.AskCompression(this, path)) == null)

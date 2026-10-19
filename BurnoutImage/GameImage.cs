@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using BCnEncoder.Shared;
+using BundleFormat;
 using BundleUtilities;
 
 namespace BurnoutImage;
@@ -250,128 +251,127 @@ public static class GameImage
         return new ImageInfo(msx.ToArray(), data);
     }
 
-    public static ImageHeader GetImageHeader(byte[] data)
+    public static ImageHeader GetImageHeader(byte[] data, BundlePlatform? bundle = null)
     {
-        try
+        MemoryStream ms = new(data);
+        BinaryReader2 br = new(ms);
+
+        PlatformType platform = DetectPlatform(data, bundle);
+        if (platform == PlatformType.X360)
         {
-            MemoryStream ms = new(data);
-            BinaryReader2 br = new(ms);
-
-            PlatformType platform = DetectPlatform(data);
-            if (platform == PlatformType.X360)
+            X360Fetch f = new(data);
+            CompressionType type = (f.Format, f.Swizzle) switch
             {
-                X360Fetch f = new(data);
-                CompressionType type = (f.Format, f.Swizzle) switch
-                {
-                    (18, _) => CompressionType.DXT1,     // GPUTEXTUREFORMAT_DXT1
-                    (20, _) => CompressionType.DXT5,     // GPUTEXTUREFORMAT_DXT4_5
-                    (6, 0x688) => CompressionType.RGBA,  // GPUTEXTUREFORMAT_8_8_8_8, named by the order
-                    (6, 0x60A) => CompressionType.BGRA,  // its swizzle reads the bytes in
-                    _ => CompressionType.UNKNOWN
-                };
-                return new ImageHeader(type, f.Width, f.Height, PlatformType.X360);
-            }
-            else if (platform == PlatformType.Remastered)
-            {
-                br.BaseStream.Seek(0x00, SeekOrigin.Begin);
-
-                // 32/64 bit offsets
-                var (oFormat, oSize) = data.Length switch
-                {
-                    0x40 => (0x1C, 0x24),
-                    0x60 => (0x2C, 0x34),
-                    _ => throw new InvalidDataException()
-                };
-
-                br.BaseStream.Seek(oFormat, SeekOrigin.Begin);
-
-                // DXGI_Format
-                CompressionType type = br.ReadUInt32() switch
-                {
-                    0x00000057  => CompressionType.BGRA,
-                    0x0000001C  => CompressionType.RGBA,
-                    0x000000FF  => CompressionType.ARGB,
-                    0x00000047  => CompressionType.DXT1,
-                    0x0000004D  => CompressionType.DXT5,
-                    _           => CompressionType.UNKNOWN
-                };
-
-                br.BaseStream.Seek(oSize, SeekOrigin.Begin);
-
-                int width = br.ReadInt16();
-                int height = br.ReadInt16();
-
-                br.Close();
-
-                return new ImageHeader(type, width, height, PlatformType.Remastered);
-            }
-            else if (platform == PlatformType.PC || platform == PlatformType.PCx64)
-            {
-                br.BaseStream.Seek(platform == PlatformType.PC ? 0x10 : 0x1C, SeekOrigin.Begin);
-
-                // D3DFORMAT
-                CompressionType type = br.ReadInt32() switch
-                {
-                    0x00000015  => CompressionType.BGRA,
-                    0x00000020  => CompressionType.RGBA,
-                    0x000000FF  => CompressionType.ARGB,
-                    0x31545844  => CompressionType.DXT1, // "DXT1"
-                    0x35545844  => CompressionType.DXT5, // "DXT5"
-                    _           => CompressionType.UNKNOWN
-                };
-
-                int width = br.ReadInt16();
-                int height = br.ReadInt16();
-
-                br.Close();
-
-                return new ImageHeader(type, width, height, platform);
-            }
-            else if (platform == PlatformType.PS3) // PS3
-            {
-                br.BaseStream.Seek(0x00, SeekOrigin.Begin);
-
-                CompressionType type = br.ReadByte() switch
-                {
-                    0x85 => CompressionType.ARGB,
-                    0x86 => CompressionType.DXT1,
-                    0x88 => CompressionType.DXT5,
-                    _ => CompressionType.UNKNOWN
-                };
-
-                br.BaseStream.Seek(0x08, SeekOrigin.Begin);
-
-                ushort width = Util.ReverseBytes(br.ReadUInt16());
-                ushort height = Util.ReverseBytes(br.ReadUInt16());
-
-                br.Close();
-
-                return new ImageHeader(type, width, height, PlatformType.PS3);
-            }
-            else
-            {
-                throw new InvalidDataException($"Unknown image header platform.");
-            }
+                (18, _) => CompressionType.DXT1,     // GPUTEXTUREFORMAT_DXT1
+                (20, _) => CompressionType.DXT5,     // GPUTEXTUREFORMAT_DXT4_5
+                (6, 0x688) => CompressionType.RGBA,  // GPUTEXTUREFORMAT_8_8_8_8, named by the order
+                (6, 0x60A) => CompressionType.BGRA,  // its swizzle reads the bytes in
+                _ => CompressionType.UNKNOWN
+            };
+            return new ImageHeader(type, f.Width, f.Height, PlatformType.X360);
         }
-        catch (Exception ex)
+        else if (platform == PlatformType.Remastered)
         {
-            MessageBox.Show(ex.Message + "\r\n" + ex.StackTrace);
-        }
+            br.BaseStream.Seek(0x00, SeekOrigin.Begin);
 
-        return null;
+            // 32/64 bit offsets
+            var (oFormat, oSize) = data.Length switch
+            {
+                0x40 => (0x1C, 0x24),
+                0x60 => (0x2C, 0x34),
+                _ => throw new InvalidDataException()
+            };
+
+            br.BaseStream.Seek(oFormat, SeekOrigin.Begin);
+
+            // DXGI_Format
+            CompressionType type = br.ReadUInt32() switch
+            {
+                0x00000057  => CompressionType.BGRA,
+                0x0000001C  => CompressionType.RGBA,
+                0x000000FF  => CompressionType.ARGB,
+                0x00000047  => CompressionType.DXT1,
+                0x0000004D  => CompressionType.DXT5,
+                _           => CompressionType.UNKNOWN
+            };
+
+            br.BaseStream.Seek(oSize, SeekOrigin.Begin);
+
+            int width = br.ReadInt16();
+            int height = br.ReadInt16();
+
+            br.Close();
+
+            return new ImageHeader(type, width, height, PlatformType.Remastered);
+        }
+        else if (platform == PlatformType.PC || platform == PlatformType.PCx64)
+        {
+            br.BaseStream.Seek(platform == PlatformType.PC ? 0x10 : 0x1C, SeekOrigin.Begin);
+
+            // D3DFORMAT
+            CompressionType type = br.ReadInt32() switch
+            {
+                0x00000015  => CompressionType.BGRA,
+                0x00000020  => CompressionType.RGBA,
+                0x000000FF  => CompressionType.ARGB,
+                0x31545844  => CompressionType.DXT1, // "DXT1"
+                0x35545844  => CompressionType.DXT5, // "DXT5"
+                _           => CompressionType.UNKNOWN
+            };
+
+            int width = br.ReadInt16();
+            int height = br.ReadInt16();
+
+            br.Close();
+
+            return new ImageHeader(type, width, height, platform);
+        }
+        else if (platform == PlatformType.PS3) // PS3
+        {
+            br.BaseStream.Seek(0x00, SeekOrigin.Begin);
+
+            CompressionType type = br.ReadByte() switch
+            {
+                0x85 => CompressionType.ARGB,
+                0x86 => CompressionType.DXT1,
+                0x88 => CompressionType.DXT5,
+                _ => CompressionType.UNKNOWN
+            };
+
+            br.BaseStream.Seek(0x08, SeekOrigin.Begin);
+
+            ushort width = Util.ReverseBytes(br.ReadUInt16());
+            ushort height = Util.ReverseBytes(br.ReadUInt16());
+
+            br.Close();
+
+            return new ImageHeader(type, width, height, PlatformType.PS3);
+        }
+        else
+        {
+            throw new InvalidDataException($"A texture header of 0x{data.Length:X} bytes isn't one Bundle Manager knows.");
+        }
     }
 
-    public static Image GetImage(byte[] data, byte[] extraData)
+    public static Image GetImage(byte[] data, byte[] extraData, BundlePlatform? bundle = null)
     {
         if (extraData == null) // ¯\_(ツ)_/¯
             return null;
 
         try
         {
-            ImageHeader header = GetImageHeader(data);
+            ImageHeader header = GetImageHeader(data, bundle);
+            if (header.Width <= 0 || header.Height <= 0)
+                throw new InvalidDataException($"The texture header gives a size of {header.Width}×{header.Height}.");
 
             if (header.Platform == PlatformType.X360)
                 extraData = LinearX360(data, extraData, header.CompressionType);
+            else if (header.CompressionType == CompressionType.UNKNOWN)
+                throw new NotSupportedException($"This {header.Platform} texture's format isn't supported yet.");
+
+            int needed = TextureSize(header.CompressionType, header.Width, header.Height);
+            if (extraData.Length < needed)
+                throw new InvalidDataException($"The texture data is {extraData.Length} bytes, but a {header.Width}×{header.Height} {header.CompressionType} texture needs {needed}.");
 
             byte[] pixels = header.CompressionType switch
             {
@@ -380,7 +380,7 @@ public static class GameImage
                 _ => extraData
             };
 
-            DirectBitmap bitmap = new(header.Width, header.Height);
+            int[] bits = new int[header.Width * header.Height];
 
             int rO, gO, bO, aO;
 
@@ -425,13 +425,19 @@ public static class GameImage
 
                 int argb = (a << 24) | (r << 16) | (g << 8) | b;
 
-                bitmap.Bits[dstIndex] = argb;
+                bits[dstIndex] = argb;
 
                 srcIndex += 4;
                 dstIndex++;
             }
 
-            return bitmap.Bitmap;
+            // Make sure we create a Bitmap that has ownership of its pixels so disposing it frees them
+            Bitmap image = new(header.Width, header.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            System.Drawing.Imaging.BitmapData locked = image.LockBits(new Rectangle(0, 0, header.Width, header.Height),
+                System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            Marshal.Copy(bits, 0, locked.Scan0, bits.Length);
+            image.UnlockBits(locked);
+            return image;
         }
         catch (Exception ex)
         {
@@ -520,11 +526,23 @@ public static class GameImage
              | (outerInner & 0xF) | (outerInner >> 4 & 1) << 5 | (outerInner >> 5 & 7) << 8 | outerInner >> 8 << 12;
     }
 
-    public static PlatformType DetectPlatform(byte[] data)
+    public static PlatformType DetectPlatform(byte[] data, BundlePlatform? bundle = null)
     {
         if (data == null) throw new ArgumentNullException(nameof(data));
 
         int len = data.Length;
+
+        PlatformType? known = (bundle, len) switch
+        {
+            (BundlePlatform.X360, 0x40) => PlatformType.X360,
+            (BundlePlatform.PS3, 0x30) => PlatformType.PS3,
+            (BundlePlatform.PCx64, 0x30) => PlatformType.PCx64,
+            (BundlePlatform.PC, 0x20) => PlatformType.PC,
+            (BundlePlatform.PC or BundlePlatform.PCx64, 0x40 or 0x60) => PlatformType.Remastered,
+            _ => null
+        };
+        if (known != null)
+            return known.Value;
 
         using MemoryStream ms = new(data);
         using BinaryReader2 br = new(ms);

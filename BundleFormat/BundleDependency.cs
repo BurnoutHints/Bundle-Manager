@@ -22,8 +22,7 @@ public struct BundleDependency
             if (!string.IsNullOrEmpty(file))
             {
                 extra = ", Path: " + BundleCache.GetRelativePath(file);
-                BundleArchive archive = BundleArchive.Read(file);
-                Entry = archive.GetEntryByID(EntryID);
+                Entry = BundleCache.GetEntryByID(EntryID);
             }
         }
 

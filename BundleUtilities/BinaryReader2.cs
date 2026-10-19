@@ -1,3 +1,4 @@
+using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
@@ -14,77 +15,26 @@ public class BinaryReader2 : BinaryReader
         BigEndian = bigEndian;
     }
 
-    public override short ReadInt16()
+    // Reused for every value, as handlers read millions of them
+    private readonly byte[] _value = new byte[8];
+
+    // The next count bytes, leaving the position alone when fewer are left
+    private ReadOnlySpan<byte> Next(int count)
     {
-        if (BaseStream.Length - BaseStream.Position < 2)
+        if (BaseStream.Length - BaseStream.Position < count)
             throw new EndOfStreamException();
-        if (BigEndian)
-            return BinaryPrimitives.ReadInt16BigEndian(ReadBytes(2));
-        return BinaryPrimitives.ReadInt16LittleEndian(ReadBytes(2));
+        BaseStream.ReadExactly(_value, 0, count);
+        return _value.AsSpan(0, count);
     }
 
-    public override int ReadInt32()
-    {
-        if (BaseStream.Length - BaseStream.Position < 4)
-            throw new EndOfStreamException();
-        if (BigEndian)
-            return BinaryPrimitives.ReadInt32BigEndian(ReadBytes(4));
-        return BinaryPrimitives.ReadInt32LittleEndian(ReadBytes(4));
-    }
-
-    public override long ReadInt64()
-    {
-        if (BaseStream.Length - BaseStream.Position < 8)
-            throw new EndOfStreamException();
-        if (BigEndian)
-            return BinaryPrimitives.ReadInt64BigEndian(ReadBytes(8));
-        return BinaryPrimitives.ReadInt64LittleEndian(ReadBytes(8));
-    }
-
-    public override ushort ReadUInt16()
-    {
-        if (BaseStream.Length - BaseStream.Position < 2)
-            throw new EndOfStreamException();
-        if (BigEndian)
-            return BinaryPrimitives.ReadUInt16BigEndian(ReadBytes(2));
-        return BinaryPrimitives.ReadUInt16LittleEndian(ReadBytes(2));
-    }
-
-    public override uint ReadUInt32()
-    {
-        if (BaseStream.Length - BaseStream.Position < 4)
-            throw new EndOfStreamException();
-        if (BigEndian)
-            return BinaryPrimitives.ReadUInt32BigEndian(ReadBytes(4));
-        return BinaryPrimitives.ReadUInt32LittleEndian(ReadBytes(4));
-    }
-
-    public override ulong ReadUInt64()
-    {
-        if (BaseStream.Length - BaseStream.Position < 8)
-            throw new EndOfStreamException();
-        if (BigEndian)
-            return BinaryPrimitives.ReadUInt64BigEndian(ReadBytes(8));
-        return BinaryPrimitives.ReadUInt64LittleEndian(ReadBytes(8));
-    }
-
-    public override float ReadSingle()
-    {
-        if (BaseStream.Length - BaseStream.Position < 4)
-            throw new EndOfStreamException();
-        if (BigEndian)
-            return BinaryPrimitives.ReadSingleBigEndian(ReadBytes(4));
-        return BinaryPrimitives.ReadSingleLittleEndian(ReadBytes(4));
-    }
-
-    public override double ReadDouble()
-    {
-        if (BaseStream.Length - BaseStream.Position < 8)
-            throw new EndOfStreamException();
-        if (BigEndian)
-            return BinaryPrimitives.ReadDoubleBigEndian(ReadBytes(8));
-        return BinaryPrimitives.ReadDoubleLittleEndian(ReadBytes(8));
-    }
+    public override short ReadInt16() => BigEndian ? BinaryPrimitives.ReadInt16BigEndian(Next(2)) : BinaryPrimitives.ReadInt16LittleEndian(Next(2));
+    public override int ReadInt32() => BigEndian ? BinaryPrimitives.ReadInt32BigEndian(Next(4)) : BinaryPrimitives.ReadInt32LittleEndian(Next(4));
+    public override long ReadInt64() => BigEndian ? BinaryPrimitives.ReadInt64BigEndian(Next(8)) : BinaryPrimitives.ReadInt64LittleEndian(Next(8));
+    public override ushort ReadUInt16() => BigEndian ? BinaryPrimitives.ReadUInt16BigEndian(Next(2)) : BinaryPrimitives.ReadUInt16LittleEndian(Next(2));
+    public override uint ReadUInt32() => BigEndian ? BinaryPrimitives.ReadUInt32BigEndian(Next(4)) : BinaryPrimitives.ReadUInt32LittleEndian(Next(4));
+    public override ulong ReadUInt64() => BigEndian ? BinaryPrimitives.ReadUInt64BigEndian(Next(8)) : BinaryPrimitives.ReadUInt64LittleEndian(Next(8));
+    public override float ReadSingle() => BigEndian ? BinaryPrimitives.ReadSingleBigEndian(Next(4)) : BinaryPrimitives.ReadSingleLittleEndian(Next(4));
+    public override double ReadDouble() => BigEndian ? BinaryPrimitives.ReadDoubleBigEndian(Next(8)) : BinaryPrimitives.ReadDoubleLittleEndian(Next(8));
 
     public void Align(int alignment)
     {
@@ -125,20 +75,13 @@ public class BinaryReader2 : BinaryReader
         return result;
     }
 
+    // size bytes, one character each, up to the first null
     public string ReadLenString(int size)
     {
-        string result = "";
-        bool readNull = false;
-        for (int i = 0; i < size; i++)
-        {
-            char c = (char)ReadByte();
-            if (c == '\0')
-                readNull = true;
-            if (!readNull)
-                result += c;
-        }
-
-        return result;
+        byte[] bytes = new byte[size];
+        BaseStream.ReadExactly(bytes);
+        int end = Array.IndexOf(bytes, (byte)0);
+        return Encoding.Latin1.GetString(bytes, 0, end < 0 ? size : end);
     }
 
     public bool EOF()

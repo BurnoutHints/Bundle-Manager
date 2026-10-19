@@ -29,18 +29,7 @@ public class MaterialEntry
         {
             ulong id = dependency.EntryID;
 
-            //DebugTimer t = DebugTimer.Start("LoadDep");
-            BundleEntry descEntry1 = entry.Archive.GetEntryByID(id);
-            if (descEntry1 == null)
-            {
-                string file = BundleCache.GetFileByEntryID(id);
-                if (!string.IsNullOrEmpty(file))
-                {
-                    BundleArchive archive = BundleArchive.Read(file);
-                    descEntry1 = archive.GetEntryByID(id);
-                }
-            }
-            //t.StopLog();
+            BundleEntry descEntry1 = entry.Archive.GetEntryByID(id) ?? BundleCache.GetEntryByID(id);
 
             //DebugTimer t2 = DebugTimer.Start("LoadTextureState");
             if (descEntry1 != null && descEntry1.Type == EntryType.TextureState)

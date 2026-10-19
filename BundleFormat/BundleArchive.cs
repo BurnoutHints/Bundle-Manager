@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml;
 using BundleUtilities;
 
@@ -139,6 +140,68 @@ public class BundleArchive
         return entry;
     }
 
+    private Dictionary<ulong, string> _guessedNames;
+    private (string Path, int Count) _guessedNamesKey;
+
+    public string GuessName(ulong id)
+    {
+        if (_guessedNames == null || _guessedNamesKey != (Path, Entries.Count))
+        {
+            _guessedNames = GuessNames();
+            _guessedNamesKey = (Path, Entries.Count);
+        }
+        return _guessedNames.GetValueOrDefault(id);
+    }
+
+    private Dictionary<ulong, string> GuessNames()
+    {
+        List<string> names = ["worldvault", "postfxvault", "cameravault"];
+
+        string file = System.IO.Path.GetFileNameWithoutExtension(Path)?.ToUpper();
+        if (file != null)
+        {
+            if (file.StartsWith("TRK_UNIT") && file.EndsWith("_GR"))
+            {
+                string trackID = file[8..].Replace("_GR", "").ToLower();
+                names.AddRange(["trk_unit" + trackID + "_list", "prp_inst_" + trackID, "prp_gl__" + trackID,
+                    "trk_unit" + trackID + "_passby", "trk_unit" + trackID + "_emitter"]);
+            }
+
+            names.Add(file.ToLower() + ".swf");
+
+            if (file.StartsWith("WHE_") && file.EndsWith("_GR"))
+                names.Add(file[4..].Replace("_GR", "").ToLower() + "_graphics");
+
+            if (file.StartsWith("VEH_"))
+            {
+                if (file.EndsWith("_AT"))
+                {
+                    string vehicleID = file[4..].Replace("_AT", "").ToLower();
+                    string shownID = file[4..].Replace("_AT", ""); // Upper case, as Criterion named these
+                    names.AddRange([shownID + "_AttribSys", shownID + "DeformationModel", vehicleID + "_bpr",
+                        vehicleID + "_anim", vehicleID + "_trafficstub", vehicleID + "_vanm"]);
+                }
+                else if (file.EndsWith("_CD"))
+                    names.Add(file[4..].Replace("_CD", "").ToLower());
+                else if (file.EndsWith("_GR"))
+                    names.Add(file[4..].Replace("_GR", "").ToLower() + "_graphics");
+            }
+        }
+
+        // WorldCol names
+        for (int i = 0; i < Entries.Count; i++)
+        {
+            names.Add("trk_col_" + i);
+            names.Add("trk_clil" + i);
+        }
+
+        // Resource IDs hash the lower case name, so names can be shown in Criterion's case
+        Dictionary<ulong, string> guesses = [];
+        foreach (string name in names)
+            guesses.TryAdd(Crc32.HashCrc32B(name.ToLowerInvariant()), name); // First pattern wins, as when they were checked in turn
+        return guesses;
+    }
+
     public string GetEntryNameByID(ulong id)
     {
         for (int i = 0; i < Entries.Count; i++)
@@ -158,53 +221,38 @@ public class BundleArchive
     private static Dictionary<ulong, DebugInfo> GetDebugInfoFromRST(string rst)
     {
         XmlDocument doc = new();
-        doc.LoadXml(rst);
-
-        XmlElement root = doc["ResourceStringTable"];
-        XmlNodeList resources = root.GetElementsByTagName("Resource");
-
-        Dictionary<ulong, DebugInfo> debugInfo = [];
-
-        foreach (XmlElement ele in resources)
+        try
         {
-            if (ele.Name != "Resource")
-                continue;
-
-            if (!ulong.TryParse(ele.Attributes["id"].Value, NumberStyles.AllowHexSpecifier, CultureInfo.CurrentCulture, out ulong resourceID))
-                continue;
-
-            DebugInfo debug;
-            debug.Name = ele.Attributes["name"].Value;
-            debug.TypeName = ele.Attributes["type"].Value;
-
-            debugInfo.Add(resourceID, debug);
+            doc.LoadXml(rst);
+        }
+        catch (XmlException)
+        {
+            // Cover Criterion's broken XML writer
+            if (rst.StartsWith("</ResourceStringTable>"))
+                rst = rst.Remove(1, 1);
+            doc.LoadXml(rst.Replace("</ResourceStringTable>\n\t", ""));
         }
 
+        Dictionary<ulong, DebugInfo> debugInfo = [];
+        XmlElement root = doc["ResourceStringTable"];
+        if (root == null)
+            return debugInfo;
+
+        foreach (XmlElement ele in root.GetElementsByTagName("Resource"))
+        {
+            if (ulong.TryParse(ele.GetAttribute("id"), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out ulong resourceID))
+                debugInfo[resourceID] = new DebugInfo { Name = ele.GetAttribute("name"), TypeName = ele.GetAttribute("type") };
+        }
         return debugInfo;
     }
 
     private void ProcessRST(string rst)
     {
-        XmlDocument doc = new();
-        doc.LoadXml(rst);
-
-        XmlElement root = doc["ResourceStringTable"];
-        XmlNodeList resources = root.GetElementsByTagName("Resource");
-
-        foreach (XmlElement ele in resources)
+        Dictionary<ulong, DebugInfo> debugInfo = GetDebugInfoFromRST(rst);
+        foreach (BundleEntry entry in Entries)
         {
-            if (!ulong.TryParse(ele.Attributes["id"].Value, NumberStyles.AllowHexSpecifier, CultureInfo.CurrentCulture, out ulong resourceID))
-                continue;
-
-            foreach (var entry in Entries)
-            {
-                if (entry.ID != resourceID)
-                    continue;
-
-                entry.DebugInfo.Name = ele.Attributes["name"].Value;
-                entry.DebugInfo.TypeName = ele.Attributes["type"].Value;
-                break;
-            }
+            if (debugInfo.TryGetValue(entry.ID, out DebugInfo debug))
+                entry.DebugInfo = debug;
         }
     }
 
@@ -247,37 +295,27 @@ public class BundleArchive
         Flags |= Flags.HasResourceStringTable;
     }
 
+    // Null when the file can't be read; Open says why
     public static BundleArchive Read(string path)
     {
-        using Stream s = File.OpenRead(path);
         try
         {
-            BinaryReader2 br = new(s);
-
-            BundleArchive result = new();
-            result.Path = path;
-
-            if (!result.Read(br))
-            {
-                br.Close();
-
-                return null;
-            }
-
-            br.Close();
-
-            return result;
+            return Open(path);
         }
-        catch (IOException ex)
+        catch (Exception ex)
         {
             Debug.WriteLine(ex.Message + "\n" + ex.StackTrace);
             return null;
         }
-        catch (ReadFailedError ex)
-        {
-            Debug.WriteLine(ex.Message + "\n" + ex.StackTrace);
-            return null;
-        }
+    }
+
+    public static BundleArchive Open(string path)
+    {
+        using BinaryReader2 br = new(File.OpenRead(path));
+        BundleArchive result = new() { Path = path };
+        if (!result.Read(br))
+            throw new ReadFailedError("This file isn't a bundle Bundle Manager can read.");
+        return result;
     }
 
     public bool Read(BinaryReader2 br)
@@ -363,8 +401,9 @@ public class BundleArchive
         foreach (ulong resourceId in resourceIds)
         {
             BundleEntry entry = new(this);
-            entry.EntryBlocks = new EntryBlock[3];
+            entry.EntryBlocks = [null, null, new EntryBlock()]; // Blocks 2, 4 and 5 aren't read, see below
             entry.ID = resourceId;
+            entry.Platform = Platform;
 
             br.ReadUInt32(); // unknown mem stuff
 
@@ -442,7 +481,7 @@ public class BundleArchive
                 long pos = br.BaseStream.Position;
                 br.BaseStream.Position = readOffset;
 
-                entryBlock.RawData = br.ReadBytes((int)readSize);
+                entryBlock.RawData = ReadBlock(br, readSize, resourceId, j);
 
                 br.BaseStream.Position = pos;
             }
@@ -501,30 +540,34 @@ public class BundleArchive
         }
 
         BundleEntry rst = GetEntryByID(0xC039284A);
-        if (rst == null)
-            return true;
+        if (rst != null)
+        {
+            BinaryReader2 br2 = new(rst.MakeStream());
+            br2.BigEndian = false;
 
-        BinaryReader2 br2 = new(rst.MakeStream());
-        br2.BigEndian = false;
+            // TODO: Store only the debug info and not the full string
+            ResourceStringTable = br2.ReadLenString(br2.ReadInt32());
 
-        // TODO: Store only the debug info and not the full string
-        ResourceStringTable = br2.ReadLenString(br2.ReadInt32());
+            br2.Close();
 
-        br2.Close();
+            ProcessRST(ResourceStringTable);
 
-        // Cover Criterion's broken XML writer.
-        if (ResourceStringTable.StartsWith("</ResourceStringTable>"))
-            ResourceStringTable = ResourceStringTable.Remove(1, 1);
-        string badLine = "</ResourceStringTable>\n\t";
-        int index = ResourceStringTable.IndexOf(badLine);
-        if (index > -1)
-            ResourceStringTable = ResourceStringTable.Remove(index, badLine.Length);
+            Entries.Remove(rst);
+        }
 
-        ProcessRST(ResourceStringTable);
-
-        Entries.Remove(rst);
+        // List rows find their entry by index
+        for (int i = 0; i < Entries.Count; i++)
+            Entries[i].Index = i;
 
         return true;
+    }
+
+    private static byte[] ReadBlock(BinaryReader2 br, uint size, ulong id, int block)
+    {
+        byte[] data = br.ReadBytes((int)size);
+        if (data.Length != size)
+            throw new ReadFailedError($"The file is cut short: resource 0x{id:X8} needs {size} bytes in block {block}, but only {data.Length} are left.");
+        return data;
     }
 
     private bool ReadBND2(BinaryReader2 br)
@@ -607,7 +650,7 @@ public class BundleArchive
                     continue;
                 }
 
-                block.RawData = br.ReadBytes((int)readSize);
+                block.RawData = ReadBlock(br, readSize, entry.ID, j);
                 //if (compressed)
                 //    block.Data = block.Data.Decompress((int)blockUncompressedSizes[j]);
                 br.BaseStream.Position = lastAddr;
@@ -637,19 +680,27 @@ public class BundleArchive
         return true;
     }
 
-    public void Write(string path)
+    public void Write(string path, CancellationToken cancel = default)
     {
-        Stream s = File.Open(path, FileMode.Create);
-        BinaryWriter2 bw = new(s);
-        bw.BigEndian = Console;
+        if (BNDVersion == 1)
+            throw new NotSupportedException("Saving BND1 (bndl) bundles isn't supported, as Bundle Manager can only write BND2.");
 
-        Write(bw);
-
-        bw.Flush();
-        bw.Close();
+        string temp = path + ".saving";
+        try
+        {
+            using (BinaryWriter2 bw = new(File.Create(temp), Console))
+                Write(bw, cancel);
+            cancel.ThrowIfCancellationRequested();
+            File.Move(temp, path, true);
+        }
+        finally
+        {
+            if (File.Exists(temp))
+                File.Delete(temp);
+        }
     }
 
-    public void Write(BinaryWriter2 bw)
+    public void Write(BinaryWriter2 bw, CancellationToken cancel = default)
     {
         RebuildRST();
 
@@ -700,8 +751,10 @@ public class BundleArchive
 
         List<byte[][]> compressedBlocks = [];
 
+        bool compress = Flags.HasFlag(Flags.Compressed);
         for (int i = 0; i < this.Entries.Count; i++)
         {
+            cancel.ThrowIfCancellationRequested();
             BundleEntry entry = this.Entries[i];
 
             compressedBlocks.Add(new byte[3][]);
@@ -726,7 +779,10 @@ public class BundleArchive
                     bw.Write((uint)0);
                 else
                 {
-                    compressedBlocks[i][j] = Flags.HasFlag(Flags.Compressed) ? entryBlock.Data.Compress() : entryBlock.Data;
+                    // A compressed block's RawData always matches its Data, so only uncompressed ones need compressing
+                    compressedBlocks[i][j] = !compress ? entryBlock.Data
+                        : entryBlock.Compressed ? entryBlock.RawData
+                        : entryBlock.Data.Compress();
                     bw.Write(compressedBlocks[i][j].Length);
                 }
             }
@@ -755,6 +811,7 @@ public class BundleArchive
 
             for (int j = 0; j < Entries.Count; j++)
             {
+                cancel.ThrowIfCancellationRequested();
                 byte[] diskData = compressedBlocks[j][i];
 
                 if (diskData != null && diskData.Length > 0)
@@ -839,8 +896,8 @@ public class BundleArchive
 
         for (int i = 0; i < fileCount; i++)
         {
-            uint id = br.ReadUInt32();
-            br.BaseStream.Position += 0x3C;
+            uint id = (uint)br.ReadUInt64(); // A 64 bit ID, so console bundles hold the low half second
+            br.BaseStream.Position += 0x38;
 
             result.Add(id);
         }
@@ -893,8 +950,8 @@ public class BundleArchive
 
         for (int i = 0; i < fileCount; i++)
         {
-            uint id = br.ReadUInt32();
-            br.BaseStream.Position += 0x34;
+            uint id = (uint)br.ReadUInt64(); // A 64 bit ID, so console bundles hold the low half second
+            br.BaseStream.Position += 0x30;
             EntryType type = (EntryType)br.ReadUInt32();
             br.BaseStream.Position += 0x4;
 
@@ -940,8 +997,8 @@ public class BundleArchive
 
         for (int i = 0; i < fileCount; i++)
         {
-            uint id2 = br.ReadUInt32();
-            br.BaseStream.Position += 0x34;
+            uint id2 = (uint)br.ReadUInt64(); // A 64 bit ID, so console bundles hold the low half second
+            br.BaseStream.Position += 0x30;
             EntryType type = (EntryType) br.ReadUInt32();
             br.BaseStream.Position += 0x4;
 

@@ -36,6 +36,30 @@ public static class BundleCache
         return string.IsNullOrWhiteSpace(name) ? ResourceDB.Lookup(entryID) : name;
     }
 
+    private static readonly Dictionary<string, BundleArchive> Archives = [];
+
+    public static BundleArchive GetArchive(string path)
+    {
+        lock (Archives)
+        {
+            if (!Archives.TryGetValue(path, out BundleArchive archive))
+                Archives[path] = archive = BundleArchive.Read(path);
+            return archive;
+        }
+    }
+
+    public static void ClearArchives()
+    {
+        lock (Archives)
+            Archives.Clear();
+    }
+
+    public static BundleEntry GetEntryByID(ulong entryID)
+    {
+        string file = GetFileByEntryID(entryID);
+        return file == null ? null : GetArchive(file)?.GetEntryByID(entryID);
+    }
+
     public static string GetRelativePath(string path)
     {
         string file = path.Replace('\\', '/').Replace(CurrentPath.Replace('\\', '/'), "");

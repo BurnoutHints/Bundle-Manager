@@ -31,21 +31,11 @@ public class TextureState
             }
             else
             {
-                BundleEntry descEntry1 = entry.Archive.GetEntryByID(id);
-                if (descEntry1 == null)
-                {
-                    string file = BundleCache.GetFileByEntryID(id);
-                    if (!string.IsNullOrEmpty(file))
-                    {
-                        BundleArchive archive = BundleArchive.Read(file);
-                        if (archive != null)
-                            descEntry1 = archive.GetEntryByID(id);
-                    }
-                }
+                BundleEntry descEntry1 = entry.Archive.GetEntryByID(id) ?? BundleCache.GetEntryByID(id);
 
                 if (descEntry1 != null && descEntry1.Type == EntryType.Texture)
                 {
-                    result.Texture = GameImage.GetImage(descEntry1.EntryBlocks[0].Data, descEntry1.EntryBlocks[1].Data);
+                    result.Texture = GameImage.GetImage(descEntry1.EntryBlocks[0].Data, descEntry1.EntryBlocks[1].Data, descEntry1.Platform);
 
                     if (result.Texture != null)
                         TextureCache.AddToCache(id, result.Texture);

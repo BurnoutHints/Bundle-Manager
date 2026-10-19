@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using BundleFormat;
 using BundleUtilities;
 using MathLib;
@@ -102,6 +103,9 @@ public class Renderable : IEntryData
         {
             RenderableMesh rMesh = Meshes[i];
             Mesh mesh = new();
+            meshes[i] = mesh;
+            if (rMesh.Vertices == null) // No vertex descriptor to read them with
+                continue;
 
             if (rMesh.Material != null)
             {
@@ -122,14 +126,20 @@ public class Renderable : IEntryData
                 mesh.Normals.Add(data.Normal1);
                 mesh.UV1.Add(data.UV1);
             }
-
-            meshes[i] = mesh;
         }
         
         Model = new Model(meshes);
     }
 
     public VertexData ReadVertex(BinaryReader2 br, VertexAttribute attribute)
+    {
+        long start = br.BaseStream.Position;
+        VertexData vertex = ReadVertexLayout(br, attribute);
+        br.BaseStream.Position = start + attribute.Size;
+        return vertex;
+    }
+
+    private static VertexData ReadVertexLayout(BinaryReader2 br, VertexAttribute attribute)
     {
         switch (attribute.Size) // We don't use type here. This is wrong tbh.
         {
@@ -194,6 +204,8 @@ public class Renderable : IEntryData
                 };
         }
 
+        if (attribute.Size >= 0xC)
+            return new VertexData { Vertex = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()) };
         return new VertexData();
     }
 
@@ -234,16 +246,21 @@ public class Renderable : IEntryData
             }
 
             if (attributeToUse.Size == 0)
-            {
-                break;
-            }
+                continue; // Leaves Vertices null, which BuildModel skips
 
+            uint first = mesh.Indices.Count > 0 ? mesh.Indices.Min() : 0;
+            uint last = mesh.Indices.Count > 0 ? mesh.Indices.Max() : 0;
+            long start = VertexBlockAddress + mesh.VertexOffsetCount * attributeToUse.Size + attributeToUse.Offset;
             mesh.Vertices = [];
-            br.BaseStream.Position = VertexBlockAddress + mesh.VertexOffsetCount * attributeToUse.Size + attributeToUse.Offset;
-            while (br.BaseStream.Position + attributeToUse.Size < br.BaseStream.Length) // Really, this should not be done like this.
+            for (long vertex = first; vertex <= last; vertex++)
             {
+                br.BaseStream.Position = start + vertex * attributeToUse.Size;
+                if (br.BaseStream.Position + attributeToUse.Size > br.BaseStream.Length)
+                    break;
                 mesh.Vertices.Add(ReadVertex(br, attributeToUse));
             }
+            for (int j = 0; j < mesh.Indices.Count; j++)
+                mesh.Indices[j] -= first;
         }
     }
 
@@ -543,6 +560,10 @@ public class Renderable : IEntryData
         br.Close();
         ms.Close();
         
+        Dictionary<ulong, MaterialEntry> materials = [];
+        Dictionary<ulong, VertexDesc> descriptions = [];
+        BundleEntry Find(ulong id) => entry.Archive.GetEntryByID(id) ?? BundleCache.GetEntryByID(id);
+
         loader?.SetStatus("Loading Meshes");
         for (int i = 0; i < Meshes.Count; i++)
         {
@@ -555,38 +576,22 @@ public class Renderable : IEntryData
 
             if (LoadMaterials)
             {
-                BundleEntry descEntry1 = entry.Archive.GetEntryByID(mesh.MaterialID);
-                if (descEntry1 == null)
+                if (!materials.TryGetValue(mesh.MaterialID, out mesh.Material))
                 {
-                    string file = BundleCache.GetFileByEntryID(mesh.MaterialID);
-                    if (!string.IsNullOrEmpty(file))
-                    {
-                        BundleArchive archive = BundleArchive.Read(file);
-                        descEntry1 = archive.GetEntryByID(mesh.MaterialID);
-                    }
+                    BundleEntry materialEntry = Find(mesh.MaterialID);
+                    materials[mesh.MaterialID] = mesh.Material = materialEntry == null ? null : MaterialEntry.Read(materialEntry);
                 }
-
-                if (descEntry1 != null)
-                    mesh.Material = MaterialEntry.Read(descEntry1);
             }
 
             mesh.VertexDescriptions = new VertexDesc[mesh.VertexDescriptionIDs.Length];
             for (int j = 0; j < mesh.VertexDescriptions.Length; j++)
             {
                 ulong vertexDescID = mesh.VertexDescriptionIDs[j];
-                BundleEntry descEntry = entry.Archive.GetEntryByID(vertexDescID);
-                if (descEntry == null)
+                if (!descriptions.TryGetValue(vertexDescID, out mesh.VertexDescriptions[j]))
                 {
-                    string file = BundleCache.GetFileByEntryID(vertexDescID);
-                    if (!string.IsNullOrEmpty(file))
-                    {
-                        BundleArchive archive = BundleArchive.Read(file);
-                        descEntry = archive.GetEntryByID(vertexDescID);
-                    }
+                    BundleEntry descEntry = Find(vertexDescID);
+                    descriptions[vertexDescID] = mesh.VertexDescriptions[j] = descEntry == null ? null : VertexDesc.Read(descEntry);
                 }
-
-                if (descEntry != null)
-                    mesh.VertexDescriptions[j] = VertexDesc.Read(descEntry);
             }
         }
 

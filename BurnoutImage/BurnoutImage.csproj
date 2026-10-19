@@ -8,6 +8,7 @@
     <PackageReference Include="BCnEncoder.Net" Version="2.3.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BundleFormat\BundleFormat.csproj" />
     <ProjectReference Include="..\BundleUtilities\BundleUtilities.csproj" />
   </ItemGroup>
 </Project>

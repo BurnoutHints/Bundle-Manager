@@ -36,6 +36,8 @@ public class MeshFace
 public class Mesh
 {
     private int _vertexArray;
+    private int _buffer;
+    private int _vertexCount;
     private int _indexArray;
     private int _texture;
 
@@ -45,7 +47,6 @@ public class Mesh
     public List<Vector3> Normals { get; set; }
     public List<Vector3> Normals2 { get; set; }
     public List<uint> Indices { get; set; }
-    private List<uint> TempIndices;
     public List<MeshFace> Faces { get; set; }
     public List<Vector2> UV1 { get; set; }
     public List<Vector2> UV2 { get; set; }
@@ -209,32 +210,24 @@ public class Mesh
             }
         }*/
 
-        for (int i = 0; i < indices2.Count; i++)
+        for (int i = 0; i + 2 < indices2.Count; i += 3)
         {
-            if (indices2[i] >= Vertices.Count)
-            {
-                //MessageBox.Show("Index too large: " + indices[i].ToString("X2") + " >= " + Vertices.Count.ToString("X8"));
+            // Drop a triangle with a missing corner whole, as dropping only the corner shifts every triangle after it
+            if (indices2[i] >= Vertices.Count || indices2[i + 1] >= Vertices.Count || indices2[i + 2] >= Vertices.Count)
                 continue;
+
+            for (int j = i; j < i + 3; j++)
+            {
+                int index = (int)indices2[j];
+                vertices.Add(new TexturedVertex(Vertices[index], index < UV1.Count ? UV1[index] : Vector2.Zero));
             }
-            Vector3 pos = Vertices[(int)indices2[i]];
-            //Vector2 uv = new Vector2();
-            //if (UV1.Count < indices[i])
-            //    uv = UV1[(int) indices[i]];
-            Vector2 uv1;
-            if (indices2[i] < UV1.Count)
-                uv1 = UV1[(int)indices2[i]];
-            else
-                uv1 = new Vector2(0, 0);
-
-            Vector2 uv = new(uv1.X, uv1.Y);
-
-            vertices.Add(new TexturedVertex(pos, uv));
         }
 
-        TempIndices = new List<uint>(indices2);
+        _vertexCount = vertices.Count;
 
         _vertexArray = GL.GenVertexArray();
-        int buffer = GL.GenBuffer();
+        _buffer = GL.GenBuffer();
+        int buffer = _buffer;
         GL.BindVertexArray(_vertexArray);
         GL.BindBuffer(BufferTarget.ArrayBuffer, buffer);
 
@@ -347,10 +340,7 @@ public class Mesh
 
         GL.BindVertexArray(_vertexArray);
         //GL.PointSize(4.0f);
-        if (TempIndices != null)
-            GL.DrawArrays(PrimitiveType.Triangles, 0, TempIndices.Count);
-        else
-            GL.DrawArrays(PrimitiveType.Triangles, 0, Indices.Count);
+        GL.DrawArrays(PrimitiveType.Triangles, 0, _vertexCount);
 
         /*GL.EnableClientState(ArrayCap.VertexArray);
         GL.EnableClientState(ArrayCap.IndexArray);
@@ -378,5 +368,7 @@ public class Mesh
     public void Dispose()
     {
         GL.DeleteVertexArrays(1, ref _vertexArray);
+        GL.DeleteBuffers(1, ref _buffer);
+        GL.DeleteTextures(1, ref _texture);
     }
 }

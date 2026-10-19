@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -12,7 +13,21 @@ public class EntryBlock
     public uint CompressedSize;
     public uint UncompressedSize;
     public uint UncompressedAlignment = 1; // default depending on file type, 1 (what empty blocks use) so new blocks never write alignment 0
-    public byte[] RawData;
+
+    // As stored in the bundle, so saving can write unchanged compressed blocks without recompressing them
+    private byte[] _rawData;
+    public byte[] RawData
+    {
+        get => _rawData;
+        set
+        {
+            _rawData = value;
+            _data = null;
+        }
+    }
+
+    // RawData inflated once, as the list, handlers and saving all read Data repeatedly
+    private byte[] _data;
     public byte[] Data
     {
         get
@@ -21,16 +36,15 @@ public class EntryBlock
                 return null;
 
             if (Compressed)
-                return RawData.Decompress();
+                return _data ??= RawData.Decompress();
 
             return RawData;
         }
         set
         {
+            RawData = Compressed ? value.Compress() : value;
             if (Compressed)
-                RawData = value.Compress();
-            else
-                RawData = value;
+                _data = value;
 
             UncompressedSize = (uint)value.Length;
             CompressedSize = (uint)RawData.Length;
@@ -185,10 +199,7 @@ public class BundleEntry
         Dependencies = [];
     }
 
-    public ulong ImportID => 
-        DependencyCount == 0 
-            ? 0 
-            : GetDependencies().Aggregate(0UL, (id, dep) => id | dep.EntryID);
+    public ulong ImportID => Imports().Aggregate(0UL, (id, dep) => id | dep.ID);
 
     // Secondary data is memory type 2 on PS3 and 1 elsewhere
     public int SecondaryBlock => HasSection(1) ? 1 : (HasSection(2) || Platform == BundlePlatform.PS3) ? 2 : 1;
@@ -198,102 +209,47 @@ public class BundleEntry
         return EntryBlocks != null &&
                section < EntryBlocks.Length &&
                section >= 0 &&
-               EntryBlocks[section] != null &&
-               EntryBlocks[section].Data != null &&
-               EntryBlocks[section].Data.Length > 0;
+               EntryBlocks[section]?.Data is { Length: > 0 };
     }
 
+    // Read only, as Data is cached and saving writes unchanged blocks as they were read
     public MemoryStream MakeStream(bool body = false)
     {
         if (EntryBlocks == null)
             return null;
 
-        if (body)
-            return new MemoryStream(EntryBlocks[1].Data);
-        return new MemoryStream(EntryBlocks[0].Data);
+        return new MemoryStream(EntryBlocks[body ? 1 : 0].Data, false);
+    }
+
+    // The import table: the bundle's own list (BND1), or the one at the end of primary data
+    private List<Dependency> Imports()
+    {
+        if (Dependencies.Count > 0 || DependencyCount == 0)
+            return Dependencies;
+
+        List<Dependency> imports = [];
+        using BinaryReader2 br = new(MakeStream(), Console);
+        br.BaseStream.Position = DependenciesListOffset;
+        for (int i = 0; i < DependencyCount; i++)
+            imports.Add(Dependency.Read(br));
+        return imports;
     }
 
     public List<BundleDependency> GetDependencies()
     {
         List<BundleDependency> result = [];
-
-        if (Dependencies.Count > 0)
+        foreach (Dependency dep in Imports())
         {
-            for (int i = 0; i < Dependencies.Count; i++)
+            // TODO: look in other bundles through BundleCache.GetFileByEntryID
+            int index = Archive.Entries.FindLastIndex(e => e.ID == dep.ID);
+            result.Add(new BundleDependency
             {
-                BundleDependency dependency = new();
-
-                dependency.EntryID = Dependencies[i].ID;
-                dependency.EntryPointerOffset = (int)Dependencies[i].EntryPointerOffset;
-
-                BundleEntry entry = null;
-
-                /*string file = BundleCache.GetFileByEntryID(dependency.EntryID);
-                if (!string.IsNullOrEmpty(file))
-                {
-                    BundleArchive archive = BundleArchive.Read(file, dependency.EntryID);
-                    entry = archive.GetEntryByID(dependency.EntryID);
-                }*/
-                //}
-
-                // TODO
-                for (int j = 0; j < Archive.Entries.Count; j++)
-                {
-                    if (Archive.Entries[j].ID != dependency.EntryID)
-                        continue;
-
-                    dependency.EntryIndex = j;
-                    entry = Archive.Entries[j];
-                }
-
-                dependency.Entry = entry;
-
-                result.Add(dependency);
-            }
-            return result;
+                EntryID = dep.ID,
+                EntryPointerOffset = (int)dep.EntryPointerOffset,
+                EntryIndex = Math.Max(index, 0),
+                Entry = index >= 0 ? Archive.Entries[index] : null
+            });
         }
-
-        MemoryStream ms = MakeStream();
-        BinaryReader2 br = new(ms);
-        br.BigEndian = Console;
-
-        br.BaseStream.Position = DependenciesListOffset;
-
-        for (int i = 0; i < DependencyCount; i++)
-        {
-            BundleDependency bundleDependency = new();
-
-            Dependency dep = Dependency.Read(br);
-            bundleDependency.EntryID = dep.ID;
-            bundleDependency.EntryPointerOffset = (int)dep.EntryPointerOffset;
-
-            BundleEntry entry = null;
-
-            /*string file = BundleCache.GetFileByEntryID(bundleDependency.EntryID);
-            if (!string.IsNullOrEmpty(file))
-            {
-                BundleArchive archive = BundleArchive.Read(file, bundleDependency.EntryID);
-                entry = archive.GetEntryByID(bundleDependency.EntryID);
-            }*/
-
-            // TODO
-            for (int j = 0; j < Archive.Entries.Count; j++)
-            {
-                if (Archive.Entries[j].ID != bundleDependency.EntryID)
-                    continue;
-
-                bundleDependency.EntryIndex = j;
-                entry = Archive.Entries[j];
-            }
-
-            bundleDependency.Entry = entry;
-
-            result.Add(bundleDependency);
-        }
-
-        br.Close();
-        ms.Close();
-
         return result;
     }
 
@@ -302,130 +258,7 @@ public class BundleEntry
         if (!string.IsNullOrWhiteSpace(DebugInfo.Name))
             return DebugInfo.Name;
 
-        string known = ResourceDB.Lookup(ID);
-        if (known != null)
-            return known;
-
-        string theName = "worldvault";
-        ulong theID = Crc32.HashCrc32B(theName);
-        if (theID == ID)
-            return theName;
-        theName = "postfxvault";
-        theID = Crc32.HashCrc32B(theName);
-        if (theID == ID)
-            return theName;
-        theName = "cameravault";
-        theID = Crc32.HashCrc32B(theName);
-        if (theID == ID)
-            return theName;
-
-        string path = Path.GetFileNameWithoutExtension(Archive.Path);
-        string file = null;
-        if (path != null)
-            file = path.ToUpper();
-
-        if (file != null && file.StartsWith("TRK_UNIT") && file.EndsWith("_GR"))
-        {
-            string trackID = file[8..].Replace("_GR", "").ToLower();
-            string name = "trk_unit" + trackID + "_list";
-            ulong newID = Crc32.HashCrc32B(name);
-            if (newID == ID)
-                return name;
-            name = "prp_inst_" + trackID;
-            newID = Crc32.HashCrc32B(name);
-            if (newID == ID)
-                return name;
-            name = "prp_gl__" + trackID;
-            newID = Crc32.HashCrc32B(name);
-            if (newID == ID)
-                return name;
-            name = "trk_unit" + trackID + "_passby";
-            newID = Crc32.HashCrc32B(name);
-            if (newID == ID)
-                return name;
-            name = "trk_unit" + trackID + "_emitter";
-            newID = Crc32.HashCrc32B(name);
-            if (newID == ID)
-                return name;
-        }
-
-        if (file != null)
-        {
-            string aptName = file.ToLower() + ".swf";
-            ulong aptID = Crc32.HashCrc32B(aptName);
-            if (aptID == ID)
-                return aptName;
-        }
-
-        if (file != null && file.StartsWith("WHE_") && file.EndsWith("_GR"))
-        {
-            string wheelID = file[4..].Replace("_GR", "").ToLower();
-            string name = wheelID + "_graphics";
-            ulong newID = Crc32.HashCrc32B(name);
-            if (newID == ID)
-                return name;
-        }
-
-        if (file != null && file.StartsWith("VEH_"))
-        {
-            if (file.EndsWith("_AT"))
-            {
-                string vehicleID = file[4..].Replace("_AT", "").ToLower();
-                string name = vehicleID + "_attribsys";
-                ulong newID = Crc32.HashCrc32B(name);
-                if (newID == ID)
-                    return name;
-                name = vehicleID + "deformationmodel";
-                newID = Crc32.HashCrc32B(name);
-                if (newID == ID)
-                    return name;
-                name = vehicleID + "_bpr";
-                newID = Crc32.HashCrc32B(name);
-                if (newID == ID)
-                    return name;
-                name = vehicleID + "_anim";
-                newID = Crc32.HashCrc32B(name);
-                if (newID == ID)
-                    return name;
-                name = vehicleID + "_trafficstub";
-                newID = Crc32.HashCrc32B(name);
-                if (newID == ID)
-                    return name;
-                name = vehicleID + "_vanm";
-                newID = Crc32.HashCrc32B(name);
-                if (newID == ID)
-                    return name;
-            } else if (file.EndsWith("_CD"))
-            {
-                string vehicleID = file[4..].Replace("_CD", "").ToLower();
-                string name = vehicleID;
-                ulong newID = Crc32.HashCrc32B(name);
-                if (newID == ID)
-                    return name;
-            } else if (file.EndsWith("_GR"))
-            {
-                string vehicleID = file[4..].Replace("_GR", "").ToLower();
-                string name = vehicleID + "_graphics";
-                ulong newID = Crc32.HashCrc32B(name);
-                if (newID == ID)
-                    return name;
-            }
-        }
-
-        // WorldCol Names
-        for (int i = 0; i < Archive.EntryCount; i++)
-        {
-            string name = "trk_col_" + i;
-            ulong newID = Crc32.HashCrc32B(name);
-            if (newID == ID)
-                return name;
-            name = "trk_clil" + i;
-            newID = Crc32.HashCrc32B(name);
-            if (newID == ID)
-                return name;
-        }
-
-        return "";
+        return ResourceDB.Lookup(ID) ?? Archive.GuessName(ID) ?? "";
     }
 
     public static Color GetColor(EntryType type) => type switch

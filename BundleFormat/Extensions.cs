@@ -28,15 +28,10 @@ public static class Extensions
         return sb.ToString();
     }
 
+    // Shorter data previews what there is
     public static string MakePreview(this byte[] self, int start, int end)
     {
-        byte[] subArray = new byte[end - start];
-        int index = 0;
-        for (int i = start; i < start + end; i++)
-        {
-            subArray[index++] = self[i];
-        }
-        return subArray.AsString();
+        return self[Math.Min(start, self.Length)..Math.Min(end, self.Length)].AsString();
     }
 
     public static byte[] Compress(this byte[] self)

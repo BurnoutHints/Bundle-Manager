@@ -125,14 +125,19 @@ public partial class SceneRenderControl : UserControl
         }
     }
 
-    public new void Dispose()
+    // From Dispose, while glcMain and its GL context still exist
+    private void StopRendering()
     {
-        if (!_designMode)
+        if (_designMode)
+            return;
+
+        tmrUpdate.Enabled = false;
+        if (_graphicsScene != null && glcMain.IsHandleCreated)
         {
-            tmrUpdate.Enabled = false;
-            _graphicsScene?.Cleanup();
+            glcMain.MakeCurrent();
+            _graphicsScene.Cleanup();
         }
-        base.Dispose();
+        _graphicsScene = null;
     }
 
     private int _updateCount;

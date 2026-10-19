@@ -103,23 +103,21 @@ public partial class FileView : Form
         }
         lstMain.Enabled = Utilities.IsValidPath(_currentPath);
 
+        lstMain.BeginUpdate();
+        lstMain.Items.Clear();
         foreach (string path in BundleCache.Paths)
-        {
-            string fixedPath = path.Replace('\\', '/');
-            string fixedCurrentPath = _currentPath.Replace('\\', '/');
+            lstMain.Items.Add(BundleCache.GetRelativePath(path));
+        lstMain.EndUpdate();
+    }
 
-            fixedPath = fixedPath.Replace(fixedCurrentPath, "");
-
-            if (fixedPath.StartsWith("/"))
-                fixedPath = fixedPath[1..];
-
-            string[] itemData =
-            [
-                fixedPath
-            ];
-
-            lstMain.Items.Add(new ListViewItem(itemData));
-        }
+    // What a folder load found, published to BundleCache on the UI thread once it's complete
+    private class FileList
+    {
+        public readonly List<string> Paths = [];
+        public readonly Dictionary<ulong, int> Files = [];
+        public readonly Dictionary<ulong, EntryInfo> EntryInfos = [];
+        public bool Stopped;
+        public Exception Error;
     }
 
     private void LoadFileList()
@@ -127,22 +125,49 @@ public partial class FileView : Form
         lstMain.Items.Clear();
         if (HasPath)
         {
+            // A cancelled load may still be finishing its current file, but only into its own discarded result
+            string root = _currentPath;
+            CancellationTokenSource cancel = new();
+            FileList result = new();
+
             LoadingDialog loader = new();
-            loader.Status = "Loading: " + _currentPath;
+            loader.Status = "Loading: " + root;
             loader.Done += (cancelled, value) =>
             {
-                if (cancelled)
+                cancel.Cancel();
+                if (cancelled || result.Stopped || result.Error != null)
                 {
-                    _updateDisplayThread?.Interrupt();
                     _currentPath = null;
+                    if (result.Error != null)
+                        MessageBox.Show(this, $"Couldn't load {root}:\n{result.Error.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else
+                {
+                    BundleCache.Paths.Clear();
+                    BundleCache.Paths.AddRange(result.Paths);
+                    BundleCache.Files.Clear();
+                    foreach (var file in result.Files)
+                        BundleCache.Files.Add(file.Key, file.Value);
+                    BundleCache.EntryInfos.Clear();
+                    foreach (var info in result.EntryInfos)
+                        BundleCache.EntryInfos.Add(info.Key, info.Value);
                 }
                 UpdateDisplay();
             };
             _updateDisplayThread = new Thread(() =>
             {
-                DoLoadFileList(loader);
-
-                loader.Value = new object[] { _currentPath };
+                try
+                {
+                    DoLoadFileList(loader, root, result, cancel.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    result.Stopped = true; // Cancelled, or stopped at an ID conflict
+                }
+                catch (Exception ex)
+                {
+                    result.Error = ex;
+                }
                 loader.IsDone = true;
             });
             _updateDisplayThread.Start();
@@ -188,16 +213,14 @@ public partial class FileView : Form
         }));
     }
 
-    private void DoLoadFileList(ILoader loader)
+    // Runs on a worker thread, so it only touches its own result until the UI thread publishes it
+    private void DoLoadFileList(ILoader loader, string root, FileList result, CancellationToken cancel)
     {
-        BundleCache.Files.Clear();
-        BundleCache.Paths.Clear();
-        BundleCache.EntryInfos.Clear();
-        string[] files = Directory.GetFiles(_currentPath, "*.*", SearchOption.AllDirectories);
+        string[] files = Directory.GetFiles(root, "*.*", SearchOption.AllDirectories);
 
         Dictionary<string, bool> fileTypes = [];
 
-        string cachePath = _currentPath + "/files.bmcache";
+        string cachePath = root + "/files.bmcache";
         if (File.Exists(cachePath))
         {
             string[] lines = File.ReadAllLines(cachePath);
@@ -212,93 +235,61 @@ public partial class FileView : Form
             }
         }
 
-        int i = 0;
         int index = 0;
         bool ignoreAllConflicts = false;
         foreach (string file in files)
         {
+            cancel.ThrowIfCancellationRequested();
             index++;
+            if (!fileTypes.ContainsKey(file))
+            {
+                bool isBundle = BundleArchive.IsBundle(file);
+                fileTypes.Add(file, isBundle);
+
+                if (!isBundle)
+                    continue;
+            }
+            else if (!fileTypes[file])
+            {
+                continue;
+            }
+
+            int progress = index * 100 / files.Length;
+            loader.SetStatus("Loading(" + progress.ToString("D2") + "%): " + Path.GetFileName(file));
+            loader.SetProgress(progress);
+
+            List<EntryInfo> infos;
             try
             {
-                if (!fileTypes.ContainsKey(file))
-                {
-                    bool isBundle = BundleArchive.IsBundle(file);
-                    fileTypes.Add(file, isBundle);
+                infos = BundleArchive.GetEntryInfos(file, false);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Skipping {file}: {ex.Message}"); // One unreadable bundle shouldn't stop the folder loading
+                continue;
+            }
+            if (infos == null)
+                continue;
 
-                    if (!isBundle)
-                        continue;
-                }
-                else if (!fileTypes[file])
+            foreach (EntryInfo info in infos)
+            {
+                uint entryID = info.ID;
+                if (result.Files.TryGetValue(entryID, out int otherIndex))
                 {
+                    if (ignoreAllConflicts)
+                        continue;
+                    ConflictChoice choice = ResolveConflict(entryID, file, result.Paths[otherIndex]);
+                    if (choice.Cancel)
+                        throw new OperationCanceledException();
+                    if (choice.IgnoreAll)
+                        ignoreAllConflicts = true;
                     continue;
                 }
-
-                int progress = index * 100 / files.Length;
-                loader.SetStatus("Loading(" + progress.ToString("D2") + "%): " + Path.GetFileName(file));
-                loader.SetProgress(progress);
-
-                string fixedPath = file.Replace('\\', '/');
-                string fixedCurrentPath = _currentPath.Replace('\\', '/');
-
-                fixedPath = fixedPath.Replace(fixedCurrentPath, "");
-
-                if (fixedPath.StartsWith("/"))
-                    fixedPath = fixedPath[1..];
-
-                string[] itemData =
-                [
-                    fixedPath
-                ];
-
-                bool cancel = false;
-
-                List<EntryInfo> entryIDs = BundleArchive.GetEntryInfos(file, false);
-                foreach (EntryInfo info in entryIDs)
-                {
-                    uint entryID = info.ID;
-                    if (BundleCache.Files.ContainsKey(entryID))
-                    {
-                        if (ignoreAllConflicts)
-                            continue;
-                        int index1 = BundleCache.Files[entryID];
-                        string otherFile = BundleCache.Paths[index1];
-                        ConflictChoice choice = ResolveConflict(entryID, file, otherFile);
-                        if (choice.Cancel)
-                        {
-                            cancel = true;
-                            break;
-                        }
-                        if (choice.IgnoreAll)
-                            ignoreAllConflicts = true;
-                        continue;
-                    }
-                    if (!BundleCache.EntryInfos.ContainsKey(entryID))
-                        BundleCache.EntryInfos.Add(entryID, info);
-                    BundleCache.Files.Add(entryID, i);
-                }
-
-                if (cancel)
-                {
-                    BundleCache.Files.Clear();
-                    BundleCache.Paths.Clear();
-                    BundleCache.EntryInfos.Clear();
-                    lstMain.Items.Clear();
-                    break;
-                }
-
-                BundleCache.Paths.Add(file);
-            }
-            catch (ThreadAbortException)
-            {
-                BundleCache.Files.Clear();
-                BundleCache.Paths.Clear();
-                BundleCache.EntryInfos.Clear();
-
-                _currentPath = null;
-                break;
+                result.EntryInfos.TryAdd(entryID, info);
+                result.Files.Add(entryID, result.Paths.Count);
             }
 
-            i++;
+            result.Paths.Add(file);
         }
 
         try

@@ -305,7 +305,7 @@ public class PVS : IEntryData
 
         if (descEntry1 != null && descEntry1.Type == EntryType.Texture)
         {
-            image = GameImage.GetImage(descEntry1.EntryBlocks[0].Data, descEntry1.EntryBlocks[1].Data);
+            image = GameImage.GetImage(descEntry1.EntryBlocks[0].Data, descEntry1.EntryBlocks[1].Data, descEntry1.Platform);
 
             if (image != null)
                 TextureCache.AddToCache(id, image);

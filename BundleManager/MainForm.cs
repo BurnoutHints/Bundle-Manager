@@ -131,6 +131,7 @@ public partial class MainForm : Form
     public bool ForceOnlySpecificEntry = false;
 
     private Thread _openSaveThread;
+    private Thread _saveThread;
 
     private const int NameColumn = 1;
     private readonly Font _inferredNameFont;
@@ -165,28 +166,20 @@ public partial class MainForm : Form
         }
 
         lstEntries.BeginUpdate();
+        IComparer sorter = lstEntries.ListViewItemSorter ?? new EntrySorter(0);
         lstEntries.ListViewItemSorter = null; // Disable sorting while adding
 
         foreach (BundleEntry entry in CurrentArchive.Entries)
         {
-            if (entry.EntryBlocks[0].Data == null) // Exception occurred
-            {
-                lstEntries.Items.Clear();
-                lstEntries.Enabled = false;
-                CurrentArchive = null;
-                CurrentFileName = null;
-                lstEntries.EndUpdate();
-                UpdatePluginMenu();
-                return;
-            }
+            byte[] primary = entry.EntryBlocks[0].Data ?? [];
             string[] values =
             [
                 entry.Index.ToString("d3"),
                 "", // Set by ShowName
                 "0x" + entry.ID.ToString("X8"),
                 entry.Type.ToString(),
-                entry.EntryBlocks[0].Data.Length.ToString(),
-                entry.EntryBlocks[0].Data.MakePreview(0, 16)
+                primary.Length.ToString(),
+                primary.MakePreview(0, 16)
             ];
 
             // Sub item styles so the name alone can be italic
@@ -198,7 +191,7 @@ public partial class MainForm : Form
             lstEntries.Items.Add(item);
         }
 
-        lstEntries.ListViewItemSorter = new EntrySorter(0); // Also calls Sort
+        lstEntries.ListViewItemSorter = sorter; // Also calls Sort, keeping the column chosen before
         lstEntries.EndUpdate();
     }
 
@@ -300,7 +293,7 @@ public partial class MainForm : Form
 
             if (CurrentArchive == null)
             {
-                MessageBox.Show(this, "There was an error opening archive: " + (string)values[1], "Error",
+                MessageBox.Show(this, $"There was an error opening {values[1]}:\n{values[2]}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 CurrentFileName = null;
                 Text = "Bundle Manager";
@@ -316,9 +309,18 @@ public partial class MainForm : Form
 
     public void DoOpenBundle(LoadingDialog loader, string path)
     {
-        BundleArchive archive = BundleArchive.Read(path);
+        BundleArchive archive = null;
+        string error = null;
+        try
+        {
+            archive = BundleArchive.Open(path);
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
 
-        loader.Value = new object[] { archive, path };
+        loader.Value = new object[] { archive, path, error };
         loader.IsDone = true;
     }
 
@@ -334,13 +336,7 @@ public partial class MainForm : Form
             return SaveAs();
         }
 
-        LoadingDialog loader = new();
-        loader.Status = "Saving: " + CurrentFileName;
-        loader.Done += Loader_SaveDone;
-        _openSaveThread = new Thread(() => DoSaveBundle(loader, CurrentFileName));
-        _openSaveThread.Start();
-        loader.ShowDialog(this);
-        return true;
+        return SaveTo(CurrentFileName);
     }
 
     public bool SaveAs()
@@ -355,42 +351,61 @@ public partial class MainForm : Form
         DialogResult result = sfd.ShowDialog(this);
         if (result == DialogResult.OK)
         {
-            if (!Utilities.IsValidPath(sfd.FileName))
+            if (!Utilities.IsValidPath(sfd.FileName) || !SaveTo(sfd.FileName))
                 return false;
-
-            LoadingDialog loader = new();
-            loader.Status = "Saving: " + sfd.FileName;
-            loader.Done += Loader_SaveDone;
-            _openSaveThread = new Thread(() => DoSaveBundle(loader, sfd.FileName));
-            _openSaveThread.Start();
-            loader.ShowDialog(this);
 
             CurrentFileName = sfd.FileName;
             Text = "Bundle Manager - " + CurrentFileName;
-            UpdateDisplay();
 
             return true;
         }
         return false;
     }
 
-    private void Loader_SaveDone(bool cancelled, object value)
+    // True only once the bundle is written. Cancelling, or an error, leaves the file as it was
+    private bool SaveTo(string path)
     {
+        _saveThread?.Join(); // A cancelled save may still be stopping. It never waits on the UI thread, so this can't deadlock
+
+        BundleArchive archive = CurrentArchive;
+        CancellationTokenSource cancel = new();
+        Exception error = null;
+        bool cancelled = false;
+
+        LoadingDialog loader = new();
+        loader.Status = "Saving: " + path;
+        loader.Done += (wasCancelled, _) =>
+        {
+            cancelled = wasCancelled;
+            if (wasCancelled)
+                cancel.Cancel();
+        };
+        _saveThread = new Thread(() =>
+        {
+            try
+            {
+                archive.Write(path, cancel.Token);
+            }
+            catch (Exception ex)
+            {
+                error = ex;
+            }
+            loader.IsDone = true;
+        });
+        _saveThread.Start();
+        loader.ShowDialog(this);
+
         if (cancelled)
+            return false;
+        if (error != null)
         {
-            _openSaveThread?.Interrupt();
+            MessageBox.Show(this, $"{path} wasn't saved, and is unchanged:\n{error.Message}", "Error",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
         }
-        else
-        {
-            CurrentArchive.Dirty = false;
-        }
-    }
 
-    public void DoSaveBundle(LoadingDialog loader, string path)
-    {
-        CurrentArchive.Write(path);
-
-        loader.IsDone = true;
+        archive.Dirty = false;
+        return true;
     }
 
     public void Exit()
@@ -459,7 +474,10 @@ public partial class MainForm : Form
                         }
                         IEntryEditor editor = data.GetEditor(entry);
                         if (editor != null)
+                        {
                             editor.ShowDialog(this);
+                            (editor as IDisposable)?.Dispose(); // Closing a dialog doesn't dispose it, and model viewers hold their scene and a running timer
+                        }
                         else
                             DebugUtil.ShowDebug(this, data);
                         if (ForceOnlySpecificEntry)
@@ -467,6 +485,7 @@ public partial class MainForm : Form
                     }
                 }
                 TextureCache.ResetCache();
+                BundleCache.ClearArchives();
             };
 
             loadInstanceThread = new Thread(() =>
@@ -501,7 +520,7 @@ public partial class MainForm : Form
         }
         else
         {
-            EntryEditor editor = new();
+            using EntryEditor editor = new();
             editor.ForceHex = forceHex;
             Task.Run(() => openEditor(editor, index));
             editor.ShowDialog(this);
@@ -669,6 +688,7 @@ public partial class MainForm : Form
         if (!CheckSave())
         {
             e.Cancel = true;
+            return; // Application.Exit would close again and ask a second time
         }
 
         if (!SubForm)
@@ -766,7 +786,7 @@ public partial class MainForm : Form
                 return;
             }
 
-            string indexText = CurrentArchive.Entries.IndexOf(entry).ToString("D3");
+            string indexText = entry.Index.ToString("D3");
             int listIndex = -1;
             for (int i = 0; i < lstEntries.Items.Count; i++)
             {
@@ -777,6 +797,8 @@ public partial class MainForm : Form
                     break;
                 }
             }
+            if (listIndex < 0)
+                return;
 
             lstEntries.SelectedIndices.Clear();
             lstEntries.SelectedIndices.Add(listIndex);
@@ -851,20 +873,10 @@ public partial class MainForm : Form
             string iX = itemX?.SubItems[Column].Text;
             string iY = itemY?.SubItems[Column].Text;
 
-            /*
-            if (int.TryParse(iX, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out var iXint))
-            {
-                if (int.TryParse(iY, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out var iYint))
-                {
-                    int val2 = iXint.CompareTo(iYint);
-                    if (this.Direction)
-                        return val2 * -1;
-                    return val2;
-                }
-            }
-            */
-
-            int val = Math.Sign(string.Compare(iX, iY, StringComparison.CurrentCultureIgnoreCase));
+            // Index and size are numbers, so 1000 sorts after 20
+            int val = long.TryParse(iX, out long nX) && long.TryParse(iY, out long nY)
+                ? nX.CompareTo(nY)
+                : Math.Sign(string.Compare(iX, iY, StringComparison.CurrentCultureIgnoreCase));
             if (this.Direction)
                 return val * -1;
             return val;
