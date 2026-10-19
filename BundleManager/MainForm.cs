@@ -566,6 +566,64 @@ public partial class MainForm : Form
         EditSelectedEntry(false, true);
     }
 
+    private void renameToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        RenameSelectedEntry();
+    }
+
+    // Edits the name in a text box over its cell, as the list's own label editing only edits the first column.
+    // Enter or clicking away keeps it, Escape cancels. An empty name removes it, leaving the detected one.
+    private void RenameSelectedEntry()
+    {
+        const int nameColumn = 1;
+
+        // F2 reaches here from the text box too, which is the list's only child
+        if (lstEntries.SelectedItems.Count == 0 || lstEntries.Controls.Count > 0)
+            return;
+
+        ListViewItem item = lstEntries.SelectedItems[0];
+        if (!int.TryParse(item.Text, out int index))
+            return;
+        BundleEntry entry = GetEntry(index);
+
+        item.EnsureVisible();
+        string shown = item.SubItems[nameColumn].Text;
+        TextBox box = new() { AutoSize = false, BorderStyle = BorderStyle.FixedSingle, Font = lstEntries.Font, Bounds = item.SubItems[nameColumn].Bounds, Text = shown };
+
+        bool finished = false;
+        void Finish(bool keep)
+        {
+            if (finished)
+                return;
+            finished = true;
+
+            string name = box.Text.Trim();
+            if (keep && name != shown)
+            {
+                entry.DebugInfo.Name = name.Length > 0 ? name : null;
+                entry.Dirty = true;
+                item.SubItems[nameColumn].Text = entry.DetectName();
+            }
+
+            lstEntries.Controls.Remove(box);
+            box.Dispose();
+            lstEntries.Focus();
+        }
+
+        box.KeyDown += (_, e) =>
+        {
+            if (e.KeyCode is not (Keys.Enter or Keys.Escape))
+                return;
+            e.SuppressKeyPress = true;
+            Finish(e.KeyCode == Keys.Enter);
+        };
+        box.LostFocus += (_, _) => Finish(true);
+
+        lstEntries.Controls.Add(box);
+        box.Focus();
+        box.SelectAll();
+    }
+
     private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
     {
         if (!CheckSave())

@@ -62,6 +62,7 @@ namespace BundleManager
             colPreview = new System.Windows.Forms.ColumnHeader();
             mnuLst = new System.Windows.Forms.ContextMenuStrip(components);
             previewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            renameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
             viewDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             viewDebugMenuStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -293,7 +294,7 @@ namespace BundleManager
             // 
             // mnuLst
             // 
-            mnuLst.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { previewToolStripMenuItem, toolStripMenuItem4, viewDataToolStripMenuItem, viewDebugMenuStripMenuItem });
+            mnuLst.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { previewToolStripMenuItem, renameToolStripMenuItem, toolStripMenuItem4, viewDataToolStripMenuItem, viewDebugMenuStripMenuItem });
             mnuLst.Name = "mnuLst";
             mnuLst.Size = new System.Drawing.Size(172, 76);
             // 
@@ -304,6 +305,14 @@ namespace BundleManager
             previewToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
             previewToolStripMenuItem.Text = "Preview";
             previewToolStripMenuItem.Click += previewToolStripMenuItem_Click;
+            // 
+            // renameToolStripMenuItem
+            // 
+            renameToolStripMenuItem.Name = "renameToolStripMenuItem";
+            renameToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F2;
+            renameToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            renameToolStripMenuItem.Text = "Rename";
+            renameToolStripMenuItem.Click += renameToolStripMenuItem_Click;
             // 
             // toolStripMenuItem4
             // 
@@ -371,6 +380,7 @@ namespace BundleManager
         private System.Windows.Forms.ColumnHeader colPreview;
         private System.Windows.Forms.ContextMenuStrip mnuLst;
         private System.Windows.Forms.ToolStripMenuItem previewToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem renameToolStripMenuItem;
         private System.Windows.Forms.ColumnHeader colType;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
         private System.Windows.Forms.ToolStripMenuItem viewDataToolStripMenuItem;        
