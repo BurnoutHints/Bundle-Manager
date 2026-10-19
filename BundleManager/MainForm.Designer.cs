@@ -45,6 +45,7 @@ namespace BundleManager
             searchForEntryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             pluginToolsSeparatorItem = new System.Windows.Forms.ToolStripSeparator();
             addResourcesToBundleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            fillMissingNamesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             toolStrip1 = new System.Windows.Forms.ToolStrip();
             tsbNew = new System.Windows.Forms.ToolStripButton();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
@@ -156,7 +157,7 @@ namespace BundleManager
             // 
             // toolsToolStripMenuItem
             // 
-            toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { searchForEntryToolStripMenuItem, addResourcesToBundleToolStripMenuItem, pluginToolsSeparatorItem });
+            toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { searchForEntryToolStripMenuItem, addResourcesToBundleToolStripMenuItem, fillMissingNamesToolStripMenuItem, pluginToolsSeparatorItem });
             toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
             toolsToolStripMenuItem.Text = "Tools";
@@ -180,6 +181,13 @@ namespace BundleManager
             addResourcesToBundleToolStripMenuItem.Size = new System.Drawing.Size(220, 22);
             addResourcesToBundleToolStripMenuItem.Text = "Add resource(s) to bundle...";
             addResourcesToBundleToolStripMenuItem.Click += addResourcesToBundleToolStripMenuItem_Click;
+            // 
+            // fillMissingNamesToolStripMenuItem
+            // 
+            fillMissingNamesToolStripMenuItem.Name = "fillMissingNamesToolStripMenuItem";
+            fillMissingNamesToolStripMenuItem.Size = new System.Drawing.Size(220, 22);
+            fillMissingNamesToolStripMenuItem.Text = "Fill missing names";
+            fillMissingNamesToolStripMenuItem.Click += fillMissingNamesToolStripMenuItem_Click;
             // 
             // toolStrip1
             // 
@@ -255,6 +263,7 @@ namespace BundleManager
             lstEntries.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             lstEntries.MultiSelect = false;
             lstEntries.Name = "lstEntries";
+            lstEntries.ShowItemToolTips = true;
             lstEntries.Size = new System.Drawing.Size(915, 598);
             lstEntries.TabIndex = 2;
             lstEntries.UseCompatibleStateImageBehavior = false;
@@ -395,6 +404,7 @@ namespace BundleManager
         private System.Windows.Forms.ColumnHeader colName;
         private System.Windows.Forms.ToolStripSeparator pluginToolsSeparatorItem;
         private System.Windows.Forms.ToolStripMenuItem addResourcesToBundleToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fillMissingNamesToolStripMenuItem;
     }
 }
 

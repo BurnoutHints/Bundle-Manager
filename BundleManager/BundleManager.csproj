@@ -35,5 +35,10 @@
       <Link>keys\%(RecursiveDir)%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\resources\ResourceDB.json">
+      <Visible>false</Visible>
+      <Link>ResourceDB.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

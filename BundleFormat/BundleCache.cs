@@ -32,7 +32,8 @@ public static class BundleCache
 
     public static string GetEntryNameByID(ulong entryID)
     {
-        return GetEntryDebugInfoByID(entryID).Name;
+        string name = GetEntryDebugInfoByID(entryID).Name;
+        return string.IsNullOrWhiteSpace(name) ? ResourceDB.Lookup(entryID) : name;
     }
 
     public static string GetRelativePath(string path)

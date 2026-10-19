@@ -8,6 +8,7 @@ using System.Security.Principal;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
+using BundleFormat;
 using BundleManager.TypeConverters;
 
 namespace BundleManager;
@@ -28,6 +29,8 @@ public static class Program
     public static void Main(string[] args)
     {
         CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+
+        ResourceDB.Preload();
 
         TypeDescriptor.AddAttributes(typeof(Vector2), new TypeConverterAttribute(typeof(Vector2Converter)));
         TypeDescriptor.AddAttributes(typeof(Vector3), new TypeConverterAttribute(typeof(Vector3Converter)));

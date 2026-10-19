@@ -302,6 +302,10 @@ public class BundleEntry
         if (!string.IsNullOrWhiteSpace(DebugInfo.Name))
             return DebugInfo.Name;
 
+        string known = ResourceDB.Lookup(ID);
+        if (known != null)
+            return known;
+
         string theName = "worldvault";
         ulong theID = Crc32.HashCrc32B(theName);
         if (theID == ID)

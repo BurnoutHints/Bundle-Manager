@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.ComponentModel;
+using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -131,11 +132,15 @@ public partial class MainForm : Form
 
     private Thread _openSaveThread;
 
+    private const int NameColumn = 1;
+    private readonly Font _inferredNameFont;
+
     #endregion
 
     public MainForm()
     {
         InitializeComponent();
+        _inferredNameFont = new Font(lstEntries.Font, FontStyle.Italic);
 
         //doNew();
         UpdateDisplay();
@@ -147,6 +152,7 @@ public partial class MainForm : Form
 
         UpdatePluginMenu();
         addResourcesToBundleToolStripMenuItem.Enabled = CurrentArchive != null;
+        fillMissingNamesToolStripMenuItem.Enabled = CurrentArchive != null;
 
         if (CurrentArchive == null)
         {
@@ -176,15 +182,19 @@ public partial class MainForm : Form
             string[] values =
             [
                 entry.Index.ToString("d3"),
-                entry.DetectName(),
+                "", // Set by ShowName
                 "0x" + entry.ID.ToString("X8"),
                 entry.Type.ToString(),
                 entry.EntryBlocks[0].Data.Length.ToString(),
                 entry.EntryBlocks[0].Data.MakePreview(0, 16)
             ];
 
-            ListViewItem item = new(values);
-            item.BackColor = BundleEntry.GetColor(entry.Type);
+            // Sub item styles so the name alone can be italic
+            ListViewItem item = new(values) { UseItemStyleForSubItems = false };
+            Color color = BundleEntry.GetColor(entry.Type);
+            foreach (ListViewItem.ListViewSubItem subItem in item.SubItems)
+                subItem.BackColor = color;
+            ShowName(item, entry);
             lstEntries.Items.Add(item);
         }
 
@@ -575,8 +585,6 @@ public partial class MainForm : Form
     // Enter or clicking away keeps it, Escape cancels. An empty name removes it, leaving the detected one.
     private void RenameSelectedEntry()
     {
-        const int nameColumn = 1;
-
         // F2 reaches here from the text box too, which is the list's only child
         if (lstEntries.SelectedItems.Count == 0 || lstEntries.Controls.Count > 0)
             return;
@@ -587,22 +595,23 @@ public partial class MainForm : Form
         BundleEntry entry = GetEntry(index);
 
         item.EnsureVisible();
-        string shown = item.SubItems[nameColumn].Text;
-        TextBox box = new() { AutoSize = false, BorderStyle = BorderStyle.FixedSingle, Font = lstEntries.Font, Bounds = item.SubItems[nameColumn].Bounds, Text = shown };
+        string shown = item.SubItems[NameColumn].Text;
+        TextBox box = new() { AutoSize = false, BorderStyle = BorderStyle.FixedSingle, Font = lstEntries.Font, Bounds = item.SubItems[NameColumn].Bounds, Text = shown };
 
         bool finished = false;
-        void Finish(bool keep)
+        void Finish(bool keep, bool enter = false)
         {
             if (finished)
                 return;
             finished = true;
 
+            // Enter also stores an italic name left as it is, clicking away only keeps edits
             string name = box.Text.Trim();
-            if (keep && name != shown)
+            if (keep && name != (enter ? entry.DebugInfo.Name ?? "" : shown))
             {
                 entry.DebugInfo.Name = name.Length > 0 ? name : null;
                 entry.Dirty = true;
-                item.SubItems[nameColumn].Text = entry.DetectName();
+                ShowName(item, entry);
             }
 
             lstEntries.Controls.Remove(box);
@@ -615,13 +624,44 @@ public partial class MainForm : Form
             if (e.KeyCode is not (Keys.Enter or Keys.Escape))
                 return;
             e.SuppressKeyPress = true;
-            Finish(e.KeyCode == Keys.Enter);
+            bool enter = e.KeyCode == Keys.Enter;
+            Finish(enter, enter);
         };
         box.LostFocus += (_, _) => Finish(true);
 
         lstEntries.Controls.Add(box);
         box.Focus();
         box.SelectAll();
+    }
+
+    // Names the bundle doesn't store are italic, as ResourceDB.json or detection only suggests them
+    private void ShowName(ListViewItem item, BundleEntry entry)
+    {
+        ListViewItem.ListViewSubItem name = item.SubItems[NameColumn];
+        name.Text = entry.DetectName();
+        bool inferred = string.IsNullOrWhiteSpace(entry.DebugInfo.Name) && name.Text.Length > 0;
+        name.Font = inferred ? _inferredNameFont : null;
+        item.ToolTipText = inferred ? "Likely name, not stored in the bundle. Rename and press Enter, or Tools > Fill missing names, to store it." : "";
+    }
+
+    private void fillMissingNamesToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        int filled = 0;
+        foreach (ListViewItem item in lstEntries.Items)
+        {
+            BundleEntry entry = GetEntry(int.Parse(item.Text));
+            string name = item.SubItems[NameColumn].Text;
+            if (!string.IsNullOrWhiteSpace(entry.DebugInfo.Name) || name.Length == 0)
+                continue;
+
+            entry.DebugInfo.Name = name;
+            entry.Dirty = true;
+            ShowName(item, entry);
+            filled++;
+        }
+
+        MessageBox.Show(this, filled > 0 ? $"Filled {filled} missing names." : "No missing names were found.", "Fill missing names",
+            MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
