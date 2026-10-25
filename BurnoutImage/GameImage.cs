@@ -70,7 +70,7 @@ public static class GameImage
     {
         int size = 0;
         for (int i = 0; i < mips; i++, width = Math.Max(1, width / 2), height = Math.Max(1, height / 2))
-            size += compression is CompressionType.DXT1 or CompressionType.DXT5
+            size += compression is CompressionType.DXT1 or CompressionType.DXT5 or CompressionType.BC7
                 ? ((width + 3) / 4) * ((height + 3) / 4) * (compression == CompressionType.DXT1 ? 8 : 16)
                 : width * height * 4;
         return size;
@@ -292,6 +292,7 @@ public static class GameImage
                 0x000000FF  => CompressionType.ARGB,
                 0x00000047  => CompressionType.DXT1,
                 0x0000004D  => CompressionType.DXT5,
+                0x00000062  => CompressionType.BC7,
                 _           => CompressionType.UNKNOWN
             };
 
@@ -377,6 +378,7 @@ public static class GameImage
             {
                 CompressionType.DXT1 => ImageUtil.DecompressImage(extraData, header.Width, header.Height, CompressionFormat.Bc1),
                 CompressionType.DXT5 => ImageUtil.DecompressImage(extraData, header.Width, header.Height, CompressionFormat.Bc3),
+                CompressionType.BC7 => ImageUtil.DecompressImage(extraData, header.Width, header.Height, CompressionFormat.Bc7),
                 _ => extraData
             };
 
@@ -584,7 +586,8 @@ public enum CompressionType
     ARGB,
     BGRA,
     DXT1,
-    DXT5
+    DXT5,
+    BC7
 }
 
 public enum PlatformType
