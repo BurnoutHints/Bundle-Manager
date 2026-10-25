@@ -165,14 +165,66 @@ public partial class MainForm : Form
 
     private async Task DoNew()
     {
-        if (!await CheckSave())
+        if (!await CheckSave() || AskNewBundle() is not (BundlePlatform platform, bool import))
             return;
-        //CurrentArchive = new BundleArchive();
-        //UpdateDisplay();
 
-        MessageBox.Show(this,
-            "This feature is currently not avaliable because we don't know enough about the Bundle format to create them from scratch yet.",
-            "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        // Retail bundles are compressed, the decomp's x64 ones aren't
+        CurrentArchive = new BundleArchive
+        {
+            BNDVersion = 2,
+            Version = 2,
+            Platform = platform,
+            Flags = Flags.UnusedFlag1 | Flags.UnusedFlag2 | (platform == BundlePlatform.PCx64 ? 0 : Flags.Compressed)
+        };
+        CurrentFileName = null;
+        Text = "Bundle Manager - Untitled";
+
+        if (import)
+            ImportResourceForm.ShowImport(this, CurrentArchive);
+        UpdateDisplay();
+    }
+
+    // Asks the platform, then whether to import a first resource. Null when cancelled
+    private (BundlePlatform Platform, bool Import)? AskNewBundle()
+    {
+        TaskDialogCommandLinkButton import = new("Import a resource", "Choose the first resource to add now.");
+        TaskDialogCommandLinkButton empty = new("Keep it empty", "Add resources later from Tools > Add resource(s) to bundle.");
+        TaskDialogPage contents = new()
+        {
+            Caption = "New Bundle",
+            Heading = "Add a first resource?",
+            Buttons = { import, empty, TaskDialogButton.Cancel },
+            AllowCancel = true
+        };
+
+        TaskDialogPage platforms = new()
+        {
+            Caption = "New Bundle",
+            Heading = "Which platform is this bundle for?",
+            AllowCancel = true
+        };
+        BundlePlatform platform = default;
+        foreach (var (value, text, note) in new (BundlePlatform, string, string)[]
+        {
+            (BundlePlatform.PC, "PC", "Burnout Paradise Remastered, or The Ultimate Box (2009)"),
+            (BundlePlatform.X360, "Xbox 360", null),
+            (BundlePlatform.PS3, "PlayStation 3", null),
+            (BundlePlatform.PCx64, "PC x64", "Builds of the Burnout Paradise decompilation")
+        })
+        {
+            TaskDialogCommandLinkButton button = new(text, note) { AllowCloseDialog = false };
+            button.Click += (_, _) =>
+            {
+                platform = value;
+                contents.Text = $"The new bundle is for {text}.";
+                platforms.Navigate(contents);
+            };
+            platforms.Buttons.Add(button);
+        }
+        platforms.Buttons.Add(TaskDialogButton.Cancel);
+
+        TaskDialogButton result = TaskDialog.ShowDialog(this, platforms);
+        return result == import ? (platform, true) : result == empty ? (platform, false) : null;
     }
 
     private async Task Open()
