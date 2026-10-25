@@ -114,7 +114,7 @@ namespace BundleManager
             tabHeader.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
             tabHeader.Size = new System.Drawing.Size(720, 459);
             tabHeader.TabIndex = 0;
-            tabHeader.Text = "Header";
+            tabHeader.Text = "Primary";
             tabHeader.UseVisualStyleBackColor = true;
             // 
             // hexData
@@ -140,7 +140,7 @@ namespace BundleManager
             tabBody.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
             tabBody.Size = new System.Drawing.Size(720, 459);
             tabBody.TabIndex = 2;
-            tabBody.Text = "Body";
+            tabBody.Text = "Secondary";
             tabBody.UseVisualStyleBackColor = true;
             // 
             // hexExtraData
