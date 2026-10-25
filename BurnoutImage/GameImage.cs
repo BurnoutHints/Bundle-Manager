@@ -171,6 +171,7 @@ public static class GameImage
                 {
                     CompressionType.DXT1 => CompressionFormat.Bc1,
                     CompressionType.DXT5 => CompressionFormat.Bc3,
+                    CompressionType.BC7 => CompressionFormat.Bc7,
                     _ => CompressionFormat.Unknown
                 };
 
@@ -180,7 +181,7 @@ public static class GameImage
 
 
         // Direct3D can't create block compressed textures of other sizes, and the game crashes on them
-        if (compression is CompressionType.DXT1 or CompressionType.DXT5 && (width % 4 != 0 || height % 4 != 0))
+        if (compression is CompressionType.DXT1 or CompressionType.DXT5 or CompressionType.BC7 && (width % 4 != 0 || height % 4 != 0))
             throw new InvalidDataException($"{compression} textures need a width and height that are multiples of 4, but this image is {width}×{height}. Resize it or import it uncompressed.");
 
         // Process header block
@@ -199,6 +200,7 @@ public static class GameImage
                 CompressionType.BGRA => 0x57,
                 CompressionType.DXT1 => 0x47,
                 CompressionType.DXT5 => 0x4D,
+                CompressionType.BC7 => 0x62,
             });
             BinaryPrimitives.WriteUInt16LittleEndian(h[(0x24 + f)..], (ushort)width);
             BinaryPrimitives.WriteUInt16LittleEndian(h[(0x26 + f)..], (ushort)height);

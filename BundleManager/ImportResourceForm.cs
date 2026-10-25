@@ -115,7 +115,7 @@ public partial class ImportResourceForm : Form
 
     void LoadPrimary(string path)
     {
-        _primary = ResourceImport.LoadPrimary(path, _workingArchive, AskPCTexturePlatform, p => ImageImportDialog.AskCompression(null, p));
+        _primary = ResourceImport.LoadPrimary(path, _workingArchive, AskPCTexturePlatform, (p, platform) => ImageImportDialog.AskCompression(null, p, platform));
         _primaryPath = path;
 
         primaryResourcePathTextBox.Text = path;

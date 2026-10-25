@@ -16,7 +16,7 @@ public static partial class ResourceImport
 {
     private static readonly string[] ImageExtensions = [".dds", ".bmp", ".gif", ".jpg", ".jpeg", ".png", ".tif", ".tiff"];
 
-    public static PrimaryResource LoadPrimary(string path, BundleArchive archive, Func<PlatformType> choosePCTexturePlatform, Func<string, CompressionType?> chooseCompression)
+    public static PrimaryResource LoadPrimary(string path, BundleArchive archive, Func<PlatformType> choosePCTexturePlatform, Func<string, PlatformType, CompressionType?> chooseCompression)
     {
         string extension = Path.GetExtension(path);
         if (ImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
@@ -27,7 +27,7 @@ public static partial class ResourceImport
 
             CompressionType compression = string.Equals(extension, ".dds", StringComparison.OrdinalIgnoreCase)
                 ? CompressionType.UNKNOWN // SetImage reads the DDS file's own format
-                : chooseCompression(path) ?? throw new OperationCanceledException();
+                : chooseCompression(path, platform) ?? throw new OperationCanceledException();
 
             // A blank header the size of the bundle's others, so 64-bit Remastered bundles get 64-bit headers
             ImageInfo info = GameImage.SetImage(path, compression, platform, sample != null ? new byte[sample.EntryBlocks[0].Data.Length] : null);

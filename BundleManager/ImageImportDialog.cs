@@ -6,10 +6,12 @@ namespace BundleManager;
 
 internal static class ImageImportDialog
 {
-    public static CompressionType? AskCompression(IWin32Window owner, string imagePath)
+    public static CompressionType? AskCompression(IWin32Window owner, string imagePath, PlatformType platform)
     {
         var (width, height, hasAlpha) = GameImage.InspectImage(imagePath);
-        CompressionType compressed = hasAlpha ? CompressionType.DXT5 : CompressionType.DXT1;
+        CompressionType compressed = !hasAlpha ? CompressionType.DXT1
+            : platform == PlatformType.Remastered ? CompressionType.BC7 // Only Remastered's D3D11 renderer reads BC7
+            : CompressionType.DXT5;
         long compressedSize = GameImage.TextureSize(compressed, width, height);
         long linearSize = GameImage.TextureSize(CompressionType.BGRA, width, height);
         bool compressible = width % 4 == 0 && height % 4 == 0; // GameImage.SetImage refuses other sizes

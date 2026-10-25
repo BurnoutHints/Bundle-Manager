@@ -207,7 +207,7 @@ public partial class EntryEditor : Form
             ImageHeader header = GameImage.GetImageHeader(oldHeader, Entry.Platform);
             CompressionType? compression = null; // DDS files keep their own format
             if (!string.Equals(Path.GetExtension(path), ".dds", StringComparison.OrdinalIgnoreCase)
-                && (compression = ImageImportDialog.AskCompression(this, path)) == null)
+                && (compression = ImageImportDialog.AskCompression(this, path, header.Platform)) == null)
                 return;
 
             info = await Task.Run(() => GameImage.SetImage(path, compression ?? header.CompressionType, header.Platform, oldHeader));
