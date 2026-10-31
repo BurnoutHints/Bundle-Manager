@@ -115,20 +115,32 @@ public static class GameImage
             uint pfBMask = br.ReadUInt32();
             uint pfAMask = br.ReadUInt32();
 
-            compression = ImageUtil.DetectDdsFormat(
-                pfFlags,
-                pfFourCC,
-                pfRGBBits,
-                pfRMask,
-                pfGMask,
-                pfBMask,
-                pfAMask
-            );
+            bool dx10 = (pfFlags & 0x4) != 0 && pfFourCC == 0x30315844; // DDPF_FOURCC "DX10"
+            if (dx10)
+            {
+                fs.Seek(0x80, SeekOrigin.Begin);
+                uint dxgi = br.ReadUInt32();
+                compression = FromDxgi(dxgi);
+                if (compression is CompressionType.UNKNOWN or CompressionType.ARGB)
+                    throw new NotSupportedException($"DDS files of DXGI format {dxgi} aren't supported.");
+            }
+            else
+            {
+                compression = ImageUtil.DetectDdsFormat(
+                    pfFlags,
+                    pfFourCC,
+                    pfRGBBits,
+                    pfRMask,
+                    pfGMask,
+                    pfBMask,
+                    pfAMask
+                );
+            }
 
             if (compression == CompressionType.UNKNOWN)
                 compression = CompressionType.RGBA;
 
-            const int ddsHeaderSize = 0x80;
+            int ddsHeaderSize = dx10 ? 0x94 : 0x80;
             fs.Seek(ddsHeaderSize, SeekOrigin.Begin);
             data = br.ReadBytes((int)(fs.Length - ddsHeaderSize));
 
@@ -253,6 +265,17 @@ public static class GameImage
         return new ImageInfo(msx.ToArray(), data);
     }
 
+    private static CompressionType FromDxgi(uint format) => format switch // DXGI_FORMAT
+    {
+        0x00000057  => CompressionType.BGRA,
+        0x0000001C  => CompressionType.RGBA,
+        0x000000FF  => CompressionType.ARGB,
+        0x00000047  => CompressionType.DXT1,
+        0x0000004D  => CompressionType.DXT5,
+        0x00000062  => CompressionType.BC7,
+        _           => CompressionType.UNKNOWN
+    };
+
     public static ImageHeader GetImageHeader(byte[] data, BundlePlatform? bundle = null)
     {
         MemoryStream ms = new(data);
@@ -286,17 +309,7 @@ public static class GameImage
 
             br.BaseStream.Seek(oFormat, SeekOrigin.Begin);
 
-            // DXGI_Format
-            CompressionType type = br.ReadUInt32() switch
-            {
-                0x00000057  => CompressionType.BGRA,
-                0x0000001C  => CompressionType.RGBA,
-                0x000000FF  => CompressionType.ARGB,
-                0x00000047  => CompressionType.DXT1,
-                0x0000004D  => CompressionType.DXT5,
-                0x00000062  => CompressionType.BC7,
-                _           => CompressionType.UNKNOWN
-            };
+            CompressionType type = FromDxgi(br.ReadUInt32());
 
             br.BaseStream.Seek(oSize, SeekOrigin.Begin);
 
@@ -448,6 +461,90 @@ public static class GameImage
             MessageBox.Show(ex.Message + "\r\n" + ex.StackTrace);
             return null;
         }
+    }
+
+    public static byte[] GetDDS(byte[] header, byte[] data, BundlePlatform? bundle = null)
+    {
+        ImageHeader info = GetImageHeader(header, bundle);
+        CompressionType type = info.CompressionType;
+        int width = info.Width, height = info.Height, mips = 1, faces = 1;
+        switch (info.Platform)
+        {
+            case PlatformType.Remastered:
+                int p = header.Length == 0x60 ? 4 : 0, f = header.Length == 0x60 ? 0x10 : 0;
+                mips = header[0x2D + f];
+                faces = header[0x08 + p] == 9 ? 6 : 1; // Dimension 9 is a cube
+                break;
+            case PlatformType.PC:
+                mips = header[0x19];
+                faces = header[0x1A] == 1 ? 6 : 1; // Type 1 is a cube
+                break;
+            case PlatformType.PCx64:
+                mips = header[0x25];
+                faces = header[0x24] == 6 ? 6 : 1; // The decomp's converter writes cubes as six deep
+                break;
+            case PlatformType.PS3:
+                mips = header[0x01];               // CellGcmTexture
+                faces = header[0x03] != 0 ? 6 : 1;
+                break;
+            case PlatformType.X360:
+                data = LinearX360(header, data, type);
+                break;
+        }
+        mips = Math.Max(1, mips);
+        if (type is CompressionType.UNKNOWN)
+            throw new NotSupportedException($"This {info.Platform} texture's format isn't supported yet.");
+
+        int faceSize = TextureSize(type, width, height, mips), padded = (faceSize + 0x7F) & ~0x7F;
+        int stride = info.Platform == PlatformType.PC && data.Length >= faces * padded ? padded : faceSize;
+        if (data.Length < (faces - 1) * stride + faceSize)
+            throw new InvalidDataException($"The texture data is {data.Length} bytes, but a {width}×{height} {type} texture with {mips} mips and {faces} faces needs {faces * faceSize}.");
+
+        bool compressed = type is CompressionType.DXT1 or CompressionType.DXT5 or CompressionType.BC7;
+        (uint flags, uint fourCC, uint r, uint g, uint b, uint a) = type switch // DDS_PIXELFORMAT
+        {
+            CompressionType.DXT1 => (0x4u, 0x31545844u, 0u, 0u, 0u, 0u),                         // DDPF_FOURCC "DXT1"
+            CompressionType.DXT5 => (0x4u, 0x35545844u, 0u, 0u, 0u, 0u),                         // "DXT5"
+            CompressionType.BC7 => (0x4u, 0x30315844u, 0u, 0u, 0u, 0u),                          // "DX10"
+            CompressionType.BGRA => (0x41u, 0u, 0x00FF0000u, 0x0000FF00u, 0x000000FFu, 0xFF000000u), // DDPF_RGB | DDPF_ALPHAPIXELS
+            CompressionType.RGBA => (0x41u, 0u, 0x000000FFu, 0x0000FF00u, 0x00FF0000u, 0xFF000000u),
+            _ => (0x41u, 0u, 0x0000FF00u, 0x00FF0000u, 0xFF000000u, 0x000000FFu)                  // ARGB
+        };
+
+        using MemoryStream ms = new();
+        using BinaryWriter bw = new(ms);
+        bw.Write(0x20534444);                                                       // "DDS "
+        bw.Write(124);                                                              // DDS_HEADER size
+        bw.Write(0x1007 | (mips > 1 ? 0x20000 : 0) | (compressed ? 0x80000 : 0x8)); // CAPS | HEIGHT | WIDTH | PIXELFORMAT, MIPMAPCOUNT, LINEARSIZE or PITCH
+        bw.Write(height);
+        bw.Write(width);
+        bw.Write(compressed ? TextureSize(type, width, height) : width * 4);       // Linear size or pitch
+        bw.Write(0);                                                                // Depth
+        bw.Write(mips);
+        bw.Write(new byte[44]);                                                     // Reserved
+        bw.Write(32);                                                               // DDS_PIXELFORMAT size
+        bw.Write(flags);
+        bw.Write(fourCC);
+        bw.Write(compressed ? 0 : 32);                                              // RGB bit count
+        bw.Write(r);
+        bw.Write(g);
+        bw.Write(b);
+        bw.Write(a);
+        bw.Write(0x1000 | (mips > 1 ? 0x400008 : 0) | (faces > 1 ? 0x8 : 0));       // TEXTURE, MIPMAP | COMPLEX, COMPLEX
+        bw.Write(faces > 1 ? 0xFE00 : 0);                                           // CUBEMAP | all six faces
+        bw.Write(new byte[12]);                                                     // Caps3, Caps4, reserved
+        if (type == CompressionType.BC7)
+        {
+            bw.Write(0x62);                                                         // DDS_HEADER_DXT10: DXGI_FORMAT_BC7_UNORM
+            bw.Write(3);                                                            // D3D10_RESOURCE_DIMENSION_TEXTURE2D
+            bw.Write(faces > 1 ? 0x4 : 0);                                          // D3D10_RESOURCE_MISC_TEXTURECUBE
+            bw.Write(1);                                                            // Array size
+            bw.Write(0);                                                            // Alpha mode
+        }
+        for (int i = 0; i < faces; i++)
+            bw.Write(data, i * stride, faceSize);
+        bw.Flush();
+        return ms.ToArray();
     }
 
     // Xbox 360 GPUTEXTURE_FETCH_CONSTANT. Fields as in Volatility's TextureX360

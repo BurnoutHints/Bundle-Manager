@@ -42,8 +42,6 @@ internal static class ImageUtil
                     return CompressionType.RGBA;
                 case 0x000000FFu:
                     return CompressionType.ARGB;
-                case 0x30315844u:
-                    throw new NotSupportedException("DX10 DDS files are not supported by this reader.");
             }
 
             return CompressionType.UNKNOWN;

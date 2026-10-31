@@ -176,7 +176,7 @@ public partial class EntryEditor : Form
     private void exportToolStripMenuItem_Click(object sender, EventArgs e)
     {
         SaveFileDialog sfd = new();
-        sfd.Filter = "PNG Images|*.png";
+        sfd.Filter = "PNG Images|*.png|DDS Images (original data)|*.dds";
         sfd.FileOk += Sfd_FileOk;
         sfd.ShowDialog(this);
     }
@@ -190,7 +190,17 @@ public partial class EntryEditor : Form
 
         string path = sfd.FileName;
 
-        Image.Save(path, ImageFormat.Png);
+        try
+        {
+            if (string.Equals(Path.GetExtension(path), ".dds", StringComparison.OrdinalIgnoreCase))
+                File.WriteAllBytes(path, GameImage.GetDDS(Entry.EntryBlocks[0].Data, Entry.EntryBlocks[1].Data, Entry.Platform));
+            else
+                Image.Save(path, ImageFormat.Png);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Unable to export {path}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     private async void importToolStripMenuItem_Click(object sender, EventArgs e)
