@@ -15,6 +15,7 @@ public class WorldCollisionPlugin : IPlugin
     public static void Init()
     {
         EntryTypeRegistry.Register(EntryType.PolygonSoupList, new PolygonSoupList());
+        EntryTypeRegistry.Register(EntryType.CollisionMeshData, new ClusteredMesh());
 
         PluginCommandRegistry.Register("dump_all_collisions", "Dump All Collisions", DumpAllCollisions, IsWorldCol);
         PluginCommandRegistry.Register("remove_wreck_surfaces", "Remove Wreck Surfaces", RemoveWreckSurfaces, IsWorldCol);
