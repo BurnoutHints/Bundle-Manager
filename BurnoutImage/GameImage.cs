@@ -635,6 +635,7 @@ public static class GameImage
 
         PlatformType? known = (bundle, len) switch
         {
+            (BundlePlatform.X360, 0x34) => PlatformType.X360, // BNDL 1-era (Feb 22 etc)
             (BundlePlatform.X360, 0x40) => PlatformType.X360,
             (BundlePlatform.PS3, 0x30) => PlatformType.PS3,
             (BundlePlatform.PCx64, 0x30) => PlatformType.PCx64,
