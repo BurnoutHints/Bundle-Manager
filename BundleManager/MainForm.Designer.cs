@@ -332,7 +332,7 @@ namespace BundleManager
             // 
             viewDataToolStripMenuItem.Name = "viewDataToolStripMenuItem";
             viewDataToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
-            viewDataToolStripMenuItem.Text = "View Header";
+            viewDataToolStripMenuItem.Text = "View Resource Data";
             viewDataToolStripMenuItem.Click += viewDataToolStripMenuItem_Click;
             // 
             // viewDebugMenuStripMenuItem
