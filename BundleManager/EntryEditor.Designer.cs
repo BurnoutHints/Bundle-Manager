@@ -190,14 +190,14 @@ namespace BundleManager
             // 
             importHeaderToolStripMenuItem.Name = "importHeaderToolStripMenuItem";
             importHeaderToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
-            importHeaderToolStripMenuItem.Text = "Import Header";
+            importHeaderToolStripMenuItem.Text = "Import Primary Data";
             importHeaderToolStripMenuItem.Click += importDataToolStripMenuItem_Click;
             // 
             // exportHeaderToolStripMenuItem
             // 
             exportHeaderToolStripMenuItem.Name = "exportHeaderToolStripMenuItem";
             exportHeaderToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
-            exportHeaderToolStripMenuItem.Text = "Export Header";
+            exportHeaderToolStripMenuItem.Text = "Export Primary Data";
             exportHeaderToolStripMenuItem.Click += exportDataToolStripMenuItem_Click;
             // 
             // toolStripMenuItem1
@@ -209,14 +209,14 @@ namespace BundleManager
             // 
             importBodyToolStripMenuItem.Name = "importBodyToolStripMenuItem";
             importBodyToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
-            importBodyToolStripMenuItem.Text = "Import Body";
+            importBodyToolStripMenuItem.Text = "Import Secondary Data";
             importBodyToolStripMenuItem.Click += importExtraToolStripMenuItem_Click;
             // 
             // exportBodyToolStripMenuItem
             // 
             exportBodyToolStripMenuItem.Name = "exportBodyToolStripMenuItem";
             exportBodyToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
-            exportBodyToolStripMenuItem.Text = "Export Body";
+            exportBodyToolStripMenuItem.Text = "Export Secondary Data";
             exportBodyToolStripMenuItem.Click += exportExtraToolStripMenuItem_Click;
             // 
             // editStripMenuItem
