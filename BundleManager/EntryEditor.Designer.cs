@@ -34,10 +34,12 @@ namespace BundleManager
             tabList = new System.Windows.Forms.TabControl();
             tabInfo = new System.Windows.Forms.TabPage();
             txtInfo = new System.Windows.Forms.TextBox();
-            tabHeader = new System.Windows.Forms.TabPage();
+            tabPrimary = new System.Windows.Forms.TabPage();
             hexData = new HexEditor.HexView();
-            tabBody = new System.Windows.Forms.TabPage();
+            tabSecondary = new System.Windows.Forms.TabPage();
             hexExtraData = new HexEditor.HexView();
+            valuesData = new HexEditor.ValueView();
+            valuesExtraData = new HexEditor.ValueView();
             lblLoading = new System.Windows.Forms.Label();
             mnuBar = new System.Windows.Forms.MenuStrip();
             binaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -49,17 +51,23 @@ namespace BundleManager
             editStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             editHashToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             calcLookupHashToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            editSeparator = new System.Windows.Forms.ToolStripSeparator();
+            editModeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            goToOffsetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            tabImports = new System.Windows.Forms.TabPage();
+            importsView = new ImportsView();
             imageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             stsMain = new System.Windows.Forms.StatusStrip();
-            imageStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             pbMain = new System.Windows.Forms.ProgressBar();
             pboImage = new System.Windows.Forms.PictureBox();
             tabList.SuspendLayout();
             tabInfo.SuspendLayout();
-            tabHeader.SuspendLayout();
-            tabBody.SuspendLayout();
+            tabPrimary.SuspendLayout();
+            tabSecondary.SuspendLayout();
+            tabImports.SuspendLayout();
             mnuBar.SuspendLayout();
             stsMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pboImage).BeginInit();
@@ -68,8 +76,9 @@ namespace BundleManager
             // tabList
             // 
             tabList.Controls.Add(tabInfo);
-            tabList.Controls.Add(tabHeader);
-            tabList.Controls.Add(tabBody);
+            tabList.Controls.Add(tabImports);
+            tabList.Controls.Add(tabPrimary);
+            tabList.Controls.Add(tabSecondary);
             tabList.Dock = System.Windows.Forms.DockStyle.Fill;
             tabList.Location = new System.Drawing.Point(0, 0);
             tabList.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -105,17 +114,18 @@ namespace BundleManager
             txtInfo.Size = new System.Drawing.Size(700, 451);
             txtInfo.TabIndex = 1;
             // 
-            // tabHeader
+            // tabPrimary
             // 
-            tabHeader.Controls.Add(hexData);
-            tabHeader.Location = new System.Drawing.Point(4, 24);
-            tabHeader.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            tabHeader.Name = "tabHeader";
-            tabHeader.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            tabHeader.Size = new System.Drawing.Size(720, 459);
-            tabHeader.TabIndex = 0;
-            tabHeader.Text = "Primary";
-            tabHeader.UseVisualStyleBackColor = true;
+            tabPrimary.Controls.Add(hexData);
+            tabPrimary.Controls.Add(valuesData);
+            tabPrimary.Location = new System.Drawing.Point(4, 24);
+            tabPrimary.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            tabPrimary.Name = "tabPrimary";
+            tabPrimary.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            tabPrimary.Size = new System.Drawing.Size(720, 459);
+            tabPrimary.TabIndex = 0;
+            tabPrimary.Text = "Primary";
+            tabPrimary.UseVisualStyleBackColor = true;
             // 
             // hexData
             // 
@@ -131,17 +141,26 @@ namespace BundleManager
             hexData.Size = new System.Drawing.Size(712, 453);
             hexData.TabIndex = 0;
             // 
-            // tabBody
+            // valuesData
             // 
-            tabBody.Controls.Add(hexExtraData);
-            tabBody.Location = new System.Drawing.Point(4, 24);
-            tabBody.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            tabBody.Name = "tabBody";
-            tabBody.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            tabBody.Size = new System.Drawing.Size(720, 459);
-            tabBody.TabIndex = 2;
-            tabBody.Text = "Secondary";
-            tabBody.UseVisualStyleBackColor = true;
+            valuesData.Dock = System.Windows.Forms.DockStyle.Right;
+            valuesData.Location = new System.Drawing.Point(376, 3);
+            valuesData.Name = "valuesData";
+            valuesData.Size = new System.Drawing.Size(340, 453);
+            valuesData.TabIndex = 1;
+            // 
+            // tabSecondary
+            // 
+            tabSecondary.Controls.Add(hexExtraData);
+            tabSecondary.Controls.Add(valuesExtraData);
+            tabSecondary.Location = new System.Drawing.Point(4, 24);
+            tabSecondary.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            tabSecondary.Name = "tabSecondary";
+            tabSecondary.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            tabSecondary.Size = new System.Drawing.Size(720, 459);
+            tabSecondary.TabIndex = 2;
+            tabSecondary.Text = "Secondary";
+            tabSecondary.UseVisualStyleBackColor = true;
             // 
             // hexExtraData
             // 
@@ -157,6 +176,34 @@ namespace BundleManager
             hexExtraData.Size = new System.Drawing.Size(712, 453);
             hexExtraData.TabIndex = 0;
             // 
+            // valuesExtraData
+            // 
+            valuesExtraData.Dock = System.Windows.Forms.DockStyle.Right;
+            valuesExtraData.Location = new System.Drawing.Point(376, 3);
+            valuesExtraData.Name = "valuesExtraData";
+            valuesExtraData.Size = new System.Drawing.Size(340, 453);
+            valuesExtraData.TabIndex = 1;
+            //
+            // tabImports
+            //
+            tabImports.Controls.Add(importsView);
+            tabImports.Location = new System.Drawing.Point(4, 24);
+            tabImports.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            tabImports.Name = "tabImports";
+            tabImports.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            tabImports.Size = new System.Drawing.Size(720, 459);
+            tabImports.TabIndex = 4;
+            tabImports.Text = "Imports";
+            tabImports.UseVisualStyleBackColor = true;
+            //
+            // importsView
+            //
+            importsView.Dock = System.Windows.Forms.DockStyle.Fill;
+            importsView.Location = new System.Drawing.Point(4, 3);
+            importsView.Name = "importsView";
+            importsView.Size = new System.Drawing.Size(712, 453);
+            importsView.TabIndex = 0;
+            //
             // lblLoading
             // 
             lblLoading.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -221,7 +268,7 @@ namespace BundleManager
             // 
             // editStripMenuItem
             // 
-            editStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { editHashToolStripMenuItem, calcLookupHashToolStripMenuItem });
+            editStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { editHashToolStripMenuItem, calcLookupHashToolStripMenuItem, editSeparator, editModeToolStripMenuItem, goToOffsetToolStripMenuItem });
             editStripMenuItem.Name = "editStripMenuItem";
             editStripMenuItem.Size = new System.Drawing.Size(39, 20);
             editStripMenuItem.Text = "Edit";
@@ -239,7 +286,30 @@ namespace BundleManager
             calcLookupHashToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
             calcLookupHashToolStripMenuItem.Text = "Calc Lookup8 Hash";
             calcLookupHashToolStripMenuItem.Click += calcLookup8_Click;
-            // 
+            //
+            // editSeparator
+            //
+            editSeparator.Name = "editSeparator";
+            editSeparator.Size = new System.Drawing.Size(173, 6);
+            //
+            // editModeToolStripMenuItem
+            //
+            editModeToolStripMenuItem.CheckOnClick = true;
+            editModeToolStripMenuItem.Name = "editModeToolStripMenuItem";
+            editModeToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.E;
+            editModeToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+            editModeToolStripMenuItem.Text = "Edit Mode";
+            editModeToolStripMenuItem.ToolTipText = "Edit the primary and secondary data as hex.";
+            editModeToolStripMenuItem.CheckedChanged += editModeToolStripMenuItem_CheckedChanged;
+            //
+            // goToOffsetToolStripMenuItem
+            //
+            goToOffsetToolStripMenuItem.Name = "goToOffsetToolStripMenuItem";
+            goToOffsetToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.G;
+            goToOffsetToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
+            goToOffsetToolStripMenuItem.Text = "Go to Offset...";
+            goToOffsetToolStripMenuItem.Click += goToOffsetToolStripMenuItem_Click;
+            //
             // imageToolStripMenuItem
             // 
             imageToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { exportToolStripMenuItem, importToolStripMenuItem });
@@ -263,19 +333,19 @@ namespace BundleManager
             // 
             // stsMain
             // 
-            stsMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { imageStatusLabel });
+            stsMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { statusLabel });
             stsMain.Location = new System.Drawing.Point(0, 487);
             stsMain.Name = "stsMain";
             stsMain.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
             stsMain.Size = new System.Drawing.Size(728, 22);
             stsMain.TabIndex = 7;
             // 
-            // imageStatusLabel
+            // statusLabel
             // 
-            imageStatusLabel.Name = "imageStatusLabel";
-            imageStatusLabel.Size = new System.Drawing.Size(83, 17);
-            imageStatusLabel.Text = "Compression: ";
-            imageStatusLabel.Visible = false;
+            statusLabel.Name = "statusLabel";
+            statusLabel.Size = new System.Drawing.Size(83, 17);
+            statusLabel.Text = "Compression: ";
+            statusLabel.Visible = false;
             // 
             // pbMain
             // 
@@ -304,7 +374,7 @@ namespace BundleManager
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(728, 509);
+            ClientSize = new System.Drawing.Size(1000, 560);
             Controls.Add(pboImage);
             Controls.Add(mnuBar);
             Controls.Add(tabList);
@@ -323,8 +393,9 @@ namespace BundleManager
             tabList.ResumeLayout(false);
             tabInfo.ResumeLayout(false);
             tabInfo.PerformLayout();
-            tabHeader.ResumeLayout(false);
-            tabBody.ResumeLayout(false);
+            tabPrimary.ResumeLayout(false);
+            tabSecondary.ResumeLayout(false);
+            tabImports.ResumeLayout(false);
             mnuBar.ResumeLayout(false);
             mnuBar.PerformLayout();
             stsMain.ResumeLayout(false);
@@ -338,7 +409,7 @@ namespace BundleManager
         #endregion
 
         private System.Windows.Forms.TabControl tabList;
-        private System.Windows.Forms.TabPage tabBody;
+        private System.Windows.Forms.TabPage tabSecondary;
         private System.Windows.Forms.Label lblLoading;
         private System.Windows.Forms.MenuStrip mnuBar;
         private System.Windows.Forms.ToolStripMenuItem editStripMenuItem;
@@ -352,15 +423,22 @@ namespace BundleManager
         private System.Windows.Forms.ToolStripMenuItem exportBodyToolStripMenuItem;
         private System.Windows.Forms.StatusStrip stsMain;
         private System.Windows.Forms.ProgressBar pbMain;
-        private System.Windows.Forms.TabPage tabHeader;
+        private System.Windows.Forms.TabPage tabPrimary;
         private HexEditor.HexView hexData;
         private HexEditor.HexView hexExtraData;
+        private HexEditor.ValueView valuesData;
+        private HexEditor.ValueView valuesExtraData;
         private System.Windows.Forms.ToolStripMenuItem imageToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
         private System.Windows.Forms.PictureBox pboImage;
         private System.Windows.Forms.TabPage tabInfo;
         private System.Windows.Forms.TextBox txtInfo;
-        private System.Windows.Forms.ToolStripStatusLabel imageStatusLabel;
+        private System.Windows.Forms.ToolStripStatusLabel statusLabel;
+        private System.Windows.Forms.ToolStripSeparator editSeparator;
+        private System.Windows.Forms.ToolStripMenuItem editModeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem goToOffsetToolStripMenuItem;
+        private System.Windows.Forms.TabPage tabImports;
+        private ImportsView importsView;
     }
 }

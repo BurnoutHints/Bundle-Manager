@@ -21,7 +21,7 @@ public static partial class ResourceImport
         string extension = Path.GetExtension(path);
         if (ImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
         {
-            BundleEntry sample = archive.Entries.FirstOrDefault(e => e.Type == EntryType.Texture && e.HasHeader);
+            BundleEntry sample = archive.Entries.FirstOrDefault(e => e.Type == EntryType.Texture && e.HasPrimary);
             PlatformType platform = GetImageTexturePlatform(archive, sample, choosePCTexturePlatform)
                 ?? throw new NotSupportedException($"Images can't be converted for {archive.Platform} bundles. Import the texture's header and body instead.");
 
@@ -53,11 +53,8 @@ public static partial class ResourceImport
     // We now export the primary data without its import table and include a YAP-style yaml file for imports
     public static void WritePrimary(string path, BundleEntry entry)
     {
-        byte[] data = entry.EntryBlocks[0].Data;
         List<BundleDependency> imports = entry.GetDependencies();
-
-        int length = imports.Count > 0 && entry.Dependencies.Count == 0 ? entry.DependenciesListOffset : data.Length;
-        File.WriteAllBytes(path, data[..length]);
+        File.WriteAllBytes(path, entry.GetPrimaryWithoutImports());
 
         string yamlPath = GetImportsYamlPath(path);
         if (imports.Count > 0)

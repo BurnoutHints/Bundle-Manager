@@ -12,6 +12,7 @@ using System.Windows.Forms;
 using BundleFormat;
 using BundleUtilities;
 using BurnoutImage;
+using HexEditor;
 using LangEditor;
 
 namespace BundleManager;
@@ -47,9 +48,16 @@ public partial class EntryEditor : Form
         ImageMenuVisible = false;
         BinaryMenuVisible = false;
         ImageVisible = false;
-        ImageStatusPanelVisible = false;
         TabsVisible = false;
         MenuVisible = false; // Until UpdateDisplay has the entry
+
+        hexData.SelectionChanged += (_, _) => UpdateHexStatus();
+        hexExtraData.SelectionChanged += (_, _) => UpdateHexStatus();
+        valuesData.Source = hexData;
+        valuesExtraData.Source = hexExtraData;
+        importsView.OpenEntry += OpenEntry;
+        mnuBar.MenuActivate += (_, _) => Commit();
+        FormClosing += (_, _) => Commit();
 
         //txtData.MaxLength = int.MaxValue;
         //txtExtraData.MaxLength = int.MaxValue;
@@ -93,7 +101,6 @@ public partial class EntryEditor : Form
 
     private bool ImageVisible { set => pboImage.Visible = value; }
     private bool TabsVisible { set => tabList.Visible = value; }
-    private bool ImageStatusPanelVisible { set => imageStatusLabel.Visible = value; }
     private bool ImageMenuVisible { set => imageToolStripMenuItem.Visible = value; }
     private bool BinaryMenuVisible { set => binaryToolStripMenuItem.Visible = value; }
     private bool MenuVisible { set => mnuBar.Visible = value; }
@@ -104,23 +111,9 @@ public partial class EntryEditor : Form
 
         sb.AppendLine("ID: 0x" + entry.ID.ToString("X8"));
         sb.AppendLine("Type: " + entry.Type);
-        sb.AppendLine("Has Header: " + entry.HasHeader);
-        sb.AppendLine("Has Body: " + entry.HasBody);
-        List<BundleDependency> dependencies = entry.GetDependencies();
-        if (dependencies.Count > 0)
-        {
-            sb.AppendLine("Dependencies[" + dependencies.Count + "] = {");
-            for (int i = 0; i < dependencies.Count; i++)
-            {
-                BundleDependency bundleDependency = dependencies[i];
-                sb.AppendLine("    " + bundleDependency.ToString());
-            }
-            sb.AppendLine("}");
-        }
-        else
-        {
-            sb.AppendLine("Dependencies[" + dependencies.Count + "];");
-        }
+        sb.AppendLine("Has Primary: " + entry.HasPrimary);
+        sb.AppendLine("Has Secondary: " + entry.HasSecondary);
+        sb.AppendLine("Imports: " + entry.GetImports().Count);
 
         return sb.ToString();
     }
@@ -128,7 +121,7 @@ public partial class EntryEditor : Form
     // Counts calls, so an older display that finishes decoding late doesn't replace a newer one
     private int _displayVersion;
 
-    // A texture decodes, and the info resolves its dependencies, off the UI thread
+    // A texture decodes off the UI thread
     private async void UpdateDisplay()
     {
         int version = ++_displayVersion;
@@ -152,20 +145,25 @@ public partial class EntryEditor : Form
         ImageVisible = showImage;
         TabsVisible = !showImage;
         ImageMenuVisible = showImage;
-        ImageStatusPanelVisible = showImage;
         BinaryMenuVisible = !showImage;
+        editModeToolStripMenuItem.Visible = goToOffsetToolStripMenuItem.Visible = editSeparator.Visible = !showImage;
 
         if (showImage)
         {
-            imageStatusLabel.Text =
+            statusLabel.Visible = true;
+            statusLabel.Text =
                 $"Platform: {header.Platform}    " +
                 $"Size: {header.Width}x{header.Height}    " +
                 $"Format: {header.CompressionType}";
         }
         else
         {
-            DataHex = entry.EntryBlocks[0].Data;
-            ExtraDataHex = entry.EntryBlocks[entry.SecondaryBlock].Data;
+            // The import table is edited on its own tab
+            DataHex = entry.GetPrimaryWithoutImports();
+            ExtraDataHex = entry.EntryBlocks[entry.SecondaryBlock]?.Data;
+            importsView.Entry = entry;
+            valuesData.BigEndian = valuesExtraData.BigEndian = entry.Console;
+            ApplyEditMode();
         }
 
         MenuVisible = true;
@@ -258,7 +256,7 @@ public partial class EntryEditor : Form
 
         if (imports == null)
         {
-            List<Dependency> current = [.. Entry.GetDependencies().Select(d => new Dependency { ID = d.EntryID, EntryPointerOffset = (uint)d.EntryPointerOffset })];
+            List<Dependency> current = Entry.GetImports();
             if (current.Count > 0 && Dependency.EndsWithTable(data, current, Entry.Console))
             {
                 imports = current;
@@ -270,15 +268,9 @@ public partial class EntryEditor : Form
                 if (imports == null)
                     return;
             }
-            data = Dependency.AppendTable(data, imports, Entry.Console);
         }
 
-        Entry.EntryBlocks[0].Data = data;
-        Entry.Dependencies.Clear(); // A BND1 import list would hide the table
-        Entry.DependencyCount = (short)imports.Count;
-        Entry.DependenciesListOffset = imports.Count > 0 ? data.Length - imports.Count * Dependency.Size : 0;
-        Entry.Dirty = true;
-
+        Entry.SetPrimary(data, imports);
         UpdateDisplay();
     }
 
@@ -437,7 +429,78 @@ public partial class EntryEditor : Form
 
     private void tabList_SelectedIndexChanged(object sender, EventArgs e)
     {
+        Commit();
+        if (tabList.SelectedTab == tabImports && Entry != null)
+            importsView.Entry = Entry; // For primary data edited on its tab
+        UpdateHexStatus();
         FocusTab();
+    }
+
+    private HexView ActiveHex => tabList.SelectedTab == tabPrimary ? hexData : tabList.SelectedTab == tabSecondary ? hexExtraData : null;
+
+    // Hex edits stay in the views until edit mode ends, the tab changes, the menu opens or the window closes
+    private void Commit()
+    {
+        if (hexData.Modified)
+            Entry.SetPrimary(hexData.HexData, Entry.GetImports());
+        if (hexExtraData.Modified)
+        {
+            Entry.EntryBlocks[Entry.SecondaryBlock].Data = hexExtraData.HexData;
+            Entry.Dirty = true;
+        }
+        hexData.Modified = hexExtraData.Modified = false;
+    }
+
+    // Secondary data can only be edited if there is some
+    private void ApplyEditMode()
+    {
+        bool editing = editModeToolStripMenuItem.Checked;
+        hexData.ReadOnly = !editing;
+        hexExtraData.ReadOnly = !editing || !Entry.HasSection(Entry.SecondaryBlock);
+        UpdateHexStatus();
+    }
+
+    private void editModeToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+    {
+        Commit();
+        ApplyEditMode();
+    }
+
+    private void goToOffsetToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        if (ActiveHex is not HexView hex)
+            return;
+        string value = InputDialog.ShowInput(this, "Please enter the offset to go to, in hexadecimal.");
+        if (value == null)
+            return;
+        if (!ResourceImport.TryParseHex(value.Trim(), out uint offset))
+        {
+            MessageBox.Show(this, $"\"{value}\" isn't a hexadecimal offset.", "Go to Offset", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+        hex.Select((int)Math.Min(offset, (uint)hex.HexData.Length), 0);
+        hex.Focus();
+    }
+
+    private void UpdateHexStatus()
+    {
+        HexView hex = ActiveHex;
+        goToOffsetToolStripMenuItem.Enabled = hex != null;
+        if (pboImage.Visible)
+            return; // The status is the image's
+
+        statusLabel.Visible = hex != null;
+        if (hex == null)
+            return;
+        string mode = hex.ReadOnly ? (editModeToolStripMenuItem.Checked ? "Read only, there's no secondary data" : "Read only") : hex.InsertMode ? "Insert" : "Overwrite";
+        statusLabel.Text = $"Offset: 0x{hex.SelectionStart:X}    Selected: 0x{hex.SelectionLength:X} bytes    Size: 0x{hex.HexData.Length:X}    {mode}";
+    }
+
+    // Opens an imported resource in its own editor
+    private async void OpenEntry(BundleEntry target)
+    {
+        if (Owner is MainForm main)
+            await main.EditEntry(Entry.Archive.Entries.IndexOf(target));
     }
 
     private void EntryEditor_Shown(object sender, EventArgs e)

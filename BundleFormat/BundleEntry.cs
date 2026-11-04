@@ -178,8 +178,8 @@ public class BundleEntry
 
     public EntryBlock[] EntryBlocks;
 
-    public bool HasHeader => HasSection(0);
-    public bool HasBody => HasSection(1);
+    public bool HasPrimary => HasSection(0);
+    public bool HasSecondary => HasSection(1);
     public bool HasThird => HasSection(2);
 
     public EntryType Type;
@@ -232,6 +232,26 @@ public class BundleEntry
         for (int i = 0; i < DependencyCount; i++)
             imports.Add(Dependency.Read(br));
         return imports;
+    }
+
+    public List<Dependency> GetImports() => [.. Imports()];
+
+    // Primary data without the import table at its end
+    public byte[] GetPrimaryWithoutImports()
+    {
+        byte[] data = EntryBlocks[0].Data;
+        return DependencyCount > 0 && Dependencies.Count == 0 ? data[..DependenciesListOffset] : data;
+    }
+
+    // Replaces primary data, and puts the import table at its end
+    public void SetPrimary(byte[] data, List<Dependency> imports)
+    {
+        data = Dependency.AppendTable(data, imports, Console);
+        EntryBlocks[0].Data = data;
+        Dependencies.Clear(); // A BND1 import list would hide the table
+        DependencyCount = (short)imports.Count;
+        DependenciesListOffset = imports.Count > 0 ? data.Length - imports.Count * Dependency.Size : 0;
+        Dirty = true;
     }
 
     public List<BundleDependency> GetDependencies()
