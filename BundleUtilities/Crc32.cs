@@ -1,12 +1,12 @@
-﻿// from https://github.com/Daniel-McCarthy/Net-Hash
+// from https://github.com/Daniel-McCarthy/Net-Hash
 
 using System.Text;
 
 namespace BundleUtilities;
 
-public static class Crc32
+public static class CRC32
 {
-    private static readonly uint[] Crc32Table =
+    private static readonly uint[] crc32Table =
 [
         0x00000000, 0x04C11DB7, 0x09823B6E, 0x0D4326D9, 0x130476DC, 0x17C56B6B, 0x1A864DB2, 0x1E475005,
         0x2608EDB8, 0x22C9F00F, 0x2F8AD6D6, 0x2B4BCB61, 0x350C9B64, 0x31CD86D3, 0x3C8EA00A, 0x384FBDBD,
@@ -42,7 +42,7 @@ public static class Crc32
         0xAFB010B1, 0xAB710D06, 0xA6322BDF, 0xA2F33668, 0xBCB4666D, 0xB8757BDA, 0xB5365D03, 0xB1F740B4
     ];
 
-    public static readonly uint[] Crc32BTable =
+    public static readonly uint[] CRC32BTable =
     [
         0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3,
         0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91,
@@ -78,62 +78,68 @@ public static class Crc32
         0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
     ];
 
-    public static string HashCrc32(byte[] message)
+    public static string HashCRC32(byte[] message)
     {
         uint hash = uint.MaxValue;
 
-        for(uint i = 0; i < message.Length; i++)
+        for (uint i = 0; i < message.Length; i++)
         {
             uint index = message[i];
             index ^= ((hash & 0xFF000000) >> 24);
-            hash = Crc32Table[index] ^ (hash << 8);
+            hash = crc32Table[index] ^ (hash << 8);
         }
-        return ReverseEndian((~hash)).ToString("X8");
 
+        return ReverseEndian((~hash)).ToString("X8");
 
     }
 
-    public static string HashCrc32B(byte[] message)
+    public static string HashCRC32B(byte[] message)
     {
         uint hash = uint.MaxValue;
+
         for (uint i = 0; i < message.Length; i++)
         {
             uint index = message[i];
             index ^= (hash & 0x000000FF);
-            hash = Crc32BTable[index] ^ (hash >> 8);
+            hash = CRC32BTable[index] ^ (hash >> 8);
         }
 
         return (~hash).ToString("X8");
     }
 
-    public static ulong HashCrc32B(string text)
+    public static ulong HashCRC32B(string text)
     {
         byte[] message = Encoding.ASCII.GetBytes(text);
         uint hash = uint.MaxValue;
+
         for (uint i = 0; i < message.Length; i++)
         {
             uint index = message[i];
             index ^= (hash & 0x000000FF);
-            hash = Crc32BTable[index] ^ (hash >> 8);
+            hash = CRC32BTable[index] ^ (hash >> 8);
         }
 
         return (~hash);
     }
-    
+
     public static uint HashEntryID(string id)
     {
         uint result = 0xFFFFFFFF;
+
         for (int i = 0; i < id.Length; i++)
         {
             byte b = (byte)id[i];
             byte newByte = (byte)((b - 0x41) & 0xFF);
+
             if (newByte <= 0x19)
                 b += 0x20;
+
             byte lowByte = (byte)(result & 0xFF);
             lowByte = (byte)((lowByte ^ b) & 0xFF);
             result = (result >> 8) & 0x00FFFFFF;
-            result = (result ^ Crc32BTable[lowByte]) & 0xFFFFFFFF;
+            result = (result ^ CRC32BTable[lowByte]) & 0xFFFFFFFF;
         }
+
         result = (~result) & 0xFFFFFFFF;
 
         return result;

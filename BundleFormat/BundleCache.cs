@@ -14,6 +14,7 @@ public static class BundleCache
     {
         if (!Files.ContainsKey(entryID))
             return null;
+
         return Paths[Files[entryID]];
     }
 
@@ -21,6 +22,7 @@ public static class BundleCache
     {
         if (!EntryInfos.ContainsKey(entryID))
             return null;
+
         return EntryInfos[entryID];
     }
 
@@ -28,47 +30,53 @@ public static class BundleCache
     {
         if (!EntryInfos.ContainsKey(entryID))
             return default;
+
         return EntryInfos[entryID].DebugInfo;
     }
 
     public static string GetEntryNameByID(ulong entryID)
     {
         string name = GetEntryDebugInfoByID(entryID).Name;
-        return string.IsNullOrWhiteSpace(name) ? ResourceDB.Lookup(entryID) : name;
+        return string.IsNullOrWhiteSpace(name)
+            ? ResourceDB.Lookup(entryID)
+            : name;
     }
 
-    private static readonly Dictionary<string, BundleArchive> Archives = [];
-    private static readonly Lock ArchivesLock = new();
+    private static readonly Dictionary<string, BundleArchive> archives = [];
+    private static readonly Lock archivesLock = new();
 
     public static BundleArchive GetArchive(string path)
     {
-        lock (ArchivesLock)
+        lock (archivesLock)
         {
-            if (!Archives.TryGetValue(path, out BundleArchive archive))
-                Archives[path] = archive = BundleArchive.Read(path);
+            if (!archives.TryGetValue(path, out BundleArchive archive))
+                archives[path] = archive = BundleArchive.Read(path);
+
             return archive;
         }
     }
 
     public static void ClearArchives()
     {
-        lock (ArchivesLock)
-            Archives.Clear();
+        lock (archivesLock)
+            archives.Clear();
     }
 
     public static BundleEntry GetEntryByID(ulong entryID)
     {
-        string file = GetFileByEntryID(entryID);
-        return file == null ? null : GetArchive(file)?.GetEntryByID(entryID);
+        string currentFile = GetFileByEntryID(entryID);
+        return currentFile == null
+            ? null
+            : GetArchive(currentFile)?.GetEntryByID(entryID);
     }
 
     public static string GetRelativePath(string path)
     {
-        string file = path.Replace('\\', '/').Replace(CurrentPath.Replace('\\', '/'), "");
+        string currentFile = path.Replace('\\', '/').Replace(CurrentPath.Replace('\\', '/'), "");
 
-        if (file.StartsWith("/"))
-            file = file[1..];
+        if (currentFile.StartsWith("/"))
+            currentFile = currentFile[1..];
 
-        return file;
+        return currentFile;
     }
 }

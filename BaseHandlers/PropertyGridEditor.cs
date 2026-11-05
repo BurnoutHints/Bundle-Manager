@@ -15,9 +15,12 @@ namespace BaseHandlers;
 // PropertyGridEditor warns about values outside the range but keeps them, they're slider limits rather than engine ones.
 [AttributeUsage(AttributeTargets.Property)]
 public class FieldDescriptionAttribute(string description, float min = float.NaN, float max = float.NaN, [CallerMemberName] string field = null)
-    : DescriptionAttribute(string.Join(" ", new[] { description, float.IsNaN(min) ? "" : $"Game range: {min} to {max}.", $"({field})" }.Where(s => s.Length > 0)))
+    : DescriptionAttribute(string.Join(" ", ((string[])[description, float.IsNaN(min)
+        ? ""
+        : $"Game range: {min} to {max}.", $"({field})"]).Where(s => s.Length > 0)))
 {
     public float Min => min;
+
     public float Max => max;
 }
 
@@ -28,12 +31,25 @@ public class PropertyGridEditor : Form, IEntryEditor
     // so changes are found by comparing those bytes from opening and closing.
     public PropertyGridEditor(string title, Func<byte[]> serialize, Action write, params (string Name, object Data)[] pages)
     {
-        Label warning = new() { Dock = DockStyle.Bottom, Height = 24, ForeColor = Color.DarkOrange, TextAlign = ContentAlignment.MiddleLeft, Visible = false };
+        Label warning = new()
+        {
+            Dock = DockStyle.Bottom,
+            Height = 24,
+            ForeColor = Color.DarkOrange,
+            TextAlign = ContentAlignment.MiddleLeft,
+            Visible = false
+        };
 
         PropertyGrid MakeGrid(object data)
         {
             // Categorized without Alphabetical keeps fields in the order they're declared
-            PropertyGrid grid = new() { Dock = DockStyle.Fill, SelectedObject = data, PropertySort = PropertySort.Categorized };
+            PropertyGrid grid = new()
+            {
+                Dock = DockStyle.Fill,
+                SelectedObject = data,
+                PropertySort = PropertySort.Categorized
+            };
+
             grid.PropertyValueChanged += (_, e) =>
             {
                 warning.Text = RangeWarning(e.ChangedItem);
@@ -43,7 +59,9 @@ public class PropertyGridEditor : Form, IEntryEditor
         }
 
         // A page that's already a control is shown as it is
-        Control MakePage(object data) => data is Control control ? control : MakeGrid(data);
+        Control MakePage(object data) => data is Control control
+            ? control
+            : MakeGrid(data);
 
         if (pages.Length == 1)
         {
@@ -51,15 +69,27 @@ public class PropertyGridEditor : Form, IEntryEditor
         }
         else
         {
-            TabControl tabs = new() { Dock = DockStyle.Fill };
-            foreach ((string name, object data) in pages)
-                tabs.TabPages.Add(new TabPage(name) { Controls = { MakePage(data) } });
+            TabControl tabs = new()
+            {
+                Dock = DockStyle.Fill
+            };
+
+            foreach ((string name, object currentData) in pages)
+                tabs.TabPages.Add(new TabPage(name)
+                {
+                    Controls =
+                    {
+                        MakePage(currentData)
+                    }
+                });
+
             Controls.Add(tabs);
         }
+
         Controls.Add(warning);
 
         Text = title;
-        ClientSize = new Size(800, 600);
+        ClientSize = new(800, 600);
 
         byte[] opened = serialize();
 
@@ -86,8 +116,11 @@ public class PropertyGridEditor : Form, IEntryEditor
                 continue;
 
             float[] outside = [.. Components(item.Value).Where(v => v < range.Min || v > range.Max)];
-            return outside.Length == 0 ? "" : $"{item.Label}: {string.Join(", ", outside)} is outside the game's range of {range.Min} to {range.Max}. It's kept anyway.";
+            return outside.Length == 0
+                ? ""
+                : $"{item.Label}: {string.Join(", ", outside)} is outside the game's range of {range.Min} to {range.Max}. It's kept anyway.";
         }
+
         return "";
     }
 

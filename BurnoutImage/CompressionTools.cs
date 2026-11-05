@@ -20,9 +20,11 @@ public static class CompressionTools
         using Bitmap image = new(source);
         Rectangle area = new(0, 0, image.Width, image.Height);
         BitmapData bits = image.LockBits(area, ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb); // BGRA in memory
+
         try
         {
             byte[] pixels = new byte[image.Width * image.Height * 4];
+
             for (int y = 0; y < image.Height; y++)
                 Marshal.Copy(bits.Scan0 + y * bits.Stride, pixels, y * image.Width * 4, image.Width * 4);
 

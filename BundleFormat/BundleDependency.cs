@@ -16,12 +16,14 @@ public struct BundleDependency
         bool external = Entry == null;
 
         string extra = "";
+
         if (Entry == null)
         {
-            string file = BundleCache.GetFileByEntryID(EntryID);
-            if (!string.IsNullOrEmpty(file))
+            string currentFile = BundleCache.GetFileByEntryID(EntryID);
+
+            if (!string.IsNullOrEmpty(currentFile))
             {
-                extra = ", Path: " + BundleCache.GetRelativePath(file);
+                extra = ", Path: " + BundleCache.GetRelativePath(currentFile);
                 Entry = BundleCache.GetEntryByID(EntryID);
             }
         }
@@ -32,11 +34,15 @@ public struct BundleDependency
             value = ", Attribute Count: " + desc.AttributeCount.ToString("D2");
         }
 
-        string location = external ? "External" : "Internal";
+        string location = external
+            ? "External"
+            : "Internal";
 
         string info = "(External)";
+
         if (Entry != null)
             info = "(" + location + ": " + EntryIndex.ToString("D3") + ", " + Entry.Type + value + extra + ")";
+
         return "ID: 0x" + EntryID.ToString("X8") + ", PtrOffset: 0x" + EntryPointerOffset.ToString("X8") + " " + info;
     }
 }

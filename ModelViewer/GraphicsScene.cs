@@ -10,15 +10,17 @@ namespace ModelViewer;
 
 public class GraphicsScene
 {
-    private Shader _shader;
+    private Shader shader;
 
-    private ICamera _camera;
-    private Matrix4 _projection;
+    private ICamera camera;
+    private Matrix4 projection;
 
     public delegate void OnFrameRendered();
+
     public event OnFrameRendered FrameRendered;
 
     public int Width { get; set; }
+
     public int Height { get; set; }
 
     public bool CanRender { get; set; }
@@ -41,8 +43,8 @@ public class GraphicsScene
     private void CreateProjection()
     {
         float aspectRatio = (float)Width / Height;
-        _projection =
-            Matrix4.CreatePerspectiveFieldOfView(60.0f * ((float) Math.PI / 180.0f), aspectRatio, 0.1f, 4000.0f);
+        projection =
+            Matrix4.CreatePerspectiveFieldOfView(60.0f * ((float)Math.PI / 180.0f), aspectRatio, 0.1f, 4000.0f);
     }
 
     public void Init()
@@ -51,10 +53,10 @@ public class GraphicsScene
             return;
 
         CreateProjection();
-        
+
         try
         {
-            _shader = new Shader("standard");
+            shader = new("standard");
         }
         catch (IOException ex)
         {
@@ -63,19 +65,21 @@ public class GraphicsScene
             CanRender = false;
             return;
         }
-        _shader.Compile();
+
+        shader.Compile();
 
         if (!Scene.InitGraphics())
             return;
 
-        _camera = new OrbitCamera(Scene);
-        //_camera = new StaticCamera(new Vector3(0, 2, -5), new Vector3(0, 0, 0));
+        camera = new OrbitCamera(Scene);
 
+        //_camera = new StaticCamera(new Vector3(0, 2, -5), new Vector3(0, 0, 0));
         GL.ClearColor(Color.CornflowerBlue);
         GL.ClearDepth(1.0f);
         GL.Enable(EnableCap.Texture2D);
         GL.Enable(EnableCap.DepthTest);
         GL.DepthFunc(DepthFunction.Lequal);
+
         //glShadeModel(GL_SMOOTH);
         GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);
 
@@ -87,7 +91,7 @@ public class GraphicsScene
         if (!CanRender)
             return;
 
-        _camera?.Update();
+        camera?.Update();
         Scene?.Update();
 
         // TODO: Implement
@@ -101,11 +105,11 @@ public class GraphicsScene
 
         if (CanRender)
         {
-            _shader.Bind();
+            shader.Bind();
 
-            GL.UniformMatrix4(20, false, ref _projection);
+            GL.UniformMatrix4(20, false, ref projection);
 
-            Scene?.Render(_camera);
+            Scene?.Render(camera);
         }
 
         GL.Flush();
@@ -118,7 +122,7 @@ public class GraphicsScene
         if (CanRender)
         {
             Scene?.Dispose();
-            _shader.Dispose();
+            shader.Dispose();
         }
     }
 }

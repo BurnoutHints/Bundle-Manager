@@ -56,7 +56,7 @@ namespace BaseHandlers
             this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
             this.debugToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
             this.debugToolStripMenuItem.Text = "Debug";
-            this.debugToolStripMenuItem.Click += new System.EventHandler(this.DebugToolStripMenuItem_Click);
+            this.debugToolStripMenuItem.Click += new System.EventHandler(this.debugToolStripMenuItem_Click);
             // 
             // stsMain
             // 
@@ -71,7 +71,7 @@ namespace BaseHandlers
             this.renderToolStripMenuItem.Name = "renderToolStripMenuItem";
             this.renderToolStripMenuItem.Size = new System.Drawing.Size(56, 20);
             this.renderToolStripMenuItem.Text = "Render";
-            this.renderToolStripMenuItem.Click += new System.EventHandler(this.RenderToolStripMenuItem_Click);
+            this.renderToolStripMenuItem.Click += new System.EventHandler(this.renderToolStripMenuItem_Click);
             // 
             // lstMain
             // 
@@ -90,8 +90,8 @@ namespace BaseHandlers
             this.lstMain.TabIndex = 2;
             this.lstMain.UseCompatibleStateImageBehavior = false;
             this.lstMain.View = System.Windows.Forms.View.Details;
-            this.lstMain.SizeChanged += new System.EventHandler(this.LstMain_SizeChanged);
-            this.lstMain.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.LstMain_MouseDoubleClick);
+            this.lstMain.SizeChanged += new System.EventHandler(this.lstMain_SizeChanged);
+            this.lstMain.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lstMain_MouseDoubleClick);
             // 
             // colModel
             // 

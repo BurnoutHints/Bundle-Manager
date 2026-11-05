@@ -6,6 +6,7 @@ internal static class Extensions
     {
         if (self == null || other == null)
             return false;
+
         if (self.Length != other.Length)
             return false;
 

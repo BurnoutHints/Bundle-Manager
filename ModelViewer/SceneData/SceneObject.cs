@@ -5,12 +5,17 @@ namespace ModelViewer.SceneData;
 public class SceneObject
 {
     public Model Model { get; set; }
+
     public Matrix4 Transform { get; set; }
+
     public string Name { get; set; }
 
     public Vector3 Position => Transform.ExtractTranslation();
+
     public Vector3 Scale => Transform.ExtractScale();
+
     public Quaternion Rotation => Transform.ExtractRotation();
+
     public Vector3 Direction { get; set; }
 
     public string ID { get; set; }
@@ -45,7 +50,7 @@ public class SceneObject
 
     public Model MergeMeshesToModel()
     {
-        return new Model(MergeMeshes());
+        return new(MergeMeshes());
     }
 
     public bool InitGraphics()

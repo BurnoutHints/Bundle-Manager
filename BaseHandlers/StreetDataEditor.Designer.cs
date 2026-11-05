@@ -147,7 +147,7 @@ namespace BaseHandlers
             streetsPage.Name = "streetsPage";
             streetsPage.Size = new Size(1012, 323);
             streetsPage.TabIndex = 0;
-            streetsPage.Text = "Streets";
+            streetsPage.Text = "streets";
             // 
             // streetsList
             // 
@@ -180,7 +180,7 @@ namespace BaseHandlers
             junctionsPage.Name = "junctionsPage";
             junctionsPage.Size = new Size(1012, 323);
             junctionsPage.TabIndex = 1;
-            junctionsPage.Text = "Junctions";
+            junctionsPage.Text = "junctions";
             // 
             // junctionsList
             // 
@@ -233,7 +233,7 @@ namespace BaseHandlers
             roadsPage.Name = "roadsPage";
             roadsPage.Size = new Size(1012, 323);
             roadsPage.TabIndex = 2;
-            roadsPage.Text = "Roads";
+            roadsPage.Text = "roads";
             // 
             // roadsList
             // 
@@ -294,7 +294,7 @@ namespace BaseHandlers
             challengesPage.Name = "challengesPage";
             challengesPage.Size = new Size(1012, 323);
             challengesPage.TabIndex = 3;
-            challengesPage.Text = "Challenges";
+            challengesPage.Text = "challenges";
             // 
             // challengesList
             // 

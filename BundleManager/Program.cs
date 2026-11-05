@@ -13,11 +13,10 @@ using BundleManager.TypeConverters;
 
 namespace BundleManager;
 
-
 public static class Program
 {
-    public static MainForm fileModeForm;
-    public static FileView folderModeForm;
+    public static MainForm FileModeForm;
+    public static FileView FolderModeForm;
 
     private const string RegistryKeyPath = @"Software\BurnoutHints\BundleManager";
     private const string RegistryValueName = "PreferredMode"; // 1 = Studio, 0 = Bundle
@@ -25,10 +24,11 @@ public static class Program
     /// <summary>
     /// The main entry point for the application.
     /// </summary>
+
     [STAThread]
     public static void Main(string[] args)
     {
-        CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+        CultureInfo.DefaultThreadCurrentCulture = new("en-US");
 
         ResourceDB.Preload();
 
@@ -43,8 +43,8 @@ public static class Program
 
         PluginLoader.InitializePlugins();
 
-        fileModeForm = new MainForm();
-        folderModeForm = new FileView();
+        FileModeForm = new();
+        FolderModeForm = new();
 
         CheckElevation();
 
@@ -72,12 +72,18 @@ public static class Program
                     Caption = "Bundle Manager",
                     Heading = "Welcome to Bundle Manager.",
                     Text = "This program has two interchangable modes. Which one would you like to start in?\n\nYou can switch at any time with \"Switch to Bundle/Studio Mode\" at the top of the main window.",
-                    Buttons = { bundle, studio, TaskDialogButton.Cancel },
+                    Buttons =
+                    {
+                        bundle,
+                        studio,
+                        TaskDialogButton.Cancel
+                    },
                     Footnote = "",
                     AllowCancel = true
                 };
 
                 TaskDialogButton result = TaskDialog.ShowDialog(page);
+
                 if (result != studio && result != bundle)
                     return;
 
@@ -105,23 +111,25 @@ public static class Program
             if (args.Length >= 1)
             {
                 string path = args[0];
+
                 if (File.GetAttributes(path).HasFlag(FileAttributes.Directory))
                 {
-                    folderModeForm.Shown += async (_, _) => await folderModeForm.Open(path);
-                    Application.Run(folderModeForm);
+                    FolderModeForm.Shown += async (_, _) => await FolderModeForm.Open(path);
+                    Application.Run(FolderModeForm);
                 }
                 else
                 {
-                    fileModeForm.Shown += async (_, _) =>
+                    FileModeForm.Shown += async (_, _) =>
                     {
-                        await fileModeForm.Open(path);
+                        await FileModeForm.Open(path);
+
                         if (args.Length >= 2 && int.TryParse(args[1], out int index))
                         {
-                            fileModeForm.ForceOnlySpecificEntry = true;
-                            await fileModeForm.EditEntry(index);
+                            FileModeForm.ForceOnlySpecificEntry = true;
+                            await FileModeForm.EditEntry(index);
                         }
                     };
-                    Application.Run(fileModeForm);
+                    Application.Run(FileModeForm);
                 }
             }
         }
@@ -131,6 +139,7 @@ public static class Program
     {
         using WindowsIdentity identity = WindowsIdentity.GetCurrent();
         WindowsPrincipal principal = new(identity);
+
         if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
         {
             MessageBox.Show("Bundle Manager is running with standard permissions.\n"
@@ -146,7 +155,9 @@ public static class Program
         Registry.SetValue(
             $@"HKEY_CURRENT_USER\{RegistryKeyPath}",
             RegistryValueName,
-            useFolderMode ? 1 : 0,
+            useFolderMode
+                ? 1
+                : 0,
             RegistryValueKind.DWord);
     }
 }

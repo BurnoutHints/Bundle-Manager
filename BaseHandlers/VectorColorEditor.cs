@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Windows.Forms;
@@ -9,12 +10,41 @@ using System.Windows.Forms.Design;
 
 namespace BaseHandlers;
 
+// Colour fields use a swatch and picker rather than the vector's X/Y/Z/W editor.
+// Formatting never converts the stored floating point colour to 8-bit channels.
+public class VectorColorConverter : TypeConverter
+{
+    public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) =>
+        destinationType == typeof(string) && value is Vector4 colour
+            ? Describe(colour)
+            : base.ConvertTo(context, culture, value, destinationType);
+
+    public static string Describe(Vector4 colour)
+    {
+        Vector3 rgb = new(colour.X, colour.Y, colour.Z);
+        Color swatch = ColourPickerForm.ToColor(ColourPickerForm.Normalise(rgb));
+        string text = $"#{swatch.R:X2}{swatch.G:X2}{swatch.B:X2}";
+
+        if (colour.W != 1)
+            text += $" · Alpha {colour.W:0.##}";
+
+        float intensity = Math.Max(rgb.X, Math.Max(rgb.Y, rgb.Z));
+
+        if (intensity > 1)
+            text += $" · Intensity {intensity:0.##}";
+
+        return text;
+    }
+}
+
 // Picks float RGB colours for Vector3, Vector4 (alpha too) and Vector3[] (pick an element from a list) values with
 // ColourPickerForm, and draws a swatch of each in the grid. Swatches of colours brighter than 1 show their hue.
 public class VectorColorEditor : UITypeEditor
 {
     public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
-        => context?.PropertyDescriptor?.PropertyType == typeof(Vector3[]) ? UITypeEditorEditStyle.DropDown : UITypeEditorEditStyle.Modal;
+        => context?.PropertyDescriptor?.PropertyType == typeof(Vector3[])
+            ? UITypeEditorEditStyle.DropDown
+            : UITypeEditorEditStyle.Modal;
 
     public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
     {
@@ -26,9 +56,16 @@ public class VectorColorEditor : UITypeEditor
             case Vector3 v:
                 return Pick(service, v, null, out _) ?? v;
             case Vector4 v:
-                return Pick(service, new Vector3(v.X, v.Y, v.Z), v.W, out float alpha) is Vector3 c ? new Vector4(c, alpha) : v;
+                return Pick(service, new(v.X, v.Y, v.Z), v.W, out float alpha) is Vector3 currentC
+                    ? new(currentC, alpha)
+                    : v;
             case Vector3[] colours:
-                ListBox list = new() { BorderStyle = BorderStyle.None, IntegralHeight = false, Height = colours.Length * 18 + 4 };
+                ListBox list = new()
+                {
+                    BorderStyle = BorderStyle.None,
+                    IntegralHeight = false,
+                    Height = colours.Length * 18 + 4
+                };
                 list.Items.AddRange([.. colours.Select((c, i) => (object)$"{i}: {c.X:0.###}, {c.Y:0.###}, {c.Z:0.###}")]);
                 list.Click += (_, _) => service.CloseDropDown();
                 service.DropDownControl(list);
@@ -47,8 +84,12 @@ public class VectorColorEditor : UITypeEditor
     {
         using ColourPickerForm form = new(colour, alpha);
         bool ok = service.ShowDialog(form) == DialogResult.OK;
-        newAlpha = ok && alpha.HasValue ? form.Alpha : alpha ?? 0;
-        return ok ? form.Colour : null;
+        newAlpha = ok && alpha.HasValue
+            ? form.Alpha
+            : alpha ?? 0;
+        return ok
+            ? form.Colour
+            : null;
     }
 
     public override bool GetPaintValueSupported(ITypeDescriptorContext context) => true;
@@ -58,7 +99,7 @@ public class VectorColorEditor : UITypeEditor
         Vector3[] colours = e.Value switch
         {
             Vector3 v => [v],
-            Vector4 v => [new Vector3(v.X, v.Y, v.Z)],
+            Vector4 v => [new(v.X, v.Y, v.Z)],
             Vector3[] a => a,
             _ => []
         };

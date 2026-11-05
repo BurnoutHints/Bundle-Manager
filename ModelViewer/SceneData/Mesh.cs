@@ -35,26 +35,33 @@ public class MeshFace
 
 public class Mesh
 {
-    private int _vertexArray;
-    private int _buffer;
-    private int _vertexCount;
-    private int _indexArray;
-    private int _texture;
+    private int vertexArray;
+    private int buffer;
+    private int vertexCount;
+    private int indexArray;
+    private int texture;
 
     public Material Material { get; set; }
 
     public List<Vector3> Vertices { get; set; }
+
     public List<Vector3> Normals { get; set; }
+
     public List<Vector3> Normals2 { get; set; }
+
     public List<uint> Indices { get; set; }
+
     public List<MeshFace> Faces { get; set; }
+
     public List<Vector2> UV1 { get; set; }
+
     public List<Vector2> UV2 { get; set; }
+
     public int ID1 { get; set; }
+
     public int ID2 { get; set; }
 
     //public Dictionary<uint, Material> Materials { get; set; }
-
     public Mesh()
     {
         Vertices = [];
@@ -71,21 +78,22 @@ public class Mesh
 
     public Mesh Copy()
     {
-        Mesh result = new();
+        Mesh result = new()
+        {
+            Material = Material,
 
-        result.Material = Material;
-
-        result.Vertices = new List<Vector3>(Vertices);
-        result.Normals = new List<Vector3>(Normals);
-        result.Normals2 = new List<Vector3>(Normals2);
-        result.Indices = new List<uint>(Indices);
-        result.UV1 = new List<Vector2>(UV1);
-        result.UV2 = new List<Vector2>(UV2);
-        result.ID1 = ID1;
-        result.ID2 = ID2;
+            Vertices = [.. Vertices],
+            Normals = [.. Normals],
+            Normals2 = [.. Normals2],
+            Indices = [.. Indices],
+            UV1 = [.. UV1],
+            UV2 = [.. UV2],
+            ID1 = ID1,
+            ID2 = ID2
+        };
 
         if (Faces != null)
-            result.Faces = new List<MeshFace>(Faces);
+            result.Faces = [.. Faces];
 
         return result;
     }
@@ -104,7 +112,6 @@ public class Mesh
 
         // TODO: Merge Normals, and UVs correclty for indices
         // TODO: Merge Materials somehow (make texture atlas?)
-
         return result;
     }
 
@@ -153,12 +160,12 @@ public class Mesh
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, _indexArray);
         GL.BufferData(BufferTarget.ElementArrayBuffer, sizeof(uint) * Indices.Count, Indices.ToArray(), BufferUsageHint.StaticDraw);
         */
-
         List<uint> indices = Indices;
 
         if (Faces != null)
         {
             indices = [];
+
             foreach (MeshFace face in Faces)
             {
                 /*for (int i = 2; i < face.Indices.Count; i++)
@@ -176,12 +183,12 @@ public class Mesh
                         indices.Add(face.Indices[i] - 0);
                     }
                 }*/
-
                 indices.AddRange(face.Indices);
             }
         }
 
         List<TexturedVertex> vertices = [];
+
         if (indices.Count == 0)
         {
             for (int i = 0; i < Vertices.Count; i++)
@@ -191,25 +198,25 @@ public class Mesh
         }
 
         List<uint> indices2 = indices;
+
         /*List<uint> indices2 = new List<uint>();
 
-        // Triangulate Faces
-        for (int i = 2; i < indices.Count; i++)
-        {
-            if ((i - 2) % 2 == 0)
-            {
-                indices2.Add(indices[i] - 0);
-                indices2.Add(indices[i] - 1);
-                indices2.Add(indices[i] - 2);
-            }
-            else
-            {
-                indices2.Add(indices[i] - 2);
-                indices2.Add(indices[i] - 1);
-                indices2.Add(indices[i] - 0);
-            }
-        }*/
-
+                // Triangulate Faces
+                for (int i = 2; i < indices.Count; i++)
+                {
+                    if ((i - 2) % 2 == 0)
+                    {
+                        indices2.Add(indices[i] - 0);
+                        indices2.Add(indices[i] - 1);
+                        indices2.Add(indices[i] - 2);
+                    }
+                    else
+                    {
+                        indices2.Add(indices[i] - 2);
+                        indices2.Add(indices[i] - 1);
+                        indices2.Add(indices[i] - 0);
+                    }
+                }*/
         for (int i = 0; i + 2 < indices2.Count; i += 3)
         {
             // Drop a triangle with a missing corner whole, as dropping only the corner shifts every triangle after it
@@ -219,36 +226,35 @@ public class Mesh
             for (int j = i; j < i + 3; j++)
             {
                 int index = (int)indices2[j];
-                vertices.Add(new TexturedVertex(Vertices[index], index < UV1.Count ? UV1[index] : Vector2.Zero));
+                vertices.Add(new(Vertices[index], index < UV1.Count
+                    ? UV1[index]
+                    : Vector2.Zero));
             }
         }
 
-        _vertexCount = vertices.Count;
+        vertexCount = vertices.Count;
 
-        _vertexArray = GL.GenVertexArray();
-        _buffer = GL.GenBuffer();
-        int buffer = _buffer;
-        GL.BindVertexArray(_vertexArray);
-        GL.BindBuffer(BufferTarget.ArrayBuffer, buffer);
+        vertexArray = GL.GenVertexArray();
+        buffer = GL.GenBuffer();
+        int currentBuffer = buffer;
+        GL.BindVertexArray(vertexArray);
+        GL.BindBuffer(BufferTarget.ArrayBuffer, currentBuffer);
 
-        GL.NamedBufferStorage(buffer, TexturedVertex.SizeInBytes*vertices.Count, vertices.ToArray(), BufferStorageFlags.MapWriteBit);
+        GL.NamedBufferStorage(currentBuffer, TexturedVertex.SizeInBytes * vertices.Count, vertices.ToArray(), BufferStorageFlags.MapWriteBit);
 
-        GL.VertexArrayAttribBinding(_vertexArray, 0, 0);
-        GL.EnableVertexArrayAttrib(_vertexArray, 0);
-        GL.VertexArrayAttribFormat(_vertexArray, 0, 3, VertexAttribType.Float, false, 0);
+        GL.VertexArrayAttribBinding(vertexArray, 0, 0);
+        GL.EnableVertexArrayAttrib(vertexArray, 0);
+        GL.VertexArrayAttribFormat(vertexArray, 0, 3, VertexAttribType.Float, false, 0);
 
-        GL.VertexArrayAttribBinding(_vertexArray, 1, 0);
-        GL.EnableVertexArrayAttrib(_vertexArray, 1);
-        GL.VertexArrayAttribFormat(_vertexArray, 1, 2, VertexAttribType.Float, false, Vector3.SizeInBytes);
+        GL.VertexArrayAttribBinding(vertexArray, 1, 0);
+        GL.EnableVertexArrayAttrib(vertexArray, 1);
+        GL.VertexArrayAttribFormat(vertexArray, 1, 2, VertexAttribType.Float, false, Vector3.SizeInBytes);
 
-        GL.VertexArrayVertexBuffer(_vertexArray, 0, buffer, IntPtr.Zero, TexturedVertex.SizeInBytes);
-
-
+        GL.VertexArrayVertexBuffer(vertexArray, 0, currentBuffer, IntPtr.Zero, TexturedVertex.SizeInBytes);
 
         //_indexArray = GL.GenBuffer();
         //GL.BindBuffer(BufferTarget.ElementArrayBuffer, _indexArray);
         //GL.NamedBufferStorage(_indexArray, sizeof(uint) * Indices.Count, Indices.ToArray(), BufferStorageFlags.MapWriteBit);
-
         if (Material?.DiffuseMap != null)
         {
             try
@@ -256,15 +262,15 @@ public class Mesh
                 int width = Material.DiffuseMap.Width;
                 int height = Material.DiffuseMap.Height;
 
-                _texture = GL.GenTexture();
-                GL.BindTexture(TextureTarget.Texture2D, _texture);
+                texture = GL.GenTexture();
+                GL.BindTexture(TextureTarget.Texture2D, texture);
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Linear);
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Linear);
 
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0, PixelFormat.Bgra,
                     PixelType.UnsignedByte, IntPtr.Zero);
                 Bitmap bitmap = new(Material.DiffuseMap);
-                BitmapData data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadOnly,
+                BitmapData data = bitmap.LockBits(new(0, 0, width, height), ImageLockMode.ReadOnly,
                     System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
                 GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, width, height, PixelFormat.Bgra,
@@ -277,7 +283,8 @@ public class Mesh
                 GL.BindTexture(TextureTarget.Texture2D, 0);
 
                 GL.Enable(EnableCap.Texture2D);
-            } catch (ArgumentException ex)
+            }
+            catch (ArgumentException ex)
             {
                 Console.WriteLine(ex.Message + "\n\n" + ex.StackTrace);
             }
@@ -287,19 +294,20 @@ public class Mesh
             int width = 16;
             int height = 16;
 
-            _texture = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, _texture);
+            texture = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, texture);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Linear);
 
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0, PixelFormat.Bgra,
                 PixelType.UnsignedByte, IntPtr.Zero);
             Bitmap bitmap = new(width, height);
+
             for (int y = 0; y < height; y++)
                 for (int x = 0; x < width; x++)
                     bitmap.SetPixel(x, y, Color.DarkGray);
 
-            BitmapData data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadOnly,
+            BitmapData data = bitmap.LockBits(new(0, 0, width, height), ImageLockMode.ReadOnly,
                 System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
             GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, width, height, PixelFormat.Bgra,
@@ -319,28 +327,30 @@ public class Mesh
 
     public void Update()
     {
-        
+
     }
 
     public void Render(ICamera camera, Matrix4 transform)
     {
         GL.ActiveTexture(TextureUnit.Texture0);
-        GL.BindTexture(TextureTarget.Texture2D, _texture);
+        GL.BindTexture(TextureTarget.Texture2D, texture);
+
         //GL.Uniform1(21, 0);
-        
         Matrix4 translation = Matrix4.CreateTranslation(transform.ExtractTranslation());
         Matrix4 rotation = Matrix4.CreateFromQuaternion(transform.ExtractRotation());
         Matrix4 scale = Matrix4.CreateScale(transform.ExtractScale());
 
         Matrix4 modelView = rotation * scale * translation;
+
         if (camera != null)
             modelView *= camera.LookAtMatrix;
 
         GL.UniformMatrix4(21, false, ref modelView);
 
-        GL.BindVertexArray(_vertexArray);
+        GL.BindVertexArray(vertexArray);
+
         //GL.PointSize(4.0f);
-        GL.DrawArrays(PrimitiveType.Triangles, 0, _vertexCount);
+        GL.DrawArrays(PrimitiveType.Triangles, 0, vertexCount);
 
         /*GL.EnableClientState(ArrayCap.VertexArray);
         GL.EnableClientState(ArrayCap.IndexArray);
@@ -367,8 +377,8 @@ public class Mesh
 
     public void Dispose()
     {
-        GL.DeleteVertexArrays(1, ref _vertexArray);
-        GL.DeleteBuffers(1, ref _buffer);
-        GL.DeleteTextures(1, ref _texture);
+        GL.DeleteVertexArrays(1, ref vertexArray);
+        GL.DeleteBuffers(1, ref buffer);
+        GL.DeleteTextures(1, ref texture);
     }
 }

@@ -8,7 +8,6 @@ namespace LuaList;
 // [2] use it when defining a member of a data class using attribute TypeConverter.
 // [3] Connect the data class to a PropertyGrid.
 
-
 // [1] define UInt32HexTypeConverter is-a TypeConverter
 public class EncryptedStringConverter : TypeConverter
 {

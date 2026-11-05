@@ -11,26 +11,26 @@ namespace VehicleList;
 [Flags]
 public enum Flags
 {
-    IsRaceVehicle       = 1,
-    CanCheckTraffic     = 1 << 1,
-    CanBeChecked        = 1 << 2,
-    IsTrailer           = 1 << 3,
-    CanTowTrailer       = 1 << 4,
-    CanBePainted        = 1 << 5,
-    Unknown0            = 1 << 6,
+    IsRaceVehicle = 1,
+    CanCheckTraffic = 1 << 1,
+    CanBeChecked = 1 << 2,
+    IsTrailer = 1 << 3,
+    CanTowTrailer = 1 << 4,
+    CanBePainted = 1 << 5,
+    Unknown0 = 1 << 6,
     IsFirstInSpeedRange = 1 << 7,
-    HasSwitchableBoost  = 1 << 8,
-    Unknown1            = 1 << 9,
-    Unknown2            = 1 << 10,
-    IsWIP               = 1 << 11,
-    IsFromV10           = 1 << 12,
-    IsFromV13           = 1 << 13,
-    IsFromV14           = 1 << 14,
-    IsFromV15           = 1 << 15,
-    IsFromV16           = 1 << 16,
-    IsFromV17           = 1 << 17,
-    IsFromV18           = 1 << 18,
-    IsFromV19           = 1 << 19
+    HasSwitchableBoost = 1 << 8,
+    Unknown1 = 1 << 9,
+    Unknown2 = 1 << 10,
+    IsWIP = 1 << 11,
+    IsFromV10 = 1 << 12,
+    IsFromV13 = 1 << 13,
+    IsFromV14 = 1 << 14,
+    IsFromV15 = 1 << 15,
+    IsFromV16 = 1 << 16,
+    IsFromV17 = 1 << 17,
+    IsFromV18 = 1 << 18,
+    IsFromV19 = 1 << 19
 }
 
 public enum VehicleRank
@@ -45,23 +45,23 @@ public enum VehicleRank
 
 public enum ClassUnlock : uint
 {
-    SuperClassUnlock  = 0x0470A5BF,
+    SuperClassUnlock = 0x0470A5BF,
     MuscleClassUnlock = 0x48346FEF,
-    F1ClassUnlock     = 0x817B91D9,
-    TunerClassUnlock  = 0xA3E2D8C9,
+    F1ClassUnlock = 0x817B91D9,
+    TunerClassUnlock = 0xA3E2D8C9,
     HotRodClassUnlock = 0xB3845465,
-    RivalGen          = 0xEBE39AE9
+    RivalGen = 0xEBE39AE9
 }
 
 public enum AIMusic : uint
 {
     None,
     Muscle = 0xA9813C9D,
-    Truck  = 0xCB72AEA7,
-    Tuner  = 0x284D944B,
-    Sedan  = 0xD95C2309,
+    Truck = 0xCB72AEA7,
+    Tuner = 0x284D944B,
+    Sedan = 0xD95C2309,
     Exotic = 0x8A1A90E9,
-    Super  = 0xB12A34DD
+    Super = 0xB12A34DD
 }
 
 public enum AIExhaustIndex
@@ -78,14 +78,14 @@ public enum AIExhaustIndex
 public enum VehicleCategory
 {
     NONE,
-    PARADISE_CARS  = 1,
+    PARADISE_CARS = 1,
     PARADISE_BIKES = 1 << 1,
-    ONLINE_CARS    = 1 << 2,
-    TOYS           = 1 << 3,
+    ONLINE_CARS = 1 << 2,
+    TOYS = 1 << 3,
     LEGENDARY_CARS = 1 << 4,
     BOOST_SPECIALS = 1 << 5,
-    COP_CARS       = 1 << 6,
-    ISLAND_CARS    = 1 << 7
+    COP_CARS = 1 << 6,
+    ISLAND_CARS = 1 << 7
 }
 
 public enum VehicleType
@@ -136,8 +136,11 @@ public class VehicleListData : IEntryData
 
     public IEntryEditor GetEditor(BundleEntry entry)
     {
-        VehicleListForm vehicleList = new();
-        vehicleList.List = this;
+        VehicleListForm vehicleList = new()
+        {
+            List = this
+        };
+
         vehicleList.Edit += () =>
         {
             Write(entry);
@@ -163,8 +166,10 @@ public class VehicleListData : IEntryData
         Clear();
 
         MemoryStream ms = new(entry.EntryBlocks[0].Data);
-        BinaryReader2 br = new(ms);
-        br.BigEndian = entry.Console;
+        BinaryReader2 br = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
 
@@ -176,42 +181,45 @@ public class VehicleListData : IEntryData
 
         for (int i = 0; i < count; i++)
         {
-            Vehicle vehicle = new();
+            Vehicle vehicle = new()
+            {
+                Index = i,
 
-            vehicle.Index = i;
+                ID = new(br.ReadUInt64()),
+                ParentID = new(br.ReadUInt64()),
+                WheelType = Encoding.ASCII.GetString(br.ReadBytes(32)),
+                CarName = Encoding.ASCII.GetString(br.ReadBytes(64)),
+                CarBrand = Encoding.ASCII.GetString(br.ReadBytes(32)),
+                DamageLimit = br.ReadSingle(),
+                Flags = (Flags)br.ReadInt32(),
+                BoostLength = br.ReadByte(),
+                VehicleRank = (VehicleRank)br.ReadByte(),
+                BoostCapacity = br.ReadByte(),
+                DisplayStrength = br.ReadByte(),
+                padding0 = br.ReadInt32(),
+                AttribSysCollectionKey = br.ReadInt64(),
+                ExhaustName = new(br.ReadUInt64()),
+                ExhaustID = br.ReadInt64(),
+                EngineID = br.ReadInt64(),
+                EngineName = new(br.ReadUInt64()),
+                ClassUnlockStreamHash = (ClassUnlock)br.ReadInt32(),
+                padding1 = br.ReadInt32(),
+                CarShutdownStreamID = br.ReadInt64(),
+                CarReleasedStreamID = br.ReadInt64(),
+                AIMusicHash = (AIMusic)br.ReadInt32(),
+                AIExhaustIndex = (AIExhaustIndex)br.ReadByte(),
+                AIExhaustIndex2 = (AIExhaustIndex)br.ReadByte(),
+                AIExhaustIndex3 = (AIExhaustIndex)br.ReadByte(),
+                padding2 = br.ReadByte()
+            };
 
-            vehicle.ID = new EncryptedString(br.ReadUInt64());
-            vehicle.ParentID = new EncryptedString(br.ReadUInt64());
-            vehicle.WheelType = Encoding.ASCII.GetString(br.ReadBytes(32));
-            vehicle.CarName = Encoding.ASCII.GetString(br.ReadBytes(64));
-            vehicle.CarBrand = Encoding.ASCII.GetString(br.ReadBytes(32));
-            vehicle.DamageLimit = br.ReadSingle();
-            vehicle.Flags = (Flags)br.ReadInt32();
-            vehicle.BoostLength = br.ReadByte();
-            vehicle.VehicleRank = (VehicleRank)br.ReadByte();
-            vehicle.BoostCapacity = br.ReadByte();
-            vehicle.DisplayStrength = br.ReadByte();
-            vehicle.padding0 = br.ReadInt32();
-            vehicle.AttribSysCollectionKey = br.ReadInt64();
-            vehicle.ExhaustName = new EncryptedString(br.ReadUInt64());
-            vehicle.ExhaustID = br.ReadInt64();
-            vehicle.EngineID = br.ReadInt64();
-            vehicle.EngineName = new EncryptedString(br.ReadUInt64());
-            vehicle.ClassUnlockStreamHash = (ClassUnlock)br.ReadInt32();
-            vehicle.padding1 = br.ReadInt32();
-            vehicle.CarShutdownStreamID = br.ReadInt64();
-            vehicle.CarReleasedStreamID = br.ReadInt64();
-            vehicle.AIMusicHash = (AIMusic)br.ReadInt32();
-            vehicle.AIExhaustIndex = (AIExhaustIndex)br.ReadByte();
-            vehicle.AIExhaustIndex2 = (AIExhaustIndex)br.ReadByte();
-            vehicle.AIExhaustIndex3 = (AIExhaustIndex)br.ReadByte();
-            vehicle.padding2 = br.ReadByte();
             if (!x64)
             {
                 vehicle.Unknown[0] = br.ReadInt64();
                 vehicle.Unknown[1] = br.ReadInt64();
                 vehicle.Category = (VehicleCategory)br.ReadInt32();
             }
+
             vehicle.VehicleAndBoostType = br.ReadByte();
             vehicle.FinishType = (FinishType)br.ReadByte();
             vehicle.MaxSpeedNoBoost = br.ReadByte();
@@ -220,6 +228,7 @@ public class VehicleListData : IEntryData
             vehicle.DisplayBoost = br.ReadByte();
             vehicle.Color = br.ReadByte();
             vehicle.ColorType = (ColorType)br.ReadByte();
+
             if (!x64)
                 vehicle.padding3 = br.ReadInt32();
 
@@ -236,8 +245,10 @@ public class VehicleListData : IEntryData
     public bool Write(BundleEntry entry)
     {
         MemoryStream ms = new();
-        BinaryWriter2 bw = new(ms);
-        bw.BigEndian = entry.Console;
+        BinaryWriter2 bw = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
 
@@ -279,12 +290,14 @@ public class VehicleListData : IEntryData
             bw.Write((byte)vehicle.AIExhaustIndex2);
             bw.Write((byte)vehicle.AIExhaustIndex3);
             bw.Write(vehicle.padding2);
+
             if (!x64)
             {
                 bw.Write(vehicle.Unknown[0]);
                 bw.Write(vehicle.Unknown[1]);
                 bw.Write((uint)vehicle.Category);
             }
+
             bw.Write(vehicle.VehicleAndBoostType);
             bw.Write((byte)vehicle.FinishType);
             bw.Write(vehicle.MaxSpeedNoBoost);
@@ -293,6 +306,7 @@ public class VehicleListData : IEntryData
             bw.Write(vehicle.DisplayBoost);
             bw.Write(vehicle.Color);
             bw.Write((byte)vehicle.ColorType);
+
             if (!x64)
                 bw.Write(vehicle.padding3);
         }

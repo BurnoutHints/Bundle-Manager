@@ -288,7 +288,7 @@ namespace BundleManager
             // 
             // colType
             // 
-            colType.Text = "Type";
+            colType.Text = "type";
             colType.Width = 233;
             // 
             // colSize

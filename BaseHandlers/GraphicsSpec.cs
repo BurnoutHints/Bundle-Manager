@@ -9,7 +9,7 @@ namespace BaseHandlers;
 
 public class GraphicsSpec : IEntryData
 {
-    private Scene _scene;
+    private Scene scene;
 
     public BundleEntry Entry;
 
@@ -25,7 +25,7 @@ public class GraphicsSpec : IEntryData
 
     private void Clear()
     {
-        _scene = null;
+        scene = null;
 
         Entry = default;
 
@@ -43,13 +43,12 @@ public class GraphicsSpec : IEntryData
         Entry = entry;
 
         // TODO: Process Data
-
         for (int i = 0; i < entry.GetDependencies().Count; i++)
         {
             Instances.Add(entry.GetDependencies()[i].EntryID);
         }
 
-        _scene = MakeScene(loader);
+        scene = MakeScene(loader);
 
         return true;
     }
@@ -67,24 +66,26 @@ public class GraphicsSpec : IEntryData
     public IEntryEditor GetEditor(BundleEntry entry)
     {
         ModelViewerForm viewer = new();
-        viewer.Renderer.Scene = _scene;
+        viewer.Renderer.Scene = scene;
 
         return viewer;
     }
 
     public Scene MakeScene(ILoader loader)
     {
-        Scene scene = new();
+        Scene currentScene = new();
 
         foreach (uint instance in Instances)
         {
             BundleEntry modelEntry = Entry.Archive.GetEntryByID(instance);
+
             if (modelEntry == null)
             {
-                string file = BundleCache.GetFileByEntryID(instance);
-                if (!string.IsNullOrEmpty(file))
+                string currentFile = BundleCache.GetFileByEntryID(instance);
+
+                if (!string.IsNullOrEmpty(currentFile))
                 {
-                    BundleArchive archive = BundleArchive.Read(file);
+                    BundleArchive archive = BundleArchive.Read(currentFile);
                     modelEntry = archive.GetEntryByID(instance);
                 }
             }
@@ -95,12 +96,12 @@ public class GraphicsSpec : IEntryData
                 Renderable renderable = new();
                 renderable.Read(renderableEntry, null); // TODO: Null Loader
                 SceneObject sceneObject = new(instance.ToString("X8"), renderable.Model);
-                //sceneObject.Transform = instance.Transform;
 
-                scene.AddObject(sceneObject);
+                //sceneObject.Transform = instance.Transform;
+                currentScene.AddObject(sceneObject);
             }
         }
 
-        return scene;
+        return currentScene;
     }
 }

@@ -13,5 +13,6 @@
     <ProjectReference Include="..\MathLib\MathLib.csproj" />
     <ProjectReference Include="..\ModelViewer\ModelViewer.csproj" />
     <ProjectReference Include="..\PluginAPI\PluginAPI.csproj" />
+    <ProjectReference Include="..\WorldCollisionHandler\WorldCollisionHandler.csproj" />
   </ItemGroup>
 </Project>

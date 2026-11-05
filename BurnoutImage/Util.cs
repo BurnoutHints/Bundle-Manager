@@ -1,5 +1,3 @@
-using System;
-
 namespace BurnoutImage;
 
 internal static class Util

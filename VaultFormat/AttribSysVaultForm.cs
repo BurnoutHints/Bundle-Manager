@@ -23,7 +23,7 @@ public partial class AttribSysVaultForm : Form, IEntryEditor
     {
         InitializeComponent();
     }
-   
+
     public event Notify EditEvent;
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
@@ -49,9 +49,9 @@ public partial class AttribSysVaultForm : Form, IEntryEditor
             IAttribute chunk = AttribSys.Attributes[i];
 
             string[] value = [
-                chunk.getHeader().ClassName,
-                chunk.getHeader().ClassHash.ToString("X16"),
-                chunk.getHeader().CollectionHash.ToString("X16"),
+                chunk.GetHeader().ClassName,
+                chunk.GetHeader().ClassHash.ToString("X16"),
+                chunk.GetHeader().CollectionHash.ToString("X16"),
             ];
             lstDataChunks.Items.Add(new ListViewItem(value));
         }
@@ -67,8 +67,8 @@ public partial class AttribSysVaultForm : Form, IEntryEditor
 
         public AttribSysVaultSorter(int column)
         {
-            this.Column = column;
-            this.Direction = false;
+            Column = column;
+            Direction = false;
         }
 
         public int Compare(object x, object y)
@@ -78,46 +78,52 @@ public partial class AttribSysVaultForm : Form, IEntryEditor
 
             if (Column > itemX.SubItems.Count || Column > itemY.SubItems.Count)
             {
-                if (this.Direction)
+                if (Direction)
                     return -1;
+
                 return 1;
             }
 
             string iX = itemX.SubItems[Column].Text;
             string iY = itemY.SubItems[Column].Text;
 
-
             if (int.TryParse(iX, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out int iXint))
             {
                 if (int.TryParse(iY, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out int iYint))
                 {
                     int val2 = iXint.CompareTo(iYint);
-                    if (this.Direction)
+
+                    if (Direction)
                         return val2 * -1;
+
                     return val2;
                 }
             }
 
             int val = string.CompareOrdinal(iX, iY);
-            if (this.Direction)
+
+            if (Direction)
                 return val * -1;
+
             return val;
         }
 
         public void Swap()
         {
-            this.Direction = !this.Direction;
+            Direction = !Direction;
         }
     }
 
     private void changeCollectionHashToolStripMenuItem_Click(object sender, EventArgs e)
     {
         string value = InputDialog.ShowInput(this, "Please enter the value to get the lookup 8.");
+
         if (value == null)
             return;
+
         ulong result = Utilities.CalcLookup8(value);
-        int index = AttribSys.Attributes.FindIndex(i => i.getHeader().ClassName == lstDataChunks.SelectedItems[0].Text);
-        AttribSys.Attributes[index].getHeader().CollectionHash = result;
+        int index = AttribSys.Attributes.FindIndex(i => i.GetHeader().ClassName == lstDataChunks.SelectedItems[0].Text);
+        AttribSys.Attributes[index].GetHeader().CollectionHash = result;
         MessageBox.Show(this, "The lookup 8 hashed value is: " + result.ToString("X16"), "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
         EditEvent?.Invoke();
         UpdateDisplay();
@@ -126,7 +132,7 @@ public partial class AttribSysVaultForm : Form, IEntryEditor
     private void lstDataChunks_DoubleClick(object sender, EventArgs e)
     {
         Console.WriteLine(lstDataChunks.SelectedItems[0].Text);
-        int index = AttribSys.Attributes.FindIndex(i => i.getHeader().ClassName == lstDataChunks.SelectedItems[0].Text);
+        int index = AttribSys.Attributes.FindIndex(i => i.GetHeader().ClassName == lstDataChunks.SelectedItems[0].Text);
         propertyGrid2.SelectedObject = AttribSys.Attributes[index];
     }
 
@@ -139,10 +145,12 @@ public partial class AttribSysVaultForm : Form, IEntryEditor
     private void exportVaultToolStripMenuItem_Click(object sender, EventArgs e)
     {
         // Dialog Creation
-        SaveFileDialog saveDialog = new();
-        saveDialog.Filter = "JSON File (*.json)|*.json";
-        saveDialog.Title = "Save AttribSys as JSON";
-        saveDialog.FileName = "AttribSys.json";
+        SaveFileDialog saveDialog = new()
+        {
+            Filter = "JSON File (*.json)|*.json",
+            Title = "Save AttribSys as JSON",
+            FileName = "AttribSys.json"
+        };
 
         // Dialog Logic
         if (saveDialog.ShowDialog() == DialogResult.OK)
@@ -150,7 +158,6 @@ public partial class AttribSysVaultForm : Form, IEntryEditor
             try
             {
                 // Convertion of the AttribSys. Might need smarter structure to only keep the essential data concerning the configuration of the vehicle
-                
                 string jsonContent = JsonSerializer.Serialize(AttribSys, jsonSerializerOptions);
 
                 File.WriteAllText(saveDialog.FileName, jsonContent);

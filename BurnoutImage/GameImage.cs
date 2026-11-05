@@ -18,8 +18,8 @@ public struct ImageInfo
 
     public ImageInfo(byte[] header, byte[] data)
     {
-        this.Header = header;
-        this.Data = data;
+        Header = header;
+        Data = data;
     }
 }
 
@@ -47,16 +47,20 @@ public static class GameImage
         using Bitmap image = new(path);
         Rectangle area = new(0, 0, image.Width, image.Height);
         System.Drawing.Imaging.BitmapData bits = image.LockBits(area, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
         try
         {
             byte[] row = new byte[image.Width * 4]; // BGRA
+
             for (int y = 0; y < image.Height; y++)
             {
                 System.Runtime.InteropServices.Marshal.Copy(bits.Scan0 + y * bits.Stride, row, 0, row.Length);
+
                 for (int a = 3; a < row.Length; a += 4)
                     if (row[a] != 255)
                         return (image.Width, image.Height, true);
             }
+
             return (image.Width, image.Height, false);
         }
         finally
@@ -69,10 +73,14 @@ public static class GameImage
     public static int TextureSize(CompressionType compression, int width, int height, int mips = 1)
     {
         int size = 0;
+
         for (int i = 0; i < mips; i++, width = Math.Max(1, width / 2), height = Math.Max(1, height / 2))
             size += compression is CompressionType.DXT1 or CompressionType.DXT5 or CompressionType.BC7
-                ? ((width + 3) / 4) * ((height + 3) / 4) * (compression == CompressionType.DXT1 ? 8 : 16)
+                ? ((width + 3) / 4) * ((height + 3) / 4) * (compression == CompressionType.DXT1
+                    ? 8
+                    : 16)
                 : width * height * 4;
+
         return size;
     }
 
@@ -93,6 +101,7 @@ public static class GameImage
             using BinaryReader br = new(fs);
 
             uint magic = br.ReadUInt32();
+
             if (magic != 0x20534444)
                 throw new InvalidDataException("The provided DDS file is unsupported or corrupted.");
 
@@ -102,6 +111,7 @@ public static class GameImage
 
             fs.Seek(0x1C, SeekOrigin.Begin);
             numMips = br.ReadInt32();
+
             if (numMips <= 0)
                 numMips = 1;
 
@@ -116,17 +126,19 @@ public static class GameImage
             uint pfAMask = br.ReadUInt32();
 
             bool dx10 = (pfFlags & 0x4) != 0 && pfFourCC == 0x30315844; // DDPF_FOURCC "DX10"
+
             if (dx10)
             {
                 fs.Seek(0x80, SeekOrigin.Begin);
                 uint dxgi = br.ReadUInt32();
                 compression = FromDxgi(dxgi);
+
                 if (compression is CompressionType.UNKNOWN or CompressionType.ARGB)
                     throw new NotSupportedException($"DDS files of DXGI format {dxgi} aren't supported.");
             }
             else
             {
-                compression = ImageUtil.DetectDdsFormat(
+                compression = ImageUtil.DetectDDSFormat(
                     pfFlags,
                     pfFourCC,
                     pfRGBBits,
@@ -140,7 +152,9 @@ public static class GameImage
             if (compression == CompressionType.UNKNOWN)
                 compression = CompressionType.RGBA;
 
-            int ddsHeaderSize = dx10 ? 0x94 : 0x80;
+            int ddsHeaderSize = dx10
+                ? 0x94
+                : 0x80;
             fs.Seek(ddsHeaderSize, SeekOrigin.Begin);
             data = br.ReadBytes((int)(fs.Length - ddsHeaderSize));
 
@@ -149,6 +163,7 @@ public static class GameImage
             if (data.Length < TextureSize(compression, width, height, numMips))
                 throw new InvalidDataException($"The DDS file has less pixel data than a {width}×{height} {compression} texture with {numMips} mips needs.");
         }
+
         // Process non-DDS textures
         else
         {
@@ -191,7 +206,6 @@ public static class GameImage
             }
         }
 
-
         // Direct3D can't create block compressed textures of other sizes, and the game crashes on them
         if (compression is CompressionType.DXT1 or CompressionType.DXT5 or CompressionType.BC7 && (width % 4 != 0 || height % 4 != 0))
             throw new InvalidDataException($"{compression} textures need a width and height that are multiples of 4, but this image is {width}×{height}. Resize it or import it uncompressed.");
@@ -200,10 +214,16 @@ public static class GameImage
         if (platform == PlatformType.Remastered)
         {
             // Remastered Texture header: https://burnout.wiki/wiki/Texture/Burnout_Paradise/Remastered
-            byte[] header = template?.Length is 0x40 or 0x60 ? (byte[])template.Clone() : new byte[0x40];
+            byte[] header = template?.Length is 0x40 or 0x60
+                ? (byte[])template.Clone()
+                : new byte[0x40];
             Span<byte> h = header;
-            int p = header.Length == 0x60 ? 4 : 0;    // 64-bit pointers move Dimension 4 bytes
-            int f = header.Length == 0x60 ? 0x10 : 0; // and Format onwards 0x10 bytes
+            int p = header.Length == 0x60
+                ? 4
+                : 0;    // 64-bit pointers move Dimension 4 bytes
+            int f = header.Length == 0x60
+                ? 0x10
+                : 0; // and Format onwards 0x10 bytes
             BinaryPrimitives.WriteInt32LittleEndian(h[(0x08 + p)..], 7); // Dimension: 2D
             BinaryPrimitives.WriteInt32LittleEndian(h[(0x1C + f)..], compression switch
             {
@@ -220,7 +240,7 @@ public static class GameImage
             BinaryPrimitives.WriteUInt16LittleEndian(h[(0x2A + f)..], 1); // Array size
             h[0x2C + f] = 0;                                              // Most detailed mip
             h[0x2D + f] = (byte)numMips;                                  // Mip levels
-            return new ImageInfo(header, data);
+            return new(header, data);
         }
 
         MemoryStream msx = new();
@@ -243,6 +263,7 @@ public static class GameImage
                 // Decomp. See b5-decomp src/pc/gcm/renderengine/texture.h
                 bw.Write(new byte[0x1C]);   // 3 pointers, 4 bools
             }
+
             bw.Write(compression switch     // D3DFORMAT
             {
                 CompressionType.DXT1 => 0x31545844, // "DXT1"
@@ -256,24 +277,26 @@ public static class GameImage
             bw.Write((byte)numMips);        // MipLevels
             bw.Write((byte)0);              // Texture type
             bw.Write((byte)0);              // Flags
-            bw.Write(new byte[platform == PlatformType.PC ? 4 : 8]); // 0x10 alignment
+            bw.Write(new byte[platform == PlatformType.PC
+                ? 4
+                : 8]); // 0x10 alignment
         }
 
         bw.Flush();
         bw.Close();
 
-        return new ImageInfo(msx.ToArray(), data);
+        return new(msx.ToArray(), data);
     }
 
     private static CompressionType FromDxgi(uint format) => format switch // DXGI_FORMAT
     {
-        0x00000057  => CompressionType.BGRA,
-        0x0000001C  => CompressionType.RGBA,
-        0x000000FF  => CompressionType.ARGB,
-        0x00000047  => CompressionType.DXT1,
-        0x0000004D  => CompressionType.DXT5,
-        0x00000062  => CompressionType.BC7,
-        _           => CompressionType.UNKNOWN
+        0x00000057 => CompressionType.BGRA,
+        0x0000001C => CompressionType.RGBA,
+        0x000000FF => CompressionType.ARGB,
+        0x00000047 => CompressionType.DXT1,
+        0x0000004D => CompressionType.DXT5,
+        0x00000062 => CompressionType.BC7,
+        _ => CompressionType.UNKNOWN
     };
 
     public static ImageHeader GetImageHeader(byte[] data, BundlePlatform? bundle = null)
@@ -282,10 +305,11 @@ public static class GameImage
         BinaryReader2 br = new(ms);
 
         PlatformType platform = DetectPlatform(data, bundle);
+
         if (platform == PlatformType.X360)
         {
             X360Fetch f = new(data);
-            CompressionType type = (f.Format, f.Swizzle) switch
+            CompressionType currentType = (f.Format, f.Swizzle) switch
             {
                 (18, _) => CompressionType.DXT1,     // GPUTEXTUREFORMAT_DXT1
                 (20, _) => CompressionType.DXT5,     // GPUTEXTUREFORMAT_DXT4_5
@@ -293,14 +317,14 @@ public static class GameImage
                 (6, 0x60A) => CompressionType.BGRA,  // its swizzle reads the bytes in
                 _ => CompressionType.UNKNOWN
             };
-            return new ImageHeader(type, f.Width, f.Height, PlatformType.X360);
+            return new(currentType, f.Width, f.Height, PlatformType.X360);
         }
         else if (platform == PlatformType.Remastered)
         {
             br.BaseStream.Seek(0x00, SeekOrigin.Begin);
 
             // 32/64 bit offsets
-            var (oFormat, oSize) = data.Length switch
+            (int oFormat, int oSize) = data.Length switch
             {
                 0x40 => (0x1C, 0x24),
                 0x60 => (0x2C, 0x34),
@@ -309,7 +333,7 @@ public static class GameImage
 
             br.BaseStream.Seek(oFormat, SeekOrigin.Begin);
 
-            CompressionType type = FromDxgi(br.ReadUInt32());
+            CompressionType currentType2 = FromDxgi(br.ReadUInt32());
 
             br.BaseStream.Seek(oSize, SeekOrigin.Begin);
 
@@ -318,21 +342,23 @@ public static class GameImage
 
             br.Close();
 
-            return new ImageHeader(type, width, height, PlatformType.Remastered);
+            return new(currentType2, width, height, PlatformType.Remastered);
         }
         else if (platform == PlatformType.PC || platform == PlatformType.PCx64)
         {
-            br.BaseStream.Seek(platform == PlatformType.PC ? 0x10 : 0x1C, SeekOrigin.Begin);
+            br.BaseStream.Seek(platform == PlatformType.PC
+                ? 0x10
+                : 0x1C, SeekOrigin.Begin);
 
             // D3DFORMAT
-            CompressionType type = br.ReadInt32() switch
+            CompressionType currentType3 = br.ReadInt32() switch
             {
-                0x00000015  => CompressionType.BGRA,
-                0x00000020  => CompressionType.RGBA,
-                0x000000FF  => CompressionType.ARGB,
-                0x31545844  => CompressionType.DXT1, // "DXT1"
-                0x35545844  => CompressionType.DXT5, // "DXT5"
-                _           => CompressionType.UNKNOWN
+                0x00000015 => CompressionType.BGRA,
+                0x00000020 => CompressionType.RGBA,
+                0x000000FF => CompressionType.ARGB,
+                0x31545844 => CompressionType.DXT1, // "DXT1"
+                0x35545844 => CompressionType.DXT5, // "DXT5"
+                _ => CompressionType.UNKNOWN
             };
 
             int width = br.ReadInt16();
@@ -340,13 +366,13 @@ public static class GameImage
 
             br.Close();
 
-            return new ImageHeader(type, width, height, platform);
+            return new(currentType3, width, height, platform);
         }
         else if (platform == PlatformType.PS3) // PS3
         {
             br.BaseStream.Seek(0x00, SeekOrigin.Begin);
 
-            CompressionType type = br.ReadByte() switch
+            CompressionType currentType4 = br.ReadByte() switch
             {
                 0x85 => CompressionType.ARGB,
                 0x86 => CompressionType.DXT1,
@@ -361,7 +387,7 @@ public static class GameImage
 
             br.Close();
 
-            return new ImageHeader(type, width, height, PlatformType.PS3);
+            return new(currentType4, width, height, PlatformType.PS3);
         }
         else
         {
@@ -377,6 +403,7 @@ public static class GameImage
         try
         {
             ImageHeader header = GetImageHeader(data, bundle);
+
             if (header.Width <= 0 || header.Height <= 0)
                 throw new InvalidDataException($"The texture header gives a size of {header.Width}×{header.Height}.");
 
@@ -386,6 +413,7 @@ public static class GameImage
                 throw new NotSupportedException($"This {header.Platform} texture's format isn't supported yet.");
 
             int needed = TextureSize(header.CompressionType, header.Width, header.Height);
+
             if (extraData.Length < needed)
                 throw new InvalidDataException($"The texture data is {extraData.Length} bytes, but a {header.Width}×{header.Height} {header.CompressionType} texture needs {needed}.");
 
@@ -406,11 +434,17 @@ public static class GameImage
             {
                 if (header.Platform == PlatformType.PS3)
                 {
-                    rO = 1; gO = 2; bO = 3; aO = 0; // ARGB
+                    rO = 1;
+                    gO = 2;
+                    bO = 3;
+                    aO = 0; // ARGB
                 }
                 else
                 {
-                    rO = 0; gO = 1; bO = 2; aO = 3; // RGBA
+                    rO = 0;
+                    gO = 1;
+                    bO = 2;
+                    aO = 3; // RGBA
                 }
             }
             else
@@ -418,13 +452,22 @@ public static class GameImage
                 switch (header.CompressionType)
                 {
                     case CompressionType.BGRA:
-                        rO = 2; gO = 1; bO = 0; aO = 3;
+                        rO = 2;
+                        gO = 1;
+                        bO = 0;
+                        aO = 3;
                         break;
                     case CompressionType.ARGB:
-                        rO = 1; gO = 2; bO = 3; aO = 0;
+                        rO = 1;
+                        gO = 2;
+                        bO = 3;
+                        aO = 0;
                         break;
                     default:
-                        rO = 0; gO = 1; bO = 2; aO = 3;
+                        rO = 0;
+                        gO = 1;
+                        bO = 2;
+                        aO = 3;
                         break;
                 }
             }
@@ -450,7 +493,7 @@ public static class GameImage
 
             // Make sure we create a Bitmap that has ownership of its pixels so disposing it frees them
             Bitmap image = new(header.Width, header.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            System.Drawing.Imaging.BitmapData locked = image.LockBits(new Rectangle(0, 0, header.Width, header.Height),
+            System.Drawing.Imaging.BitmapData locked = image.LockBits(new(0, 0, header.Width, header.Height),
                 System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             Marshal.Copy(bits, 0, locked.Scan0, bits.Length);
             image.UnlockBits(locked);
@@ -466,42 +509,60 @@ public static class GameImage
     public static byte[] GetDDS(byte[] header, byte[] data, BundlePlatform? bundle = null)
     {
         ImageHeader info = GetImageHeader(header, bundle);
-        CompressionType type = info.CompressionType;
+        CompressionType currentType = info.CompressionType;
         int width = info.Width, height = info.Height, mips = 1, faces = 1;
+
         switch (info.Platform)
         {
             case PlatformType.Remastered:
-                int p = header.Length == 0x60 ? 4 : 0, f = header.Length == 0x60 ? 0x10 : 0;
+                int p = header.Length == 0x60
+                    ? 4
+                    : 0, f = header.Length == 0x60
+                    ? 0x10
+                    : 0;
                 mips = header[0x2D + f];
-                faces = header[0x08 + p] == 9 ? 6 : 1; // Dimension 9 is a cube
+                faces = header[0x08 + p] == 9
+                    ? 6
+                    : 1; // Dimension 9 is a cube
                 break;
             case PlatformType.PC:
                 mips = header[0x19];
-                faces = header[0x1A] == 1 ? 6 : 1; // Type 1 is a cube
+                faces = header[0x1A] == 1
+                    ? 6
+                    : 1; // Type 1 is a cube
                 break;
             case PlatformType.PCx64:
                 mips = header[0x25];
-                faces = header[0x24] == 6 ? 6 : 1; // The decomp's converter writes cubes as six deep
+                faces = header[0x24] == 6
+                    ? 6
+                    : 1; // The decomp's converter writes cubes as six deep
                 break;
             case PlatformType.PS3:
                 mips = header[0x01];               // CellGcmTexture
-                faces = header[0x03] != 0 ? 6 : 1;
+                faces = header[0x03] != 0
+                    ? 6
+                    : 1;
                 break;
             case PlatformType.X360:
-                data = LinearX360(header, data, type);
+                data = LinearX360(header, data, currentType);
                 break;
         }
+
         mips = Math.Max(1, mips);
-        if (type is CompressionType.UNKNOWN)
+
+        if (currentType is CompressionType.UNKNOWN)
             throw new NotSupportedException($"This {info.Platform} texture's format isn't supported yet.");
 
-        int faceSize = TextureSize(type, width, height, mips), padded = (faceSize + 0x7F) & ~0x7F;
-        int stride = info.Platform == PlatformType.PC && data.Length >= faces * padded ? padded : faceSize;
-        if (data.Length < (faces - 1) * stride + faceSize)
-            throw new InvalidDataException($"The texture data is {data.Length} bytes, but a {width}×{height} {type} texture with {mips} mips and {faces} faces needs {faces * faceSize}.");
+        int faceSize = TextureSize(currentType, width, height, mips), padded = (faceSize + 0x7F) & ~0x7F;
+        int stride = info.Platform == PlatformType.PC && data.Length >= faces * padded
+            ? padded
+            : faceSize;
 
-        bool compressed = type is CompressionType.DXT1 or CompressionType.DXT5 or CompressionType.BC7;
-        (uint flags, uint fourCC, uint r, uint g, uint b, uint a) = type switch // DDS_PIXELFORMAT
+        if (data.Length < (faces - 1) * stride + faceSize)
+            throw new InvalidDataException($"The texture data is {data.Length} bytes, but a {width}×{height} {currentType} texture with {mips} mips and {faces} faces needs {faces * faceSize}.");
+
+        bool compressed = currentType is CompressionType.DXT1 or CompressionType.DXT5 or CompressionType.BC7;
+        (uint flags, uint fourCC, uint r, uint g, uint b, uint a) = currentType switch // DDS_PIXELFORMAT
         {
             CompressionType.DXT1 => (0x4u, 0x31545844u, 0u, 0u, 0u, 0u),                         // DDPF_FOURCC "DXT1"
             CompressionType.DXT5 => (0x4u, 0x35545844u, 0u, 0u, 0u, 0u),                         // "DXT5"
@@ -515,34 +576,53 @@ public static class GameImage
         using BinaryWriter bw = new(ms);
         bw.Write(0x20534444);                                                       // "DDS "
         bw.Write(124);                                                              // DDS_HEADER size
-        bw.Write(0x1007 | (mips > 1 ? 0x20000 : 0) | (compressed ? 0x80000 : 0x8)); // CAPS | HEIGHT | WIDTH | PIXELFORMAT, MIPMAPCOUNT, LINEARSIZE or PITCH
+        bw.Write(0x1007 | (mips > 1
+            ? 0x20000
+            : 0) | (compressed
+            ? 0x80000
+            : 0x8)); // CAPS | HEIGHT | WIDTH | PIXELFORMAT, MIPMAPCOUNT, LINEARSIZE or PITCH
         bw.Write(height);
         bw.Write(width);
-        bw.Write(compressed ? TextureSize(type, width, height) : width * 4);       // Linear size or pitch
+        bw.Write(compressed
+            ? TextureSize(currentType, width, height)
+            : width * 4);       // Linear size or pitch
         bw.Write(0);                                                                // Depth
         bw.Write(mips);
         bw.Write(new byte[44]);                                                     // Reserved
         bw.Write(32);                                                               // DDS_PIXELFORMAT size
         bw.Write(flags);
         bw.Write(fourCC);
-        bw.Write(compressed ? 0 : 32);                                              // RGB bit count
+        bw.Write(compressed
+            ? 0
+            : 32);                                              // RGB bit count
         bw.Write(r);
         bw.Write(g);
         bw.Write(b);
         bw.Write(a);
-        bw.Write(0x1000 | (mips > 1 ? 0x400008 : 0) | (faces > 1 ? 0x8 : 0));       // TEXTURE, MIPMAP | COMPLEX, COMPLEX
-        bw.Write(faces > 1 ? 0xFE00 : 0);                                           // CUBEMAP | all six faces
+        bw.Write(0x1000 | (mips > 1
+            ? 0x400008
+            : 0) | (faces > 1
+            ? 0x8
+            : 0));       // TEXTURE, MIPMAP | COMPLEX, COMPLEX
+        bw.Write(faces > 1
+            ? 0xFE00
+            : 0);                                           // CUBEMAP | all six faces
         bw.Write(new byte[12]);                                                     // Caps3, Caps4, reserved
-        if (type == CompressionType.BC7)
+
+        if (currentType == CompressionType.BC7)
         {
             bw.Write(0x62);                                                         // DDS_HEADER_DXT10: DXGI_FORMAT_BC7_UNORM
             bw.Write(3);                                                            // D3D10_RESOURCE_DIMENSION_TEXTURE2D
-            bw.Write(faces > 1 ? 0x4 : 0);                                          // D3D10_RESOURCE_MISC_TEXTURECUBE
+            bw.Write(faces > 1
+                ? 0x4
+                : 0);                                          // D3D10_RESOURCE_MISC_TEXTURECUBE
             bw.Write(1);                                                            // Array size
             bw.Write(0);                                                            // Alpha mode
         }
+
         for (int i = 0; i < faces; i++)
             bw.Write(data, i * stride, faceSize);
+
         bw.Flush();
         return ms.ToArray();
     }
@@ -551,13 +631,21 @@ public static class GameImage
     private readonly struct X360Fetch(byte[] header)
     {
         private uint Word(int i) => BinaryPrimitives.ReadUInt32BigEndian(header.AsSpan(0x1C + i * 4));
+
         public bool Tiled => Word(0) >> 31 != 0;
+
         public int Pitch => (int)(Word(0) >> 22 & 0x1FF) * 32; // Texels
+
         public int Endian => (int)(Word(1) >> 6 & 3);
+
         public int Format => (int)(Word(1) & 0x3F);
+
         public int Width => (int)(Word(2) & 0x1FFF) + 1;
+
         public int Height => (int)(Word(2) >> 13 & 0x1FFF) + 1;
+
         public int Swizzle => (int)(Word(3) >> 1 & 0xFFF);
+
         public bool PackedMips => (Word(5) >> 11 & 1) != 0;
     }
 
@@ -573,12 +661,15 @@ public static class GameImage
             CompressionType.RGBA or CompressionType.BGRA => 4,
             _ => throw new NotSupportedException($"Xbox 360 texture format {f.Format} with swizzle {f.Swizzle:X3} is not supported yet.")
         };
-        int blockSize = bytesPerBlock == 4 ? 1 : 4;
+        int blockSize = bytesPerBlock == 4
+            ? 1
+            : 4;
         int width = (f.Width + blockSize - 1) / blockSize, height = (f.Height + blockSize - 1) / blockSize;
         int pitch = (f.Pitch / blockSize + 31) & ~31; // Rows are padded to whole 32 block tiles
 
         // Mips of 16 texels or less share one tile, and when the texture is that small its top mip is in there too
         int offsetX = 0, offsetY = 0;
+
         if (f.PackedMips && Math.Min(f.Width, f.Height) <= 16)
         {
             if (BitOperations.RoundUpToPowerOf2((uint)f.Width) > BitOperations.RoundUpToPowerOf2((uint)f.Height))
@@ -589,17 +680,22 @@ public static class GameImage
 
         byte[] linear = new byte[width * height * bytesPerBlock];
         int log2Bpb = BitOperations.Log2((uint)bytesPerBlock);
+
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
             {
-                int src = f.Tiled ? Tiled2D(x + offsetX, y + offsetY, pitch, log2Bpb) : ((y + offsetY) * pitch + x + offsetX) << log2Bpb;
+                int src = f.Tiled
+                    ? Tiled2D(x + offsetX, y + offsetY, pitch, log2Bpb)
+                    : ((y + offsetY) * pitch + x + offsetX) << log2Bpb;
+
                 if (src + bytesPerBlock <= data.Length)
                     Array.Copy(data, src, linear, (y * width + x) * bytesPerBlock, bytesPerBlock);
             }
         }
 
         Span<uint> words = MemoryMarshal.Cast<byte, uint>(linear.AsSpan());
+
         switch (f.Endian)
         {
             case 1: // 8in16
@@ -614,6 +710,7 @@ public static class GameImage
                     word = BitOperations.RotateLeft(word, 16);
                 break;
         }
+
         return linear;
     }
 
@@ -629,11 +726,12 @@ public static class GameImage
 
     public static PlatformType DetectPlatform(byte[] data, BundlePlatform? bundle = null)
     {
-        if (data == null) throw new ArgumentNullException(nameof(data));
+        if (data == null)
+            throw new ArgumentNullException(nameof(data));
 
         int len = data.Length;
 
-        PlatformType? known = (bundle, len) switch
+        PlatformType? known = (bundle, len: len) switch
         {
             (BundlePlatform.X360, 0x34) => PlatformType.X360, // BNDL 1-era (Feb 22 etc)
             (BundlePlatform.X360, 0x40) => PlatformType.X360,
@@ -643,6 +741,7 @@ public static class GameImage
             (BundlePlatform.PC or BundlePlatform.PCx64, 0x40 or 0x60) => PlatformType.Remastered,
             _ => null
         };
+
         if (known != null)
             return known.Value;
 
@@ -672,7 +771,9 @@ public static class GameImage
 
         // PS3 starts with format/mip/dimension bytes; decomp x64 starts with null pointers and bools
         if (len == 0x30)
-            return data.AsSpan(0, 0x1C).IndexOfAnyExcept((byte)0) < 0 ? PlatformType.PCx64 : PlatformType.PS3;
+            return data.AsSpan(0, 0x1C).IndexOfAnyExcept((byte)0) < 0
+                ? PlatformType.PCx64
+                : PlatformType.PS3;
 
         return PlatformType.Invalid;
     }

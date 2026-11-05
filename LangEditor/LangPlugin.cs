@@ -5,7 +5,8 @@ namespace LangEditor;
 
 public class LangPlugin : IPlugin
 {
-    public string Id => "langplugin";
+    public string ID => "langplugin";
+
     public string Name => "Language Resource Handler";
 
     public static void Init()

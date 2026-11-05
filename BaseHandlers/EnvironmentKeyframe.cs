@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
@@ -16,7 +16,6 @@ namespace BaseHandlers.EnvironmentSettings;
 
 // Names, groups and ranges are from the game's environment tweak menu (BrnWorld::Sky::DebugComponent), which
 // doesn't cover bloom, vignette or cloud movement. Those descriptions come from how the game uses the values.
-
 public class BloomData
 {
     [DisplayName("Luminance"), FieldDescription("Brightness of the bloom. The game's default is 0.98.")]
@@ -212,11 +211,17 @@ public class EnvironmentKeyframe : IEntryData
 
     [ReadOnly(true)]
     public uint muVersion { get; set; } = 8;
+
     public BloomData mBloomData { get; set; } = new();
+
     public VignetteData mVignetteData { get; set; } = new();
+
     public TintData mTintData { get; set; } = new();
+
     public ScatteringData mScatteringData { get; set; } = new();
+
     public LightingData mLightingData { get; set; } = new();
+
     public CloudsData mCloudsData { get; set; } = new();
 
     public bool Read(BundleEntry entry, ILoader loader = null)
@@ -227,7 +232,9 @@ public class EnvironmentKeyframe : IEntryData
 
         if (ms.Length < Size)
             throw new ReadFailedError($"Environment keyframe is 0x{ms.Length:X} bytes, expected at least 0x{Size:X}.");
+
         muVersion = br.ReadUInt32();
+
         if (muVersion != 8)
             throw new ReadFailedError($"Unsupported environment keyframe version {muVersion}, expected 8.");
 
@@ -238,28 +245,42 @@ public class EnvironmentKeyframe : IEntryData
             br.BaseStream.Position += 8;
             return v;
         }
+
         Vector3 ReadVector3()
         {
             Vector3 v = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
             br.BaseStream.Position += 4;
             return v;
         }
+
         Vector4 ReadVector4() => new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+
         float[] ReadFloats() => [br.ReadSingle(), br.ReadSingle()];
 
         br.BaseStream.Position = 0x10;
-        mBloomData = new() { mfLuminance = br.ReadSingle(), mfThreshold = br.ReadSingle() };
+        mBloomData = new()
+        {
+            mfLuminance = br.ReadSingle(),
+            mfThreshold = br.ReadSingle()
+        };
         br.BaseStream.Position = 0x20;
         mBloomData.mv4Scale = ReadVector4();
 
-        mVignetteData = new() { mfAngle = br.ReadSingle(), mfSharpness = br.ReadSingle() };
+        mVignetteData = new()
+        {
+            mfAngle = br.ReadSingle(),
+            mfSharpness = br.ReadSingle()
+        };
         br.BaseStream.Position = 0x40;
         mVignetteData.mv2Amount = ReadVector2();
         mVignetteData.mv2Centre = ReadVector2();
         mVignetteData.mv4InnerColour = ReadVector4();
         mVignetteData.mv4OuterColour = ReadVector4();
 
-        mTintData = new() { mpColourCube = entry.GetDependencies().FirstOrDefault(d => d.EntryPointerOffset == ColourCubeOffset).EntryID };
+        mTintData = new()
+        {
+            mpColourCube = entry.GetDependencies().FirstOrDefault(d => d.EntryPointerOffset == ColourCubeOffset).EntryID
+        };
 
         br.BaseStream.Position = 0x90;
         ScatteringData s = mScatteringData = new();
@@ -327,6 +348,7 @@ public class EnvironmentKeyframe : IEntryData
             bw.Write(v.Y);
             bw.BaseStream.Position += 8;
         }
+
         void WriteVector3(Vector3 v)
         {
             bw.Write(v.X);
@@ -334,6 +356,7 @@ public class EnvironmentKeyframe : IEntryData
             bw.Write(v.Z);
             bw.BaseStream.Position += 4;
         }
+
         void WriteVector4(Vector4 v)
         {
             bw.Write(v.X);
@@ -341,10 +364,12 @@ public class EnvironmentKeyframe : IEntryData
             bw.Write(v.Z);
             bw.Write(v.W);
         }
+
         void WriteArray<T>(T[] values, Action<T> write, string name)
         {
             if (values.Length != 2)
                 throw new InvalidDataException($"{name} has {values.Length} entries, it needs 2.");
+
             foreach (T value in values)
                 write(value);
         }
@@ -416,6 +441,7 @@ public class EnvironmentKeyframe : IEntryData
         // The colour cube is the import at the TintData pointer
         List<BundleDependency> imports = entry.GetDependencies();
         int colourCube = imports.FindIndex(d => d.EntryPointerOffset == ColourCubeOffset);
+
         if (colourCube >= 0)
         {
             bw.BaseStream.Position = entry.DependenciesListOffset + colourCube * Dependency.Size;
@@ -442,7 +468,7 @@ public class EnvironmentKeyframe : IEntryData
     public IEntryEditor GetEditor(BundleEntry entry)
     {
         return new PropertyGridEditor("Environment Keyframe Editor", () => Serialize(entry), () => Write(entry),
-            ("Lighting", mLightingData), ("Sky", mScatteringData), ("Clouds", mCloudsData),
-            ("Bloom", mBloomData), ("Vignette", mVignetteData), ("Colour Cube", mTintData));
+            ("Lighting", mLightingData: mLightingData), ("Sky", mScatteringData: mScatteringData), ("Clouds", mCloudsData: mCloudsData),
+            ("Bloom", mBloomData: mBloomData), ("Vignette", mVignetteData: mVignetteData), ("Colour Cube", mTintData: mTintData));
     }
 }

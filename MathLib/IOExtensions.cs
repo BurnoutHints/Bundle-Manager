@@ -8,7 +8,7 @@ public static class IOExtensions
     public static Matrix4 ReadMatrix4(this BinaryReader self)
     {
         Matrix4 result = new();
-        
+
         for (int i = 0; i < 4; i++)
         {
             for (int j = 0; j < 4; j++)
@@ -16,7 +16,7 @@ public static class IOExtensions
                 result[i, j] = self.ReadSingle();
             }
         }
-        
+
         return result;
     }
 
@@ -33,11 +33,12 @@ public static class IOExtensions
 
     public static Vector3 ReadVector3F(this BinaryReader self)
     {
-        Vector3 result = new();
-
-        result.X = self.ReadSingle();
-        result.Y = self.ReadSingle();
-        result.Z = self.ReadSingle();
+        Vector3 result = new()
+        {
+            X = self.ReadSingle(),
+            Y = self.ReadSingle(),
+            Z = self.ReadSingle()
+        };
 
         return result;
     }
@@ -51,11 +52,12 @@ public static class IOExtensions
 
     public static Vector3I ReadVector3I(this BinaryReader self)
     {
-        Vector3I result = new();
-
-        result.X = self.ReadInt32();
-        result.Y = self.ReadInt32();
-        result.Z = self.ReadInt32();
+        Vector3I result = new()
+        {
+            X = self.ReadInt32(),
+            Y = self.ReadInt32(),
+            Z = self.ReadInt32()
+        };
 
         return result;
     }
@@ -69,10 +71,11 @@ public static class IOExtensions
 
     public static Vector2I ReadVector2I(this BinaryReader self)
     {
-        Vector2I result = new();
-
-        result.X = self.ReadInt32();
-        result.Y = self.ReadInt32();
+        Vector2I result = new()
+        {
+            X = self.ReadInt32(),
+            Y = self.ReadInt32()
+        };
 
         return result;
     }
@@ -85,11 +88,12 @@ public static class IOExtensions
 
     public static Vector3S ReadVector3S(this BinaryReader self)
     {
-        Vector3S result = new();
-
-        result.X = self.ReadInt16();
-        result.Y = self.ReadInt16();
-        result.Z = self.ReadInt16();
+        Vector3S result = new()
+        {
+            X = self.ReadInt16(),
+            Y = self.ReadInt16(),
+            Z = self.ReadInt16()
+        };
 
         return result;
     }
@@ -103,10 +107,11 @@ public static class IOExtensions
 
     public static BoxF ReadBoxF(this BinaryReader self)
     {
-        BoxF result = new();
-
-        result.Min = self.ReadVector3F();
-        result.Max = self.ReadVector3F();
+        BoxF result = new()
+        {
+            Min = self.ReadVector3F(),
+            Max = self.ReadVector3F()
+        };
 
         return result;
     }
@@ -119,12 +124,13 @@ public static class IOExtensions
 
     public static RectF ReadRectF(this BinaryReader self)
     {
-        RectF result = new();
-
-        result.X = self.ReadSingle();
-        result.Width = self.ReadSingle();
-        result.Y = self.ReadSingle();
-        result.Height = self.ReadSingle();
+        RectF result = new()
+        {
+            X = self.ReadSingle(),
+            Width = self.ReadSingle(),
+            Y = self.ReadSingle(),
+            Height = self.ReadSingle()
+        };
 
         return result;
     }
@@ -139,11 +145,12 @@ public static class IOExtensions
 
     public static Triangle ReadTriangle(this BinaryReader self)
     {
-        Triangle result = new();
-
-        result.Index0 = self.ReadInt16();
-        result.Index1 = self.ReadInt16();
-        result.Index2 = self.ReadInt16();
+        Triangle result = new()
+        {
+            Index0 = self.ReadInt16(),
+            Index1 = self.ReadInt16(),
+            Index2 = self.ReadInt16()
+        };
 
         return result;
     }

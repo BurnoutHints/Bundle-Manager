@@ -27,13 +27,14 @@ public class ModelInstance
 
     public static ModelInstance Read(BinaryReader2 br)
     {
-        ModelInstance result = new();
-
-        result.ModelEntryPtr = br.ReadInt32();
-        result.Unknown2 = br.ReadInt32();
-        result.Unknown3 = br.ReadInt32();
-        result.Unknown4 = br.ReadInt32();
-        result.Transform = br.ReadMatrix4();
+        ModelInstance result = new()
+        {
+            ModelEntryPtr = br.ReadInt32(),
+            Unknown2 = br.ReadInt32(),
+            Unknown3 = br.ReadInt32(),
+            Unknown4 = br.ReadInt32(),
+            Transform = br.ReadMatrix4()
+        };
 
         return result;
     }
@@ -56,7 +57,6 @@ public class ModelInstance
 public class InstanceList : IEntryData
 {
     //private Scene _scene;
-
     public BundleEntry Entry;
 
     public int Unknown1;
@@ -74,7 +74,6 @@ public class InstanceList : IEntryData
     private void Clear()
     {
         //_scene = null;
-
         Entry = default;
         Unknown1 = default;
         Unknown2 = default;
@@ -90,8 +89,10 @@ public class InstanceList : IEntryData
         Entry = entry;
 
         MemoryStream ms = entry.MakeStream();
-        BinaryReader2 br = new(ms);
-        br.BigEndian = entry.Console;
+        BinaryReader2 br = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         Unknown1 = br.ReadInt32();
         int instanceCount = br.ReadInt32();
@@ -113,15 +114,16 @@ public class InstanceList : IEntryData
         ms.Close();
 
         //_scene = MakeScene(loader);
-
         return true;
     }
 
     public bool Write(BundleEntry entry)
     {
         MemoryStream ms = new();
-        BinaryWriter2 bw = new(ms);
-        bw.BigEndian = entry.Console;
+        BinaryWriter2 bw = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         bw.Write(Unknown1);
         bw.Write(Instances.Count);
@@ -151,19 +153,20 @@ public class InstanceList : IEntryData
     public Scene MakeScene(ILoader loader = null)
     {
         //TextureState.ResetCache();
-
         Scene scene = new();
 
         Dictionary<ulong, Renderable> models = [];
 
         int i = 0;
         int index = 1;
+
         foreach (ModelInstance instance in Instances)
         {
             int progress = (index - 1) * 100 / Instances.Count;
             loader?.SetProgress(progress);
 
             loader?.SetStatus("Loading(" + progress.ToString("D2") + "%): ModelInstance: " + index + "/" + Instances.Count);
+
             //DebugTimer t = DebugTimer.Start("ModelInstance[" + index + "/" + Instances.Count + "]");
             index++;
 
@@ -173,21 +176,25 @@ public class InstanceList : IEntryData
             if (models.ContainsKey(instance.ModelEntryID))
             {
                 Renderable renderable = models[instance.ModelEntryID];
-                SceneObject sceneObject = new(instance.ModelEntryID.ToString("X8"), renderable.Model);
-                sceneObject.ID = i.ToString();
-                sceneObject.Transform = instance.Transform;
+                SceneObject sceneObject = new(instance.ModelEntryID.ToString("X8"), renderable.Model)
+                {
+                    ID = i.ToString(),
+                    Transform = instance.Transform
+                };
 
                 scene.AddObject(sceneObject);
             }
             else
             {
                 BundleEntry modelEntry = Entry.Archive.GetEntryByID(instance.ModelEntryID);
+
                 if (modelEntry == null)
                 {
-                    string file = BundleCache.GetFileByEntryID(instance.ModelEntryID);
-                    if (!string.IsNullOrEmpty(file))
+                    string currentFile = BundleCache.GetFileByEntryID(instance.ModelEntryID);
+
+                    if (!string.IsNullOrEmpty(currentFile))
                     {
-                        BundleArchive archive = BundleArchive.Read(file);
+                        BundleArchive archive = BundleArchive.Read(currentFile);
                         modelEntry = archive.GetEntryByID(instance.ModelEntryID);
                     }
                 }
@@ -199,20 +206,24 @@ public class InstanceList : IEntryData
                     renderable.Read(renderableEntry, null); // TODO: Null Loader
                     models.Add(instance.ModelEntryID, renderable);
                     SceneObject sceneObject =
-                        new(instance.ModelEntryID.ToString("X8"), renderable.Model);
-                    sceneObject.ID = i.ToString();
-                    sceneObject.Transform = instance.Transform;
+                        new(instance.ModelEntryID.ToString("X8"), renderable.Model)
+                        {
+                            ID = i.ToString(),
+                            Transform = instance.Transform
+                        };
 
                     scene.AddObject(sceneObject);
                 }
             }
+
             i++;
+
             //t.StopLog();
         }
+
         loader?.SetProgress(100);
 
         //TextureState.ResetCache();
-
         return scene;
     }
 
@@ -228,8 +239,11 @@ public class InstanceList : IEntryData
 
     public IEntryEditor GetEditor(BundleEntry entry)
     {
-        InstanceListEditor editor = new();
-        editor.InstanceList = this;
+        InstanceListEditor editor = new()
+        {
+            InstanceList = this
+        };
+
         editor.Changed += () =>
         {
             Write(entry);

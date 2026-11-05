@@ -6,9 +6,27 @@ insert_final_newline = true
 charset = utf-8
 indent_style = space
 indent_size = 4
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_anonymous_types = true
+dotnet_style_operator_placement_when_wrapping = beginning_of_line
 dotnet_diagnostic.CA1416.severity = none
 
 # Code style
+# Keep acronym segments uppercase (e.g. FromHSV, FromRGB, HashCRC32).
+# Use standard C# casing for other words in identifiers.
+# Keep closing braces with their terminating semicolons: };
+# Empty blocks may stay on one line: { }
+# Auto-properties may stay on one line, including accessor visibility.
+# Put ? and : on separate continuation lines, indented one level.
+# CgsID is the established spelling; do not expand it to CGSID.
+# Preserve WinForms controlName_EventName handler names, including control casing.
+# Use one blank line between logical steps; keep related statements together.
+# Separate local functions from surrounding executable code.
+# Put one blank line above standalone comment groups, except at the start of a block.
+# Keep consecutive comment lines together and preserve trailing statement comments.
 csharp_style_namespace_declarations = file_scoped
 csharp_style_var_for_built_in_types = false
 csharp_style_var_when_type_is_apparent = false
@@ -16,39 +34,137 @@ csharp_style_var_elsewhere = false
 csharp_style_implicit_object_creation_when_type_is_apparent = true
 dotnet_style_prefer_collection_expression = when_types_loosely_match
 dotnet_style_collection_initializer = true
+dotnet_style_object_initializer = true
 csharp_prefer_simple_using_statement = true
 csharp_style_pattern_matching_over_as_with_null_check = true
 csharp_style_pattern_matching_over_is_with_cast_check = true
 csharp_style_prefer_not_pattern = true
 csharp_style_inlined_variable_declaration = true
 csharp_prefer_simple_default_expression = true
+csharp_style_allow_embedded_statements_on_same_line_experimental = false
+csharp_style_allow_statement_immediately_after_block_experimental = false
+dotnet_style_allow_multiple_blank_lines_experimental = false
 dotnet_style_coalesce_expression = true
 dotnet_style_null_propagation = true
+dotnet_style_qualification_for_field = false
+dotnet_style_qualification_for_property = false
+dotnet_style_qualification_for_method = false
+dotnet_style_qualification_for_event = false
 csharp_style_prefer_index_operator = true
 csharp_style_prefer_range_operator = true
 dotnet_style_predefined_type_for_locals_parameters_members = true
 dotnet_style_predefined_type_for_member_access = true
-dotnet_diagnostic.IDE0005.severity = suggestion # unnecessary using
-dotnet_diagnostic.IDE0008.severity = suggestion # explicit type instead of var
-dotnet_diagnostic.IDE0018.severity = suggestion # inline out variable
-dotnet_diagnostic.IDE0019.severity = suggestion # pattern matching over as + null check
-dotnet_diagnostic.IDE0020.severity = suggestion # pattern matching over is + cast
-dotnet_diagnostic.IDE0028.severity = suggestion # collection initializer
-dotnet_diagnostic.IDE0029.severity = suggestion # ?? over null check
-dotnet_diagnostic.IDE0031.severity = suggestion # ?. over null check
-dotnet_diagnostic.IDE0034.severity = suggestion # default literal
-dotnet_diagnostic.IDE0049.severity = suggestion # language keywords over framework type names
-dotnet_diagnostic.IDE0056.severity = suggestion # index operator
-dotnet_diagnostic.IDE0057.severity = suggestion # range operator
-dotnet_diagnostic.IDE0063.severity = suggestion # using declaration
-dotnet_diagnostic.IDE0083.severity = suggestion # is not pattern
-dotnet_diagnostic.IDE0090.severity = suggestion # target-typed new
-dotnet_diagnostic.IDE0161.severity = suggestion # file-scoped namespace
-dotnet_diagnostic.IDE0300.severity = suggestion # collection expressions
+# unnecessary using
+dotnet_diagnostic.IDE0005.severity = suggestion
+# remove unnecessary this qualification
+dotnet_diagnostic.IDE0003.severity = suggestion
+# explicit type instead of var
+dotnet_diagnostic.IDE0008.severity = suggestion
+# inline out variable
+dotnet_diagnostic.IDE0018.severity = suggestion
+# combine construction and immediate property assignments
+dotnet_diagnostic.IDE0017.severity = suggestion
+# pattern matching over as + null check
+dotnet_diagnostic.IDE0019.severity = suggestion
+# pattern matching over is + cast
+dotnet_diagnostic.IDE0020.severity = suggestion
+# collection initializer
+dotnet_diagnostic.IDE0028.severity = suggestion
+# ?? over null check
+dotnet_diagnostic.IDE0029.severity = suggestion
+# ?. over null check
+dotnet_diagnostic.IDE0031.severity = suggestion
+# default literal
+dotnet_diagnostic.IDE0034.severity = suggestion
+# language keywords over framework type names
+dotnet_diagnostic.IDE0049.severity = suggestion
+# index operator
+dotnet_diagnostic.IDE0056.severity = suggestion
+# range operator
+dotnet_diagnostic.IDE0057.severity = suggestion
+# using declaration
+dotnet_diagnostic.IDE0063.severity = suggestion
+# is not pattern
+dotnet_diagnostic.IDE0083.severity = suggestion
+# target-typed new
+dotnet_diagnostic.IDE0090.severity = suggestion
+# file-scoped namespace
+dotnet_diagnostic.IDE0161.severity = suggestion
+# collection expressions
+dotnet_diagnostic.IDE0300.severity = suggestion
 dotnet_diagnostic.IDE0301.severity = suggestion
 dotnet_diagnostic.IDE0303.severity = suggestion
 dotnet_diagnostic.IDE0304.severity = suggestion
 dotnet_diagnostic.IDE0305.severity = suggestion
+# embedded statements on their own line
+dotnet_diagnostic.IDE2001.severity = suggestion
+dotnet_diagnostic.IDE2000.severity = suggestion
+dotnet_diagnostic.IDE2003.severity = suggestion
+dotnet_diagnostic.IDE1006.severity = suggestion
+
+# Visibility and scope naming
+dotnet_naming_rule.private_fields_are_camel_case.severity = suggestion
+dotnet_naming_rule.private_fields_are_camel_case.symbols = private_fields
+dotnet_naming_rule.private_fields_are_camel_case.style = camel_case
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, internal
+
+dotnet_naming_rule.visible_fields_are_pascal_case.severity = suggestion
+dotnet_naming_rule.visible_fields_are_pascal_case.symbols = visible_fields
+dotnet_naming_rule.visible_fields_are_pascal_case.style = pascal_case
+dotnet_naming_symbols.visible_fields.applicable_kinds = field
+dotnet_naming_symbols.visible_fields.applicable_accessibilities = public, protected, protected_internal, private_protected
+
+dotnet_naming_rule.members_are_pascal_case.severity = suggestion
+dotnet_naming_rule.members_are_pascal_case.symbols = members
+dotnet_naming_rule.members_are_pascal_case.style = pascal_case
+dotnet_naming_symbols.members.applicable_kinds = method, event
+# Private WinForms handlers follow the control's casing; helper methods use PascalCase.
+# Signature-based handler exceptions cannot be expressed by the naming analyzer.
+dotnet_naming_symbols.members.applicable_accessibilities = public, internal, protected, protected_internal, private_protected
+
+dotnet_naming_rule.properties_are_pascal_case.severity = suggestion
+dotnet_naming_rule.properties_are_pascal_case.symbols = properties
+dotnet_naming_rule.properties_are_pascal_case.style = pascal_case
+dotnet_naming_symbols.properties.applicable_kinds = property
+
+dotnet_naming_rule.locals_are_camel_case.severity = suggestion
+dotnet_naming_rule.locals_are_camel_case.symbols = locals
+dotnet_naming_rule.locals_are_camel_case.style = camel_case
+dotnet_naming_symbols.locals.applicable_kinds = local
+
+dotnet_naming_rule.parameters_are_camel_case.severity = suggestion
+dotnet_naming_rule.parameters_are_camel_case.symbols = parameters
+dotnet_naming_rule.parameters_are_camel_case.style = camel_case
+dotnet_naming_symbols.parameters.applicable_kinds = parameter
+
+dotnet_naming_rule.constants_are_pascal_case.severity = suggestion
+dotnet_naming_rule.constants_are_pascal_case.symbols = constants
+dotnet_naming_rule.constants_are_pascal_case.style = pascal_case
+dotnet_naming_symbols.constants.applicable_kinds = field
+dotnet_naming_symbols.constants.required_modifiers = const
+
+dotnet_naming_style.camel_case.capitalization = camel_case
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+# These data models retain member names from the original game source/format.
+# Preserve those spellings; format their code and apply local-variable rules normally.
+# Add new game-data files here before running an automated naming cleanup.
+[BaseHandlers/{AptData,EnvironmentKeyframe,EnvironmentTimeLine,FlaptFile,GraphicsSpec,InstanceList,MaterialEntry,ProgressionData,Renderable,StreetData,TextureState,Traffic,TriggerData}.cs]
+dotnet_naming_rule.visible_fields_are_pascal_case.severity = none
+dotnet_naming_rule.properties_are_pascal_case.severity = none
+
+[LuaList/{LuaList,LuaListEntry}.cs]
+dotnet_naming_rule.visible_fields_are_pascal_case.severity = none
+dotnet_naming_rule.properties_are_pascal_case.severity = none
+
+[{VehicleList/VehicleListData,WheelList/WheelListData,WorldCollisionHandler/ClusteredMesh,WorldCollisionHandler/PolygonSoupList,PVSFormat/Polygon,PVSFormat/PVS}.cs]
+dotnet_naming_rule.visible_fields_are_pascal_case.severity = none
+dotnet_naming_rule.properties_are_pascal_case.severity = none
+
+[VaultFormat/{AttribSys,Burnoutcarasset,Burnoutcargraphicsasset,Camerabumperbehaviour,Cameraexternalbehaviour,Physicsvehiclebaseattribs,Physicsvehiclebodyrollattribs,Physicsvehicleboostattribs,Physicsvehiclecollisionattribs,Physicsvehicledriftattribs,Physicsvehicleengineattribs,Physicsvehiclehandling,Physicsvehiclesteeringattribs,Physicsvehiclesuspensionattribs,RefSpec}.cs]
+dotnet_naming_rule.visible_fields_are_pascal_case.severity = none
+dotnet_naming_rule.properties_are_pascal_case.severity = none
 
 [*.Designer.cs]
 generated_code = true

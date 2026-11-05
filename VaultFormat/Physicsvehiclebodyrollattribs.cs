@@ -8,25 +8,36 @@ namespace VaultFormat;
 public class Physicsvehiclebodyrollattribs : IAttribute
 {
     public AttributeHeader header { get; set; }
+
     public SizeAndPositionInformation info { get; set; }
 
     public float WheelLongForceHeightOffset { get; set; }
+
     public float WheelLatForceHeightOffset { get; set; }
+
     public float WeightTransferDecayZ { get; set; }
+
     public float WeightTransferDecayX { get; set; }
+
     public float RollSpringStiffness { get; set; }
+
     public float RollSpringDampening { get; set; }
+
     public float PitchSpringStiffness { get; set; }
+
     public float PitchSpringDampening { get; set; }
+
     public float FactorOfWeightZ { get; set; }
+
     public float FactorOfWeightX { get; set; }
+
     public Physicsvehiclebodyrollattribs(SizeAndPositionInformation chunk, AttributeHeader dataChunk)
     {
         header = dataChunk;
         info = chunk;
     }
 
-    public int getDataSize()
+    public int GetDataSize()
     {
         List<byte[]> bytes =
         [
@@ -40,18 +51,19 @@ public class Physicsvehiclebodyrollattribs : IAttribute
             BitConverter.GetBytes(PitchSpringDampening),
             BitConverter.GetBytes(FactorOfWeightZ),
             BitConverter.GetBytes(FactorOfWeightX),
+
             //4 bytes padding is Wrong!
             BitConverter.GetBytes((float)0)
         ];
         return bytes.SelectMany(i => i).Count();
     }
 
-    public AttributeHeader getHeader()
+    public AttributeHeader GetHeader()
     {
         return header;
     }
 
-    public SizeAndPositionInformation getInfo()
+    public SizeAndPositionInformation GetInfo()
     {
         return info;
     }

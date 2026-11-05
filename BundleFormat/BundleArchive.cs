@@ -41,36 +41,41 @@ public class BundleArchive
     public int RSTOffset; // Normally 30
     public int EntryCount;
     public int IDBlockOffset;
+
     //public int HeadStart;
     //public int BodyStart;
     //public int ArchiveSize;
     public Flags Flags;
-    
+
     public bool Console => Platform == BundlePlatform.X360 || Platform == BundlePlatform.PS3;
 
     public string ResourceStringTable;
     public List<BundleEntry> Entries;
 
-    private bool _dirty;
+    private bool dirty;
+
     public bool Dirty
     {
         get
         {
-            if (_dirty)
+            if (dirty)
                 return true;
+
             foreach (BundleEntry entry in Entries)
             {
                 if (entry.Dirty)
                     return true;
             }
+
             return false;
         }
         set
         {
-            _dirty = value;
-            if (!_dirty)
+            dirty = value;
+
+            if (!dirty)
             {
-                foreach(BundleEntry entry in Entries)
+                foreach (BundleEntry entry in Entries)
                 {
                     entry.Dirty = false;
                 }
@@ -80,7 +85,7 @@ public class BundleArchive
 
     public BundleArchive()
     {
-        this.Entries = [];
+        Entries = [];
     }
 
     public BundleEntry GetEntryByID(ulong id)
@@ -88,9 +93,11 @@ public class BundleArchive
         for (int i = 0; i < Entries.Count; i++)
         {
             BundleEntry entry = Entries[i];
+
             if (entry.ID == id)
                 return entry;
         }
+
         return null;
     }
 
@@ -99,7 +106,10 @@ public class BundleArchive
     {
         Entries.RemoveAll(e => e.ID == entry.ID);
         int index = Entries.FindIndex(e => e.ID > entry.ID);
-        Entries.Insert(index < 0 ? Entries.Count : index, entry);
+        Entries.Insert(index < 0
+            ? Entries.Count
+            : index, entry);
+
         for (int i = 0; i < Entries.Count; i++)
             Entries[i].Index = i;
     }
@@ -108,7 +118,9 @@ public class BundleArchive
     {
         BundleEntry template = Entries.FirstOrDefault(e => e.Type == type);
 
-        int secondaryBlock = template?.SecondaryBlock ?? (Platform == BundlePlatform.PS3 ? 2 : 1);
+        int secondaryBlock = template?.SecondaryBlock ?? (Platform == BundlePlatform.PS3
+            ? 2
+            : 1);
 
         byte[][] data = new byte[3][];
         data[0] = primary;
@@ -120,71 +132,86 @@ public class BundleArchive
             Type = type,
             Platform = Platform,
             DependencyCount = (short)importCount,
-            DependenciesListOffset = importCount > 0 ? primary.Length - importCount * Dependency.Size : 0,
-            DebugInfo = new() { Name = name, TypeName = type.ToString() },
+            DependenciesListOffset = importCount > 0
+                ? primary.Length - importCount * Dependency.Size
+                : 0,
+            DebugInfo = new()
+            {
+                Name = name,
+                TypeName = type.ToString()
+            },
             Dirty = true,
             EntryBlocks = new EntryBlock[3]
         };
 
         for (int i = 0; i < entry.EntryBlocks.Length; i++)
         {
-            EntryBlock block = new() { Compressed = false };
+            EntryBlock block = new()
+            {
+                Compressed = false
+            };
+
             if (data[i] != null)
             {
                 block.Data = data[i];
-                block.UncompressedAlignment = template != null && template.HasSection(i) ? template.EntryBlocks[i].UncompressedAlignment : 16;
+                block.UncompressedAlignment = template != null && template.HasSection(i)
+                    ? template.EntryBlocks[i].UncompressedAlignment
+                    : 16;
             }
+
             entry.EntryBlocks[i] = block;
         }
 
         return entry;
     }
 
-    private Dictionary<ulong, string> _guessedNames;
-    private (string Path, int Count) _guessedNamesKey;
+    private Dictionary<ulong, string> guessedNames;
+    private (string Path, int Count) guessedNamesKey;
 
     public string GuessName(ulong id)
     {
-        if (_guessedNames == null || _guessedNamesKey != (Path, Entries.Count))
+        if (guessedNames == null || guessedNamesKey != (Path, Entries.Count))
         {
-            _guessedNames = GuessNames();
-            _guessedNamesKey = (Path, Entries.Count);
+            guessedNames = GuessNames();
+            guessedNamesKey = (Path, Entries.Count);
         }
-        return _guessedNames.GetValueOrDefault(id);
+
+        return guessedNames.GetValueOrDefault(id);
     }
 
     private Dictionary<ulong, string> GuessNames()
     {
         List<string> names = ["worldvault", "postfxvault", "cameravault"];
 
-        string file = System.IO.Path.GetFileNameWithoutExtension(Path)?.ToUpper();
-        if (file != null)
+        string currentFile = System.IO.Path.GetFileNameWithoutExtension(Path)?.ToUpper();
+
+        if (currentFile != null)
         {
-            if (file.StartsWith("TRK_UNIT") && file.EndsWith("_GR"))
+            if (currentFile.StartsWith("TRK_UNIT") && currentFile.EndsWith("_GR"))
             {
-                string trackID = file[8..].Replace("_GR", "").ToLower();
+                string trackID = currentFile[8..].Replace("_GR", "").ToLower();
                 names.AddRange(["trk_unit" + trackID + "_list", "prp_inst_" + trackID, "prp_gl__" + trackID,
                     "trk_unit" + trackID + "_passby", "trk_unit" + trackID + "_emitter"]);
             }
 
-            names.Add(file.ToLower() + ".swf");
+            names.Add(currentFile.ToLower() + ".swf");
 
-            if (file.StartsWith("WHE_") && file.EndsWith("_GR"))
-                names.Add(file[4..].Replace("_GR", "").ToLower() + "_graphics");
+            if (currentFile.StartsWith("WHE_") && currentFile.EndsWith("_GR"))
+                names.Add(currentFile[4..].Replace("_GR", "").ToLower() + "_graphics");
 
-            if (file.StartsWith("VEH_"))
+            if (currentFile.StartsWith("VEH_"))
             {
-                if (file.EndsWith("_AT"))
+                if (currentFile.EndsWith("_AT"))
                 {
-                    string vehicleID = file[4..].Replace("_AT", "").ToLower();
-                    string shownID = file[4..].Replace("_AT", ""); // Upper case, as Criterion named these
+                    string vehicleID = currentFile[4..].Replace("_AT", "").ToLower();
+                    string shownID = currentFile[4..].Replace("_AT", ""); // Upper case, as Criterion named these
                     names.AddRange([shownID + "_AttribSys", shownID + "DeformationModel", vehicleID + "_bpr",
                         vehicleID + "_anim", vehicleID + "_trafficstub", vehicleID + "_vanm"]);
                 }
-                else if (file.EndsWith("_CD"))
-                    names.Add(file[4..].Replace("_CD", "").ToLower());
-                else if (file.EndsWith("_GR"))
-                    names.Add(file[4..].Replace("_GR", "").ToLower() + "_graphics");
+                else if (currentFile.EndsWith("_CD"))
+                    names.Add(currentFile[4..].Replace("_CD", "").ToLower());
+                else if (currentFile.EndsWith("_GR"))
+                    names.Add(currentFile[4..].Replace("_GR", "").ToLower() + "_graphics");
             }
         }
 
@@ -197,8 +224,10 @@ public class BundleArchive
 
         // Resource IDs hash the lower case name, so names can be shown in Criterion's case
         Dictionary<ulong, string> guesses = [];
+
         foreach (string name in names)
-            guesses.TryAdd(Crc32.HashCrc32B(name.ToLowerInvariant()), name); // First pattern wins, as when they were checked in turn
+            guesses.TryAdd(CRC32.HashCRC32B(name.ToLowerInvariant()), name); // First pattern wins, as when they were checked in turn
+
         return guesses;
     }
 
@@ -207,9 +236,11 @@ public class BundleArchive
         for (int i = 0; i < Entries.Count; i++)
         {
             BundleEntry entry = Entries[i];
+
             if (entry.ID == id)
                 return entry.DetectName();
         }
+
         return null;
     }
 
@@ -221,6 +252,7 @@ public class BundleArchive
     private static Dictionary<ulong, DebugInfo> GetDebugInfoFromRST(string rst)
     {
         XmlDocument doc = new();
+
         try
         {
             doc.LoadXml(rst);
@@ -230,25 +262,33 @@ public class BundleArchive
             // Cover Criterion's broken XML writer
             if (rst.StartsWith("</ResourceStringTable>"))
                 rst = rst.Remove(1, 1);
+
             doc.LoadXml(rst.Replace("</ResourceStringTable>\n\t", ""));
         }
 
         Dictionary<ulong, DebugInfo> debugInfo = [];
         XmlElement root = doc["ResourceStringTable"];
+
         if (root == null)
             return debugInfo;
 
         foreach (XmlElement ele in root.GetElementsByTagName("Resource"))
         {
             if (ulong.TryParse(ele.GetAttribute("id"), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out ulong resourceID))
-                debugInfo[resourceID] = new DebugInfo { Name = ele.GetAttribute("name"), TypeName = ele.GetAttribute("type") };
+                debugInfo[resourceID] = new()
+                {
+                    Name = ele.GetAttribute("name"),
+                    TypeName = ele.GetAttribute("type")
+                };
         }
+
         return debugInfo;
     }
 
     private void ProcessRST(string rst)
     {
         Dictionary<ulong, DebugInfo> debugInfo = GetDebugInfoFromRST(rst);
+
         foreach (BundleEntry entry in Entries)
         {
             if (debugInfo.TryGetValue(entry.ID, out DebugInfo debug))
@@ -267,6 +307,7 @@ public class BundleArchive
         foreach (BundleEntry entry in Entries)
         {
             string name = entry.DebugInfo.Name?.Trim();
+
             if (string.IsNullOrEmpty(name))
                 continue;
 
@@ -312,26 +353,32 @@ public class BundleArchive
     public static BundleArchive Open(string path)
     {
         using BinaryReader2 br = new(File.OpenRead(path));
-        BundleArchive result = new() { Path = path };
+        BundleArchive result = new()
+        {
+            Path = path
+        };
+
         if (!result.Read(br))
             throw new ReadFailedError("This file isn't a bundle Bundle Manager can read.");
+
         return result;
     }
 
     public bool Read(BinaryReader2 br)
     {
-        int type;
+        int currentType;
         byte[] bytes = br.ReadBytes(4);
+
         if (bytes.Matches(BND1Magic))
-            type = 1;
+            currentType = 1;
         else if (bytes.Matches(BND2Magic))
-            type = 2;
+            currentType = 2;
         else
             return false;
 
-        BNDVersion = type;
+        BNDVersion = currentType;
 
-        switch (type)
+        switch (currentType)
         {
             case 1:
                 if (!ReadBND1(br))
@@ -358,6 +405,7 @@ public class BundleArchive
         uint entryCount = br.ReadUInt32();
 
         uint[] dataBlockSizes = new uint[5];
+
         for (int i = 0; i < dataBlockSizes.Length; i++)
         {
             dataBlockSizes[i] = br.ReadUInt32();
@@ -376,6 +424,7 @@ public class BundleArchive
         br.ReadUInt32(); // might be platform (2 being X360)
 
         uint compressed = br.ReadUInt32();
+
         if (compressed != 0)
             Flags = Flags.Compressed; // TODO
         else
@@ -392,18 +441,21 @@ public class BundleArchive
 
         br.BaseStream.Position = idListOffset;
 
-        List<ulong> resourceIds = [];
+        List<ulong> resourceIDs = [];
+
         for (int i = 0; i < entryCount; i++)
-            resourceIds.Add(br.ReadUInt64());
+            resourceIDs.Add(br.ReadUInt64());
 
         br.BaseStream.Position = idTableOffset;
 
-        foreach (ulong resourceId in resourceIds)
+        foreach (ulong resourceID in resourceIDs)
         {
-            BundleEntry entry = new(this);
-            entry.EntryBlocks = [null, null, new EntryBlock()]; // Blocks 2, 4 and 5 aren't read, see below
-            entry.ID = resourceId;
-            entry.Platform = Platform;
+            BundleEntry entry = new(this)
+            {
+                EntryBlocks = [null, null, new()], // Blocks 2, 4 and 5 aren't read, see below
+                ID = resourceID,
+                Platform = Platform
+            };
 
             br.ReadUInt32(); // unknown mem stuff
 
@@ -411,39 +463,49 @@ public class BundleArchive
             entry.Type = (EntryType)br.ReadUInt32();
 
             //uint[] sizes = new uint[2];
-
             if (compressed != 0)
             {
                 //sizes[0] = br.ReadUInt32();
-                entry.EntryBlocks[0] = new EntryBlock();
-                entry.EntryBlocks[0].Compressed = true;
-                entry.EntryBlocks[0].CompressedSize = br.ReadUInt32();
+                entry.EntryBlocks[0] = new()
+                {
+                    Compressed = true,
+                    CompressedSize = br.ReadUInt32()
+                };
                 br.ReadUInt32(); // Alignment value, should be 1
                 br.ReadUInt32(); // other blocks. Maybe used but I'm ignoring it.
                 br.ReadUInt32(); // Alignment value, should be 1
+
                 //sizes[1] = br.ReadUInt32();
-                entry.EntryBlocks[1] = new EntryBlock();
-                entry.EntryBlocks[1].Compressed = true;
-                entry.EntryBlocks[1].CompressedSize = br.ReadUInt32();
+                entry.EntryBlocks[1] = new()
+                {
+                    Compressed = true,
+                    CompressedSize = br.ReadUInt32()
+                };
                 br.ReadUInt32(); // Alignment value, should be 1
                 br.ReadUInt32(); // other blocks. Maybe used but I'm ignoring it.
                 br.ReadUInt32(); // Alignment value, should be 1
                 br.ReadUInt32(); // other blocks. Maybe used but I'm ignoring it.
                 br.ReadUInt32(); // Alignment value, should be 1
-            } else
+            }
+            else
             {
                 //sizes[0] = br.ReadUInt32();
-                entry.EntryBlocks[0] = new EntryBlock();
-                entry.EntryBlocks[0].Compressed = false;
-                entry.EntryBlocks[0].UncompressedSize = br.ReadUInt32();
-                entry.EntryBlocks[0].UncompressedAlignment = br.ReadUInt32();
+                entry.EntryBlocks[0] = new()
+                {
+                    Compressed = false,
+                    UncompressedSize = br.ReadUInt32(),
+                    UncompressedAlignment = br.ReadUInt32()
+                };
                 br.ReadUInt32(); // other blocks. Maybe used but I'm ignoring it.
                 br.ReadUInt32(); // Alignment value
+
                 //sizes[1] = br.ReadUInt32();
-                entry.EntryBlocks[1] = new EntryBlock();
-                entry.EntryBlocks[1].Compressed = false;
-                entry.EntryBlocks[1].UncompressedSize = br.ReadUInt32();
-                entry.EntryBlocks[1].UncompressedAlignment = br.ReadUInt32();
+                entry.EntryBlocks[1] = new()
+                {
+                    Compressed = false,
+                    UncompressedSize = br.ReadUInt32(),
+                    UncompressedAlignment = br.ReadUInt32()
+                };
                 br.ReadUInt32(); // other blocks. Maybe used but I'm ignoring it.
                 br.ReadUInt32(); // Alignment value
                 br.ReadUInt32(); // other blocks. Maybe used but I'm ignoring it.
@@ -451,6 +513,7 @@ public class BundleArchive
             }
 
             uint dataBlockStartOffset = 0;
+
             for (int j = 0; j < dataBlockSizes.Length; j++)
             {
                 if (j > 0)
@@ -463,15 +526,20 @@ public class BundleArchive
                     continue; // Not supporting blocks 2, 4 and 5 right now.
 
                 int mappedBlock = j;
+
                 if (j == 2)
                     mappedBlock = 1;
 
                 if (entry.EntryBlocks[mappedBlock] == null)
-                    entry.EntryBlocks[mappedBlock] = new EntryBlock();
+                    entry.EntryBlocks[mappedBlock] = new();
+
                 EntryBlock entryBlock = entry.EntryBlocks[mappedBlock];
 
                 //uint readSize = sizes[mappedBlock];
-                uint readSize = compressed != 0 ? entryBlock.CompressedSize : entryBlock.UncompressedSize;
+                uint readSize = compressed != 0
+                    ? entryBlock.CompressedSize
+                    : entryBlock.UncompressedSize;
+
                 if (readSize == 0)
                 {
                     entryBlock.RawData = null;
@@ -481,7 +549,7 @@ public class BundleArchive
                 long pos = br.BaseStream.Position;
                 br.BaseStream.Position = readOffset;
 
-                entryBlock.RawData = ReadBlock(br, readSize, resourceId, j);
+                entryBlock.RawData = ReadBlock(br, readSize, resourceID, j);
 
                 br.BaseStream.Position = pos;
             }
@@ -494,6 +562,7 @@ public class BundleArchive
         if (compressed != 0)
         {
             br.BaseStream.Position = uncompressedInfoOffset;
+
             for (int i = 0; i < Entries.Count; i++)
             {
                 BundleEntry entry = Entries[i];
@@ -505,6 +574,7 @@ public class BundleArchive
                 entry.EntryBlocks[0].UncompressedAlignment = br.ReadUInt32();
                 br.ReadUInt32(); // other blocks. Maybe used but I'm ignoring it.
                 br.ReadUInt32(); // Alignment value
+
                 //sizes[1] = br.ReadUInt32();
                 entry.EntryBlocks[1].UncompressedSize = br.ReadUInt32();
                 entry.EntryBlocks[1].UncompressedAlignment = br.ReadUInt32();
@@ -526,12 +596,14 @@ public class BundleArchive
         {
             BundleEntry entry = Entries[i];
             uint depOffset = (uint)entry.DependenciesListOffset;
+
             if (depOffset == 0)
                 continue;
 
             br.BaseStream.Position = depOffset;
 
             entry.DependencyCount = (short)br.ReadUInt32();
+
             if (br.ReadUInt32() != 0)
                 return false;
 
@@ -540,10 +612,13 @@ public class BundleArchive
         }
 
         BundleEntry rst = GetEntryByID(0xC039284A);
+
         if (rst != null)
         {
-            BinaryReader2 br2 = new(rst.MakeStream());
-            br2.BigEndian = false;
+            BinaryReader2 br2 = new(rst.MakeStream())
+            {
+                BigEndian = false
+            };
 
             // TODO: Store only the debug info and not the full string
             ResourceStringTable = br2.ReadLenString(br2.ReadInt32());
@@ -565,8 +640,10 @@ public class BundleArchive
     private static byte[] ReadBlock(BinaryReader2 br, uint size, ulong id, int block)
     {
         byte[] data = br.ReadBytes((int)size);
+
         if (data.Length != size)
             throw new ReadFailedError($"The file is cut short: resource 0x{id:X8} needs {size} bytes in block {block}, but only {data.Length} are left.");
+
         return data;
     }
 
@@ -578,10 +655,12 @@ public class BundleArchive
 
         br.BaseStream.Position -= 8;
         Version = br.ReadInt32();
+
         if (Version != 2)
         {
             throw new ReadFailedError("Unsupported Bundle Version: " + Version);
         }
+
         br.BaseStream.Position += 4;
 
         RSTOffset = br.ReadInt32();
@@ -591,40 +670,42 @@ public class BundleArchive
         Flags = (Flags)br.ReadInt32();
 
         // 8 Bytes Padding
-
         br.BaseStream.Position = IDBlockOffset;
 
         for (int i = 0; i < EntryCount; i++)
         {
-            BundleEntry entry = new(this);
+            BundleEntry entry = new(this)
+            {
+                Index = i,
 
-            entry.Index = i;
+                Platform = Platform,
 
-            entry.Platform = Platform;
-
-            entry.ID = br.ReadUInt64();
+                ID = br.ReadUInt64()
+            };
 
             br.ReadUInt64(); // Import Resource ID, which we now recompute on write
 
             entry.EntryBlocks = new EntryBlock[3];
+
             for (int j = 0; j < entry.EntryBlocks.Length; j++)
             {
-                entry.EntryBlocks[j] = new EntryBlock();
-                entry.EntryBlocks[j].Compressed = Flags.HasFlag(Flags.Compressed);
+                entry.EntryBlocks[j] = new()
+                {
+                    Compressed = Flags.HasFlag(Flags.Compressed)
+                };
             }
 
             //uint[] blockUncompressedSizes = new uint[3];
-
             for (int j = 0; j < entry.EntryBlocks.Length; j++)
             {
                 uint uncompressedSize = br.ReadUInt32();
+
                 //blockUncompressedSizes[j] = uncompressedSize & ~(0xFU << 28);
                 entry.EntryBlocks[j].UncompressedSize = uncompressedSize & ~(0xFU << 28);
                 entry.EntryBlocks[j].UncompressedAlignment = (uint)(1 << ((int)uncompressedSize >> 28));
             }
 
             //uint[] blockCompressedSizes = new uint[3];
-
             for (int j = 0; j < entry.EntryBlocks.Length; j++)
             {
                 //blockCompressedSizes[j] = br.ReadUInt32();
@@ -642,7 +723,10 @@ public class BundleArchive
                 bool compressed = Flags.HasFlag(Flags.Compressed);
 
                 //uint readSize = compressed ? blockCompressedSizes[j] : blockUncompressedSizes[j];
-                uint readSize = compressed ? entry.EntryBlocks[j].CompressedSize : entry.EntryBlocks[j].UncompressedSize;
+                uint readSize = compressed
+                    ? entry.EntryBlocks[j].CompressedSize
+                    : entry.EntryBlocks[j].UncompressedSize;
+
                 if (readSize == 0)
                 {
                     block.RawData = null;
@@ -651,6 +735,7 @@ public class BundleArchive
                 }
 
                 block.RawData = ReadBlock(br, readSize, entry.ID, j);
+
                 //if (compressed)
                 //    block.Data = block.Data.Decompress((int)blockUncompressedSizes[j]);
                 br.BaseStream.Position = lastAddr;
@@ -686,6 +771,7 @@ public class BundleArchive
             throw new NotSupportedException("Saving BND1 (bndl) bundles isn't supported, as Bundle Manager can only write BND2.");
 
         string temp = path + ".saving";
+
         try
         {
             using (BinaryWriter2 bw = new(File.Create(temp), Console))
@@ -752,10 +838,11 @@ public class BundleArchive
         List<byte[][]> compressedBlocks = [];
 
         bool compress = Flags.HasFlag(Flags.Compressed);
-        for (int i = 0; i < this.Entries.Count; i++)
+
+        for (int i = 0; i < Entries.Count; i++)
         {
             cancel.ThrowIfCancellationRequested();
-            BundleEntry entry = this.Entries[i];
+            BundleEntry entry = Entries[i];
 
             compressedBlocks.Add(new byte[3][]);
 
@@ -766,8 +853,10 @@ public class BundleArchive
             {
                 EntryBlock entryBlock = entry.EntryBlocks[j];
                 uint uncompressedSize = 0;
+
                 if (entryBlock.Data != null)
                     uncompressedSize = (uint)entryBlock.Data.Length;
+
                 //self.Write((entryBlock.UncompressedAlignment << 28) | uncompressedSize);
                 bw.Write((uint)(uncompressedSize | (BitScan.BitScanReverse(entryBlock.UncompressedAlignment) << 28)));
             }
@@ -775,19 +864,23 @@ public class BundleArchive
             for (int j = 0; j < entry.EntryBlocks.Length; j++)
             {
                 EntryBlock entryBlock = entry.EntryBlocks[j];
+
                 if (entryBlock.Data == null)
                     bw.Write((uint)0);
                 else
                 {
                     // A compressed block's RawData always matches its Data, so only uncompressed ones need compressing
-                    compressedBlocks[i][j] = !compress ? entryBlock.Data
-                        : entryBlock.Compressed ? entryBlock.RawData
-                        : entryBlock.Data.Compress();
+                    compressedBlocks[i][j] = !compress
+                        ? entryBlock.Data
+                        : entryBlock.Compressed
+                            ? entryBlock.RawData
+                            : entryBlock.Data.Compress();
                     bw.Write(compressedBlocks[i][j].Length);
                 }
             }
 
             entryDataPointerPos.Add(new long[3]);
+
             for (int j = 0; j < entryDataPointerPos[i].Length; j++)
             {
                 entryDataPointerPos[i][j] = bw.BaseStream.Position;
@@ -823,7 +916,9 @@ public class BundleArchive
 
                     bw.Write(diskData);
 
-                    bw.Align((i != 0 && j != Entries.Count - 1) ? (byte)0x80 : (byte)16);
+                    bw.Align((i != 0 && j != Entries.Count - 1)
+                        ? (byte)0x80
+                        : (byte)16);
                 }
             }
 
@@ -836,14 +931,18 @@ public class BundleArchive
     {
         int platform = br.ReadInt32();
         br.BigEndian = platform > 0xFF;
-        return (BundlePlatform)(br.BigEndian ? BinaryPrimitives.ReverseEndianness(platform) : platform);
+        return (BundlePlatform)(br.BigEndian
+            ? BinaryPrimitives.ReverseEndianness(platform)
+            : platform);
     }
 
     public static bool VerifyMagic(BinaryReader2 br, byte[] magic)
     {
         byte[] readMagic = br.ReadBytes(magic.Length);
+
         if (readMagic.Matches(magic))
             return true;
+
         return false;
     }
 
@@ -925,7 +1024,7 @@ public class BundleArchive
         br.BaseStream.Position += 4;
 
         ReadPlatform(br);
-        
+
         br.BaseStream.Position = 0xC;
         uint rstOffset = br.ReadUInt32();
         int fileCount = br.ReadInt32();
@@ -952,15 +1051,15 @@ public class BundleArchive
         {
             uint id = (uint)br.ReadUInt64(); // A 64 bit ID, so console bundles hold the low half second
             br.BaseStream.Position += 0x30;
-            EntryType type = (EntryType)br.ReadUInt32();
+            EntryType currentType = (EntryType)br.ReadUInt32();
             br.BaseStream.Position += 0x4;
 
             DebugInfo debug = default;
-            
+
             if (debugInfo != null && debugInfo.ContainsKey(id))
                 debug = debugInfo[id];
 
-            result.Add(new EntryInfo(id, type, path, debug));
+            result.Add(new(id, currentType, path, debug));
         }
 
         br.Close();
@@ -984,11 +1083,11 @@ public class BundleArchive
             s.Close();
             return EntryType.Invalid;
         }
-        
+
         br.BaseStream.Position += 4;
 
         ReadPlatform(br);
-        
+
         br.BaseStream.Position = 0x10;
         int fileCount = br.ReadInt32();
         int metaStart = br.ReadInt32();
@@ -999,12 +1098,12 @@ public class BundleArchive
         {
             uint id2 = (uint)br.ReadUInt64(); // A 64 bit ID, so console bundles hold the low half second
             br.BaseStream.Position += 0x30;
-            EntryType type = (EntryType) br.ReadUInt32();
+            EntryType currentType = (EntryType)br.ReadUInt32();
             br.BaseStream.Position += 0x4;
 
             if (id2 == id)
             {
-                result = type;
+                result = currentType;
                 break;
             }
         }

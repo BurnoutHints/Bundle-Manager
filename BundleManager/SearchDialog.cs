@@ -10,6 +10,7 @@ public partial class SearchDialog : Form
     public static string LastSearch = "";
 
     public delegate void OnSearch(ulong id);
+
     public event OnSearch Search;
 
     public SearchDialog()
@@ -27,6 +28,7 @@ public partial class SearchDialog : Form
     private void btnSearch_Click(object sender, EventArgs e)
     {
         string input = txtSearch.Text;
+
         if (input.Length == 0)
         {
             MessageBox.Show(this, "Please enter a search query!", "Warning", MessageBoxButtons.OK,
@@ -48,7 +50,7 @@ public partial class SearchDialog : Form
             return;
         }
 
-        id = Crc32.HashCrc32B(input);
+        id = CRC32.HashCRC32B(input);
         Search?.Invoke(id);
         Close();
     }

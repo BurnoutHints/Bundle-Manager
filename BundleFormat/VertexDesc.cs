@@ -45,26 +45,32 @@ public class VertexDesc
         VertexDesc result = new();
 
         MemoryStream ms = entry.MakeStream();
-        BinaryReader2 br = new(ms);
-        br.BigEndian = entry.Console;
+        BinaryReader2 br = new(ms)
+        {
+            BigEndian = entry.Console
+        };
+
         bool x64 = entry.Platform == BundlePlatform.PCx64; // decomp is like the X360 layout but little endian
 
         result.Unknown1 = br.ReadInt32();
         result.Unknown2 = br.ReadInt32();
         result.Unknown3 = br.ReadInt32();
         result.AttributeCount = br.ReadInt32();
+
         if (x64) // u16 element count @0x08
             result.AttributeCount = (ushort)result.Unknown3;
 
         for (int i = 0; i < result.AttributeCount; i++)
         {
             VertexAttribute attribute = new();
-            
+
             if (result.Unknown2 != 0 && !x64) // BPR
             {
                 attribute.Type = (VertexAttributeType)br.ReadInt32();
+
                 if (!Enum.IsDefined(typeof(VertexAttributeType), attribute.Type))
                     MessageBox.Show("Unknown vertex attribute type: " + attribute.Type);
+
                 attribute.Unknown1 = br.ReadUInt32();
                 attribute.Offset = br.ReadUInt32();
                 attribute.Unknown2 = br.ReadUInt32();
@@ -82,8 +88,9 @@ public class VertexDesc
 
                 br.BaseStream.Position += 8;
 
-                byte type = br.ReadByte();
-                switch (type)
+                byte currentType = br.ReadByte();
+
+                switch (currentType)
                 {
                     case 1:
                         attribute.Type = VertexAttributeType.Positions;
@@ -108,7 +115,7 @@ public class VertexDesc
                         break;
                     default:
                         attribute.Type = VertexAttributeType.Invalid;
-                        MessageBox.Show("Unknown vertex attribute type: " + type);
+                        MessageBox.Show("Unknown vertex attribute type: " + currentType);
                         break;
                 }
 
@@ -136,13 +143,16 @@ public class VertexDesc
     public void Write(BundleEntry entry)
     {
         MemoryStream ms = new();
-        BinaryWriter2 bw = new(ms);
-        bw.BigEndian = entry.Console;
+        BinaryWriter2 bw = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         bw.Write(Unknown1);
         bw.Write(Unknown2);
         bw.Write(Unknown3);
         bw.Write(Attributes.Count);
+
         foreach (VertexAttribute attribute in Attributes)
         {
             bw.Write((int)attribute.Type);
@@ -153,11 +163,11 @@ public class VertexDesc
         }
 
         bw.Flush();
-        byte[] Data = ms.GetBuffer();
+        byte[] data = ms.GetBuffer();
         bw.Close();
         ms.Close();
 
-        entry.EntryBlocks[0].Data = Data;
+        entry.EntryBlocks[0].Data = data;
         entry.Dirty = true;
     }
 }

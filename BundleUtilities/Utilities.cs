@@ -8,7 +8,7 @@ namespace BundleUtilities;
 
 public class LogWriter
 {
-    private string m_exePath = string.Empty;
+    private string mExePath = string.Empty;
 
     public LogWriter(string logMessage)
     {
@@ -17,10 +17,11 @@ public class LogWriter
 
     public void LogWrite(string logMessage)
     {
-        m_exePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        mExePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
         try
         {
-            using StreamWriter w = File.AppendText(m_exePath + "\\" + "log.txt");
+            using StreamWriter w = File.AppendText(mExePath + "\\" + "log.txt");
             Log(logMessage, w);
         }
         catch (Exception ex)
@@ -46,7 +47,7 @@ public static class Utilities
     public static ulong CalcLookup8(string text)
     {
         byte[] message = Encoding.ASCII.GetBytes(text);
-        var hashValue = Lookup8.Hash(message, (ulong)message.Length, 0xABCDEF0011223344);
+        ulong hashValue = Lookup8.Hash(message, (ulong)message.Length, 0xABCDEF0011223344);
 
         return hashValue;
     }
@@ -87,10 +88,12 @@ public static class Utilities
     /// <param name="forceHex">Parse the input string as a hexadecimal number even if the input string is not prefixed with "0x"</param>
     /// <param name="value">An output System.Object that represents the converted text.</param>
     /// <exception cref="NotSupportedException">The string cannot be converted into the appropriate object.</exception>
+
     public static void Parse<T>(string s, bool forceHex, out T value)
     {
         if (forceHex && !s.StartsWith("0x"))
             s = "0x" + s;
+
         TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
         value = (T)converter.ConvertFromString(s);
     }

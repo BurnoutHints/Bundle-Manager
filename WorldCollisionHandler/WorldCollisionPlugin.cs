@@ -9,9 +9,10 @@ namespace WorldCollisionHandler;
 
 public class WorldCollisionPlugin : IPlugin
 {
-    public string Id => "worldcolplugin";
+    public string ID => "worldcolplugin";
+
     public string Name => "World Collision Handler";
-    
+
     public static void Init()
     {
         EntryTypeRegistry.Register(EntryType.PolygonSoupList, new PolygonSoupList());
@@ -43,6 +44,7 @@ public class WorldCollisionPlugin : IPlugin
 
         FolderBrowserDialog fbd = new();
         DialogResult result = fbd.ShowDialog(window);
+
         if (result == DialogResult.OK)
         {
             string path = fbd.SelectedPath;
@@ -52,12 +54,14 @@ public class WorldCollisionPlugin : IPlugin
                 string idListName = "trk_clil" + i;
                 string polyName = "trk_col_" + i;
 
-                ulong idListID = Crc32.HashCrc32B(idListName);
-                ulong polyID = Crc32.HashCrc32B(polyName);
+                ulong idListID = CRC32.HashCRC32B(idListName);
+                ulong polyID = CRC32.HashCRC32B(polyName);
 
                 BundleEntry entry = archive.GetEntryByID(idListID);
+
                 if (entry == null)
                     break;
+
                 Stream outFile = File.Open(path + "/" + idListName + ".bin", FileMode.Create, FileAccess.Write);
                 BinaryWriter2 bw = new(outFile);
                 bw.Write(entry.EntryBlocks[0].Data);
@@ -66,8 +70,10 @@ public class WorldCollisionPlugin : IPlugin
                 outFile.Close();
 
                 BundleEntry polyEntry = archive.GetEntryByID(polyID);
+
                 if (polyEntry == null)
                     break;
+
                 Stream outFilePoly = File.Open(path + "/" + polyName + ".bin", FileMode.Create, FileAccess.Write);
                 BinaryWriter2 bwPoly = new(outFilePoly);
                 bwPoly.Write(polyEntry.EntryBlocks[0].Data);

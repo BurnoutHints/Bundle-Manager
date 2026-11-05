@@ -12,7 +12,7 @@ public partial class AddZone : Form
         InitializeComponent();
     }
 
-    public ulong GetNewZoneId()
+    public ulong GetNewZoneID()
     {
         ShowDialog();
         return zone;

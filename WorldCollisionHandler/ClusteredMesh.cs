@@ -4,7 +4,6 @@ using BundleFormat;
 using BundleUtilities;
 using ModelViewer;
 using ModelViewer.SceneData;
-using OpenTK.Mathematics;
 using PluginAPI;
 
 namespace WorldCollisionHandler;
@@ -17,8 +16,8 @@ public class ClusteredMesh : IEntryData
     private const int UnitTypeTriList = 3;
     private const int UnitFlagNormal = 0x10;
     private const int UnitFlagEdgeAngle = 0x20;
-    private const int UnitFlagGroupId = 0x40;
-    private const int UnitFlagSurfaceId = 0x80;
+    private const int UnitFlagGroupID = 0x40;
+    private const int UnitFlagSurfaceID = 0x80;
 
     public List<Mesh> Clusters = [];
 
@@ -33,6 +32,7 @@ public class ClusteredMesh : IEntryData
         br.BigEndian = entry.Console;
 
         uint volume = br.ReadUInt32();
+
         if (volume == 0)
             return true; // No collision
 
@@ -47,11 +47,11 @@ public class ClusteredMesh : IEntryData
         br.BaseStream.Position = mesh + 0x48;
         float granularity = br.ReadSingle();
         br.BaseStream.Position = mesh + 0x52;
-        ushort defaultGroupId = br.ReadUInt16();
-        ushort defaultSurfaceId = br.ReadUInt16();
+        ushort defaultGroupID = br.ReadUInt16();
+        ushort defaultSurfaceID = br.ReadUInt16();
         br.BaseStream.Position = mesh + 0x57;
-        int groupIdSize = br.ReadByte();
-        int surfaceIdSize = br.ReadByte();
+        int groupIDSize = br.ReadByte();
+        int surfaceIDSize = br.ReadByte();
 
         for (int i = 0; i < clusterCount; i++)
         {
@@ -67,26 +67,30 @@ public class ClusteredMesh : IEntryData
             br.ReadByte(); // normalCount
             byte compressionMode = br.ReadByte();
 
-            Mesh result = new() { Faces = [] };
+            Mesh result = new()
+            {
+                Faces = []
+            };
 
             br.BaseStream.Position = cluster + 0x10;
+
             switch (compressionMode)
             {
                 case 0: // Uncompressed vpu::Vector3
                     for (int v = 0; v < vertexCount; v++)
                     {
-                        result.Vertices.Add(new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()));
+                        result.Vertices.Add(new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()));
                         br.ReadSingle();
                     }
                     break;
                 case 1: // u16 offsets from an s32 base
                     int baseX = br.ReadInt32(), baseY = br.ReadInt32(), baseZ = br.ReadInt32();
                     for (int v = 0; v < vertexCount; v++)
-                        result.Vertices.Add(new Vector3((baseX + br.ReadUInt16()) * granularity, (baseY + br.ReadUInt16()) * granularity, (baseZ + br.ReadUInt16()) * granularity));
+                        result.Vertices.Add(new((baseX + br.ReadUInt16()) * granularity, (baseY + br.ReadUInt16()) * granularity, (baseZ + br.ReadUInt16()) * granularity));
                     break;
                 case 2: // s32
                     for (int v = 0; v < vertexCount; v++)
-                        result.Vertices.Add(new Vector3(br.ReadInt32() * granularity, br.ReadInt32() * granularity, br.ReadInt32() * granularity));
+                        result.Vertices.Add(new(br.ReadInt32() * granularity, br.ReadInt32() * granularity, br.ReadInt32() * granularity));
                     break;
                 default:
                     throw new ReadFailedError($"Unknown vertex compression mode {compressionMode} in cluster {i}.");
@@ -94,29 +98,47 @@ public class ClusteredMesh : IEntryData
 
             // Units start one vector past unitDataStart, which counts from the vertex array
             br.BaseStream.Position = cluster + 0x10 * (unitDataStart + 1);
+
             for (int u = 0; u < unitCount; u++)
             {
                 byte header = br.ReadByte();
-                int type = header & 0xF;
-                int triangleCount = type == UnitTypeTriList ? br.ReadByte() : type == UnitTypeQuad ? 2 : 1;
+                int currentType = header & 0xF;
+                int triangleCount = currentType == UnitTypeTriList
+                    ? br.ReadByte()
+                    : currentType == UnitTypeQuad
+                        ? 2
+                        : 1;
                 byte[] indices = br.ReadBytes(triangleCount + 2);
+
                 if ((header & UnitFlagNormal) != 0)
                     br.ReadByte();
+
                 if ((header & UnitFlagEdgeAngle) != 0)
                     br.ReadBytes(triangleCount + 2);
-                // IDs are little endian on every platform
-                int groupId = (header & UnitFlagGroupId) != 0 ? ReadId(br, groupIdSize) : defaultGroupId;
-                int surfaceId = (header & UnitFlagSurfaceId) != 0 ? ReadId(br, surfaceIdSize) : defaultSurfaceId;
 
-                Material material = new($"{groupId:X4}_{surfaceId:X4}", Color.White);
+                // IDs are little endian on every platform
+                int groupID = (header & UnitFlagGroupID) != 0
+                    ? ReadID(br, groupIDSize)
+                    : defaultGroupID;
+                int surfaceID = (header & UnitFlagSurfaceID) != 0
+                    ? ReadID(br, surfaceIDSize)
+                    : defaultSurfaceID;
+
+                Material material = new($"{groupID:X4}_{surfaceID:X4}", Color.White);
+
                 // Quads and tri lists are strips: (0,1,2), (3,2,1), (2,3,4)...
                 for (int t = 0; t < triangleCount; t++)
                 {
-                    MeshFace face = new() { Material = material };
+                    MeshFace face = new()
+                    {
+                        Material = material
+                    };
+
                     if (t % 2 == 0)
                         face.Indices.AddRange([indices[t], indices[t + 1], indices[t + 2]]);
                     else
                         face.Indices.AddRange([indices[t + 2], indices[t + 1], indices[t]]);
+
                     result.Faces.Add(face);
                 }
             }
@@ -127,17 +149,21 @@ public class ClusteredMesh : IEntryData
         return true;
     }
 
-    private static int ReadId(BinaryReader2 br, int size)
+    private static int ReadID(BinaryReader2 br, int size)
     {
         byte[] bytes = br.ReadBytes(size);
-        return size == 2 ? bytes[0] | (bytes[1] << 8) : bytes[0];
+        return size == 2
+            ? bytes[0] | (bytes[1] << 8)
+            : bytes[0];
     }
 
     public Scene MakeScene()
     {
         Scene scene = new();
+
         for (int i = 0; i < Clusters.Count; i++)
-            scene.AddObject(new SceneObject(i.ToString(), new Model(Clusters[i])));
+            scene.AddObject(new(i.ToString(), new(Clusters[i])));
+
         return scene;
     }
 

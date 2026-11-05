@@ -8,29 +8,44 @@ namespace VaultFormat;
 public class Physicsvehiclesteeringattribs : IAttribute
 {
     public AttributeHeader header { get; set; }
+
     public SizeAndPositionInformation info { get; set; }
+
     public float TimeForLock { get; set; }
+
     public float StraightReactionBias { get; set; }
+
     public float SpeedForMinAngle { get; set; }
+
     public float SpeedForMaxAngle { get; set; }
+
     public float MinAngle { get; set; }
+
     public float MaxAngle { get; set; }
+
     public float AiPidCoefficientP { get; set; }
+
     public float AiPidCoefficientI { get; set; }
+
     public float AiPidCoefficientDriftP { get; set; }
+
     public float AiPidCoefficientDriftI { get; set; }
+
     public float AiPidCoefficientDriftD { get; set; }
+
     public float AiPidCoefficientD { get; set; }
+
     public float AiMinLookAheadDistanceForDrift { get; set; }
+
     public float AiLookAheadTimeForDrift { get; set; }
+
     public Physicsvehiclesteeringattribs(SizeAndPositionInformation chunk, AttributeHeader dataChunk)
     {
         header = dataChunk;
         info = chunk;
     }
 
-
-    public int getDataSize()
+    public int GetDataSize()
     {
         List<byte[]> bytes =
         [
@@ -48,19 +63,20 @@ public class Physicsvehiclesteeringattribs : IAttribute
             BitConverter.GetBytes(AiPidCoefficientD),
             BitConverter.GetBytes(AiMinLookAheadDistanceForDrift),
             BitConverter.GetBytes(AiLookAheadTimeForDrift),
+
             // Hack, because of weird padding of suspension attribs
-            .. Physicsvehiclesuspensionattribs.getDefaultBytes(),
+            .. Physicsvehiclesuspensionattribs.GetDefaultBytes(),
         ];
         Console.WriteLine(bytes.SelectMany(i => i).Count());
         return CountingUtilities.AddPadding(bytes);
     }
 
-    public AttributeHeader getHeader()
+    public AttributeHeader GetHeader()
     {
         return header;
     }
 
-    public SizeAndPositionInformation getInfo()
+    public SizeAndPositionInformation GetInfo()
     {
         return info;
     }

@@ -1,4 +1,4 @@
-﻿namespace ComponentTester
+namespace ComponentTester
 {
     partial class Tester
     {

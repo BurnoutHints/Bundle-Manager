@@ -12,7 +12,7 @@ public partial class TriggerDataEditor : Form, IEntryEditor
     public event Notify EditEvent;
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-    public TriggerData trigger
+    public TriggerData Trigger
     {
         get;
         set
@@ -20,15 +20,15 @@ public partial class TriggerDataEditor : Form, IEntryEditor
             field = value;
             Console.WriteLine(value.muSize);
             Console.WriteLine(field.muSize);
-            Console.WriteLine(trigger.muSize);
-            
+            Console.WriteLine(Trigger.muSize);
+
             UpdateComponent();
         }
     }
 
     public void UpdateComponent()
     {
-        propertyGrid1.SelectedObject = trigger;
+        propertyGrid1.SelectedObject = Trigger;
     }
 
     public TriggerDataEditor()
@@ -44,34 +44,41 @@ public partial class TriggerDataEditor : Form, IEntryEditor
 
     private void importYamlToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        OpenFileDialog openDialog = new();
-        openDialog.Filter = "YAML files (*.yaml;*.yml)|*.yaml;*.yml|All files (*.*)|*.*";
+        OpenFileDialog openDialog = new()
+        {
+            Filter = "YAML files (*.yaml;*.yml)|*.yaml;*.yml|All files (*.*)|*.*"
+        };
+
         if (openDialog.ShowDialog(this) != DialogResult.OK)
             return;
 
         try
         {
-            ObjectYaml.Populate(trigger, File.ReadAllText(openDialog.FileName));
+            ObjectYAML.Populate(Trigger, File.ReadAllText(openDialog.FileName));
         }
         catch (Exception ex) when (ex is FormatException or IOException or UnauthorizedAccessException)
         {
             MessageBox.Show(this, $"There was an issue importing: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
         }
+
         propertyGrid1.Refresh();
     }
 
     private void exportYamlToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        SaveFileDialog saveDialog = new();
-        saveDialog.Filter = "YAML files (*.yaml)|*.yaml|All files (*.*)|*.*";
-        saveDialog.FileName = "triggers.yaml";
+        SaveFileDialog saveDialog = new()
+        {
+            Filter = "YAML files (*.yaml)|*.yaml|All files (*.*)|*.*",
+            FileName = "triggers.yaml"
+        };
+
         if (saveDialog.ShowDialog(this) != DialogResult.OK)
             return;
 
         try
         {
-            File.WriteAllText(saveDialog.FileName, ObjectYaml.Serialize(trigger));
+            File.WriteAllText(saveDialog.FileName, ObjectYAML.Serialize(Trigger));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

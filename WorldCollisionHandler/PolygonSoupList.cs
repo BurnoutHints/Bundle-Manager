@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using BundleFormat;
 using BundleUtilities;
 using MathLib;
@@ -27,13 +26,16 @@ public class PolygonSoupProperty
 
     public PolygonSoupProperty Copy()
     {
-        PolygonSoupProperty result = new();
+        PolygonSoupProperty result = new()
+        {
+            UnknownProperty = UnknownProperty
+        };
 
-        result.UnknownProperty = UnknownProperty;
         for (int i = 0; i < Indices.Length; i++)
         {
             result.Indices[i] = Indices[i];
         }
+
         for (int i = 0; i < UnknownBytes.Length; i++)
         {
             result.UnknownBytes[i] = UnknownBytes[i];
@@ -44,9 +46,10 @@ public class PolygonSoupProperty
 
     public static PolygonSoupProperty Read(BinaryReader2 br)
     {
-        PolygonSoupProperty result = new();
-
-        result.UnknownProperty = br.ReadUInt32();
+        PolygonSoupProperty result = new()
+        {
+            UnknownProperty = br.ReadUInt32()
+        };
 
         for (int i = 0; i < result.Indices.Length; i++)
         {
@@ -76,12 +79,10 @@ public class PolygonSoupProperty
         // Patch values that are too high(from console) with 0xFFFF
         //if (unknownProperty1 > 0x9D64)
         //    unknownProperty1 = 0xFFFF;
-
-        ushort unknownProperty2 = (ushort) ((UnknownProperty >> 16) & 0xFFFF);
+        ushort unknownProperty2 = (ushort)((UnknownProperty >> 16) & 0xFFFF);
 
         // Remove wreck surfaces - TODO: tmp
         //unknownProperty2 &= unchecked((ushort)~0x4000);
-
         uint unknownProperty = (uint)((unknownProperty2 << 16) | unknownProperty1);
 
         bw.Write(unknownProperty);
@@ -140,7 +141,10 @@ public class PolygonSoupChunk
     public static PolygonSoupChunk Read(BinaryReader2 br, bool x64)
     {
         PolygonSoupChunk result = new();
-        long ReadPtr() => x64 ? (long)br.ReadUInt64() : br.ReadUInt32();
+
+        long ReadPtr() => x64
+            ? (long)br.ReadUInt64()
+            : br.ReadUInt32();
 
         result.Position = br.ReadVector3I();
         result.Scale = br.ReadSingle();
@@ -154,6 +158,7 @@ public class PolygonSoupChunk
         result.Unknown11 = br.ReadInt16();
 
         br.BaseStream.Position = pointListStart;
+
         for (int i = 0; i < pointCount; i++)
         {
             result.PointList.Add(br.ReadVector3S());
@@ -171,7 +176,13 @@ public class PolygonSoupChunk
 
     public void Write(BinaryWriter2 bw, bool x64)
     {
-        void WritePtr(long ptr) { if (x64) bw.Write((ulong)ptr); else bw.Write((uint)ptr); }
+        void WritePtr(long ptr)
+        {
+            if (x64)
+                bw.Write((ulong)ptr);
+            else
+                bw.Write((uint)ptr);
+        }
 
         long chunkStartPtr = bw.BaseStream.Position;
         bw.Write(Position);
@@ -181,13 +192,13 @@ public class PolygonSoupChunk
         long pointListStartPtr = bw.BaseStream.Position;
         WritePtr(0);
         long lengthPtr = bw.BaseStream.Position;
-        bw.Write((ushort) 0);
+        bw.Write((ushort)0);
         bw.Write((byte)PropertyList.Count);
         bw.Write(QuadCount);
         bw.Write((byte)PointList.Count);
         bw.Write(Unknown10);
         bw.Write(Unknown11);
-        
+
         long cPos = bw.BaseStream.Position;
         bw.BaseStream.Position = pointListStartPtr;
         WritePtr(cPos);
@@ -208,6 +219,7 @@ public class PolygonSoupChunk
         {
             PropertyList[i].Write(bw, x64);
         }
+
         cPos = bw.BaseStream.Position;
         bw.BaseStream.Position = lengthPtr;
         bw.Write((short)(bw.BaseStream.Length - chunkStartPtr));
@@ -217,48 +229,52 @@ public class PolygonSoupChunk
 
     public Mesh BuildMesh(MathLib.Vector3I pos, float scale)
     {
-        Mesh mesh = new();
-        mesh.Faces = [];
+        Mesh mesh = new()
+        {
+            Faces = []
+        };
 
         for (int i = 0; i < PropertyList.Count; i++)
         {
             MeshFace face = new();
-            PolygonSoupProperty property = PropertyList[i];
-            face.Indices.Add(property.Indices[0]);
-            face.Indices.Add(property.Indices[1]);
-            face.Indices.Add(property.Indices[2]);
+            PolygonSoupProperty currentProperty = PropertyList[i];
+            face.Indices.Add(currentProperty.Indices[0]);
+            face.Indices.Add(currentProperty.Indices[1]);
+            face.Indices.Add(currentProperty.Indices[2]);
 
-            ushort unknownProperty1 = (ushort) (property.UnknownProperty & 0xFFFF);
-            ushort unknownProperty2 = (ushort) ((property.UnknownProperty >> 16)); // & 0xFFFF);
+            ushort unknownProperty1 = (ushort)(currentProperty.UnknownProperty & 0xFFFF);
+            ushort unknownProperty2 = (ushort)((currentProperty.UnknownProperty >> 16)); // & 0xFFFF);
 
-            string unknownBytes = property.UnknownBytes[0].ToString("X2") + "_" +
-                                  property.UnknownBytes[1].ToString("X2") + "_" +
-                                  property.UnknownBytes[2].ToString("X2") + "_" +
-                                  property.UnknownBytes[3].ToString("X2");
-            face.Material = new Material(
+            string unknownBytes = currentProperty.UnknownBytes[0].ToString("X2") + "_" +
+                                  currentProperty.UnknownBytes[1].ToString("X2") + "_" +
+                                  currentProperty.UnknownBytes[2].ToString("X2") + "_" +
+                                  currentProperty.UnknownBytes[3].ToString("X2");
+            face.Material = new(
                 unknownProperty1.ToString("X4") + "_" + unknownProperty2.ToString("X4") + "_" + unknownBytes,
                 Color.White);
 
             mesh.Faces.Add(face);
-            
-            if (property.Indices[3] != 0xFF)
+
+            if (currentProperty.Indices[3] != 0xFF)
             {
-                MeshFace face2 = new();
-                face2.Material = face.Material;
-                face2.Indices.Add(property.Indices[3]);
-                face2.Indices.Add(property.Indices[2]);
-                face2.Indices.Add(property.Indices[1]);
+                MeshFace face2 = new()
+                {
+                    Material = face.Material
+                };
+
+                face2.Indices.Add(currentProperty.Indices[3]);
+                face2.Indices.Add(currentProperty.Indices[2]);
+                face2.Indices.Add(currentProperty.Indices[1]);
                 mesh.Faces.Add(face2);
             }
         }
-
 
         List<Vector3S> points = PointList;
 
         for (int i = 0; i < points.Count; i++)
         {
             Vector3S vert = points[i];
-            mesh.Vertices.Add(new Vector3((vert.X + pos.X) * scale, (vert.Y + pos.Y) * scale, (vert.Z + pos.Z) * scale));
+            mesh.Vertices.Add(new((vert.X + pos.X) * scale, (vert.Y + pos.Y) * scale, (vert.Z + pos.Z) * scale));
         }
 
         return mesh;
@@ -276,6 +292,7 @@ public class PolygonSoupList : IEntryData
     public int Unknown4;
     public Vector3 Max;
     public int Unknown8;
+
     //public uint ChunkPointerStart;
     //public uint BoxListStart;
     //public int ChunkCount;
@@ -296,18 +313,18 @@ public class PolygonSoupList : IEntryData
     {
         foreach (PolygonSoupChunk chunk in Chunks)
         {
-            foreach (PolygonSoupProperty property in chunk.PropertyList)
+            foreach (PolygonSoupProperty currentProperty in chunk.PropertyList)
             {
-                ushort unknownProperty1 = (ushort)(property.UnknownProperty & 0xFFFF);
+                ushort unknownProperty1 = (ushort)(currentProperty.UnknownProperty & 0xFFFF);
 
-                ushort unknownProperty2 = (ushort)((property.UnknownProperty >> 16) & 0xFFFF);
+                ushort unknownProperty2 = (ushort)((currentProperty.UnknownProperty >> 16) & 0xFFFF);
 
                 // Remove wreck surfaces - TODO: tmp
                 unknownProperty2 &= unchecked((ushort)~0x4000);
 
                 uint unknownProperty = (uint)((unknownProperty2 << 16) | unknownProperty1);
 
-                property.UnknownProperty = unknownProperty;
+                currentProperty.UnknownProperty = unknownProperty;
             }
         }
     }
@@ -317,6 +334,7 @@ public class PolygonSoupList : IEntryData
         Scene scene = new();
 
         int index = 0;
+
         foreach (PolygonSoupChunk chunk in Chunks)
         {
             string id = index.ToString();
@@ -342,6 +360,7 @@ public class PolygonSoupList : IEntryData
         {
             // Get highest point
             uint pointCount = 0;
+
             foreach (uint key in mesh.Vertices.Keys)
             {
                 if (pointCount < key)
@@ -349,10 +368,13 @@ public class PolygonSoupList : IEntryData
                     pointCount = key;
                 }
             }
+
             pointCount++;
+
             // Is it too big for a byte?
             if (pointCount > 256)
                 throw new ReadFailedError("Too many points for mesh: " + mesh.Name + ", " + pointCount + " > 256");
+
             foreach (Face face in mesh.Faces)
             {
                 // Triangulation required for now.
@@ -365,6 +387,7 @@ public class PolygonSoupList : IEntryData
 
                 // Verify that all data is there
                 string[] split = face.Material.Name.Split('_');
+
                 if (split.Length < 7)
                     throw new ReadFailedError("Invalid Material Data: " + face.Material.Name + ", for mesh: " + mesh.Name);
 
@@ -396,19 +419,20 @@ public class PolygonSoupList : IEntryData
         foreach (GenericMesh mesh in model.Meshes)
         {
             PolygonSoupChunk chunk = new();
+
             foreach (Face face in mesh.Faces)
             {
-                PolygonSoupProperty property = new();
+                PolygonSoupProperty currentProperty = new();
 
                 // Set Indices
-                property.Indices[0] = (byte)face.Indices[0];
-                property.Indices[1] = (byte)face.Indices[1];
-                property.Indices[2] = (byte)face.Indices[2];
+                currentProperty.Indices[0] = (byte)face.Indices[0];
+                currentProperty.Indices[1] = (byte)face.Indices[1];
+                currentProperty.Indices[2] = (byte)face.Indices[2];
 
                 if (face.Indices.Count > 3)
-                    property.Indices[3] = (byte) face.Indices[3];
-                else 
-                    property.Indices[3] = 0xFF;
+                    currentProperty.Indices[3] = (byte)face.Indices[3];
+                else
+                    currentProperty.Indices[3] = 0xFF;
 
                 // Get data from material name
                 string materialName = face.Material.Name;
@@ -423,20 +447,20 @@ public class PolygonSoupList : IEntryData
                 Utilities.Parse(split[6], true, out byte unknownByte4);
 
                 // Combine unknownProperty1 and unknownProperty2
-                property.UnknownProperty = (uint) ((unknownProperty2 << 16) | unknownProperty1);
+                currentProperty.UnknownProperty = (uint)((unknownProperty2 << 16) | unknownProperty1);
 
                 // Set unknown bytes
-                property.UnknownBytes[0] = unknownByte1;
-                property.UnknownBytes[1] = unknownByte2;
-                property.UnknownBytes[2] = unknownByte3;
-                property.UnknownBytes[3] = unknownByte4;
+                currentProperty.UnknownBytes[0] = unknownByte1;
+                currentProperty.UnknownBytes[1] = unknownByte2;
+                currentProperty.UnknownBytes[2] = unknownByte3;
+                currentProperty.UnknownBytes[3] = unknownByte4;
 
                 // Add the property
-                chunk.PropertyList.Add(property);
+                chunk.PropertyList.Add(currentProperty);
             }
 
             // Add the vertices to the global vertices list
-            vertices.AddRange(mesh.Vertices.Values.ToArray());
+            vertices.AddRange([.. mesh.Vertices.Values]);
 
             // Get the minimum and maximum point of the mesh
             Vector3 min = MathUtils.MinBounds([.. mesh.Vertices.Values]);
@@ -447,9 +471,10 @@ public class PolygonSoupList : IEntryData
 
             // Set the scale to something standard
             float scale = 0.015f;
-            
+
             // Get the point count
             uint pointCount = 0;
+
             foreach (uint key in mesh.Vertices.Keys)
             {
                 if (pointCount < key)
@@ -457,28 +482,31 @@ public class PolygonSoupList : IEntryData
                     pointCount = key;
                 }
             }
+
             pointCount++;
             Vector3S[] verts = new Vector3S[pointCount];
+
             foreach (uint key in mesh.Vertices.Keys)
             {
                 // Convert the point to a short and apply position and scale
-                verts[key] = new Vector3S((mesh.Vertices[key] - position) / scale);
+                verts[key] = new((mesh.Vertices[key] - position) / scale);
             }
+
             chunk.PointList = [.. verts];
-            
+
             // Quads are currently unsupported
             chunk.QuadCount = 0;
 
             chunk.Scale = scale;
 
             // Set the position and apply scale
-            chunk.Position = new MathLib.Vector3I(position / scale);
+            chunk.Position = new(position / scale);
 
             // Add the chunk
             Chunks.Add(chunk);
 
             // Add the bounding box
-            BoundingBoxes.Add(new PolygonSoupBoundingBox(new BoxF(min, max), -1));
+            BoundingBoxes.Add(new(new(min, max), -1));
         }
 
         // Calculate Bounding Box
@@ -501,11 +529,16 @@ public class PolygonSoupList : IEntryData
         Clear();
 
         MemoryStream ms = entry.MakeStream();
-        BinaryReader2 br = new(ms);
-        br.BigEndian = entry.Console;
+        BinaryReader2 br = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
-        long ReadPtr() => x64 ? (long)br.ReadUInt64() : br.ReadUInt32();
+
+        long ReadPtr() => x64
+            ? (long)br.ReadUInt64()
+            : br.ReadUInt32();
 
         Min = br.ReadVector3F();
         Unknown4 = br.ReadInt32();
@@ -536,7 +569,6 @@ public class PolygonSoupList : IEntryData
         for (int i = 0; i < chunkCount; i++)
         {
             // Read Vertically
-
             long pos = boxListStart + 0x70 * (i / 4) + 4 * (i % 4);
 
             BoxF boundingBox = new();
@@ -547,7 +579,7 @@ public class PolygonSoupList : IEntryData
             br.BaseStream.Position += 12;
             float minZ = br.ReadSingle();
 
-            boundingBox.Min = new Vector3(minX, minY, minZ);
+            boundingBox.Min = new(minX, minY, minZ);
 
             br.BaseStream.Position += 12;
             float maxX = br.ReadSingle();
@@ -557,7 +589,7 @@ public class PolygonSoupList : IEntryData
             float maxZ = br.ReadSingle();
             br.BaseStream.Position += 12;
 
-            boundingBox.Max = new Vector3(maxX, maxY, maxZ);
+            boundingBox.Max = new(maxX, maxY, maxZ);
 
             PolygonSoupBoundingBox box = new(boundingBox, br.ReadInt32());
 
@@ -580,11 +612,20 @@ public class PolygonSoupList : IEntryData
     public bool Write(BundleEntry entry)
     {
         MemoryStream ms = new();
-        BinaryWriter2 bw = new(ms);
-        bw.BigEndian = entry.Console;
+        BinaryWriter2 bw = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
-        void WritePtr(long ptr) { if (x64) bw.Write((ulong)ptr); else bw.Write((uint)ptr); }
+
+        void WritePtr(long ptr)
+        {
+            if (x64)
+                bw.Write((ulong)ptr);
+            else
+                bw.Write((uint)ptr);
+        }
 
         bw.Write(Min);
         bw.Write(Unknown4);
@@ -640,7 +681,6 @@ public class PolygonSoupList : IEntryData
         for (int i = 0; i < Chunks.Count; i++)
         {
             // Write Vertically
-
             long pos = boxListStart + 0x70 * (i / 4) + 4 * (i % 4);
 
             PolygonSoupBoundingBox box = BoundingBoxes[i];
@@ -707,6 +747,7 @@ public class PolygonSoupList : IEntryData
         bw.Write((uint)cPos);
 
         bw.BaseStream.Position = chunkPointerStart;
+
         for (int i = 0; i < Chunks.Count; i++)
         {
             WritePtr(chunkPointers[i]);
@@ -730,8 +771,11 @@ public class PolygonSoupList : IEntryData
 
     public IEntryEditor GetEditor(BundleEntry entry)
     {
-        WorldColEditor editor = new();
-        editor.Poly = this;
+        WorldColEditor editor = new()
+        {
+            Poly = this
+        };
+
         editor.Changed += () =>
         {
             Write(entry);

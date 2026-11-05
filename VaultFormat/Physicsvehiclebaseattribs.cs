@@ -10,88 +10,155 @@ namespace VaultFormat;
 public class Physicsvehiclebaseattribs : IAttribute
 {
     public Vector4 RearRightWheelPosition { get; set; }
+
     public Vector4 FrontRightWheelPosition { get; set; }
+
     public Vector4 CoMOffset { get; set; }
+
     public Vector4 BrakeScaleToFactor { get; set; }
+
     public float YawDampingOnTakeOff { get; set; }
+
     public float TractionLineLength { get; set; }
+
     public float TimeForFullBrake { get; set; }
+
     public float SurfaceRoughnessFactor { get; set; }
+
     public float SurfaceRearGripFactor { get; set; }
+
     public float SurfaceFrontGripFactor { get; set; }
+
     public float SurfaceDragFactor { get; set; }
+
     public float RollLimitOnTakeOff { get; set; }
+
     public float RollDampingOnTakeOff { get; set; }
+
     public float RearWheelMass { get; set; }
+
     public float RearTireStaticFrictionCoefficient { get; set; }
+
     public float RearTireLongForceBias { get; set; }
+
     public float RearTireDynamicFrictionCoefficient { get; set; }
+
     public float RearTireAdhesiveLimit { get; set; }
+
     public float RearLongGripCurvePeakSlipRatio { get; set; }
+
     public float RearLongGripCurvePeakCoefficient { get; set; }
+
     public float RearLongGripCurveFloorSlipRatio { get; set; }
+
     public float RearLongGripCurveFallCoefficient { get; set; }
+
     public float RearLatGripCurvePeakSlipRatio { get; set; }
+
     public float RearLatGripCurvePeakCoefficient { get; set; }
+
     public float RearLatGripCurveFloorSlipRatio { get; set; }
+
     public float RearLatGripCurveFallCoefficient { get; set; }
+
     public float RearLatGripCurveDriftPeakSlipRatio { get; set; }
+
     public float PowerToRear { get; set; }
+
     public float PowerToFront { get; set; }
+
     public float PitchDampingOnTakeOff { get; set; }
+
     public float MaxSpeed { get; set; }
+
     public float MagicBrakeFactorTurning { get; set; }
 
     public float MagicBrakeFactorStraightLine { get; set; }
+
     public float LowSpeedTyreFrictionTractionControl { get; set; }
+
     public float LowSpeedThrottleTractionControl { get; set; }
+
     public float LowSpeedDrivingSpeed { get; set; }
+
     public float LockBrakeScale { get; set; }
+
     public float LinearDrag { get; set; }
+
     public float HighSpeedAngularDamping { get; set; }
+
     public float FrontWheelMass { get; set; }
+
     public float FrontTireStaticFrictionCoefficient { get; set; }
+
     public float FrontTireLongForceBias { get; set; }
+
     public float FrontTireDynamicFrictionCoefficient { get; set; }
+
     public float FrontTireAdhesiveLimit { get; set; }
+
     public float FrontLongGripCurvePeakSlipRatio { get; set; }
+
     public float FrontLongGripCurvePeakCoefficient { get; set; }
+
     public float FrontLongGripCurveFloorSlipRatio { get; set; }
+
     public float FrontLongGripCurveFallCoefficient { get; set; }
+
     public float FrontLatGripCurvePeakSlipRatio { get; set; }
+
     public float FrontLatGripCurvePeakCoefficient { get; set; }
+
     public float FrontLatGripCurveFloorSlipRatio { get; set; }
+
     public float FrontLatGripCurveFallCoefficient { get; set; }
+
     public float FrontLatGripCurveDriftPeakSlipRatio { get; set; }
+
     public float DrivingMass { get; set; }
+
     public float DriveTimeDeformLimitX { get; set; }
+
     public float DriveTimeDeformLimitPosZ { get; set; }
+
     public float DriveTimeDeformLimitNegZ { get; set; }
+
     public float DriveTimeDeformLimitNegY { get; set; }
+
     public float DownForceZOffset { get; set; }
+
     public float DownForce { get; set; }
+
     public float CrashExtraYawVelocityFactor { get; set; }
+
     public float CrashExtraRollVelocityFactor { get; set; }
+
     public float CrashExtraPitchVelocityFactor { get; set; }
+
     public float CrashExtraLinearVelocityFactor { get; set; }
+
     public float AngularDrag { get; set; }
+
     public int PaddingLength { get; set; }
+
     public AttributeHeader header { get; set; }
+
     public SizeAndPositionInformation info { get; set; }
+
     public Physicsvehiclebaseattribs(SizeAndPositionInformation chunk, AttributeHeader dataChunk)
     {
         header = dataChunk;
         info = chunk;
     }
 
-    public int getDataSize()
+    public int GetDataSize()
     {
         List<byte[]> bytes =
         [
-            RearRightWheelPosition.toBytes(),
-            FrontRightWheelPosition.toBytes(),
-            CoMOffset.toBytes(),
-            BrakeScaleToFactor.toBytes(),
+            RearRightWheelPosition.ToBytes(),
+            FrontRightWheelPosition.ToBytes(),
+            CoMOffset.ToBytes(),
+            BrakeScaleToFactor.ToBytes(),
             BitConverter.GetBytes(YawDampingOnTakeOff),
             BitConverter.GetBytes(TractionLineLength),
             BitConverter.GetBytes(TimeForFullBrake),
@@ -154,16 +221,17 @@ public class Physicsvehiclebaseattribs : IAttribute
             BitConverter.GetBytes(CrashExtraLinearVelocityFactor),
             BitConverter.GetBytes(AngularDrag)
         ];
+
         // No padding needed
         return bytes.SelectMany(i => i).Count() + PaddingLength;
     }
 
-    public AttributeHeader getHeader()
+    public AttributeHeader GetHeader()
     {
         return header;
     }
 
-    public SizeAndPositionInformation getInfo()
+    public SizeAndPositionInformation GetInfo()
     {
         return info;
     }
@@ -173,10 +241,10 @@ public class Physicsvehiclebaseattribs : IAttribute
         int pos = (int)br.BaseStream.Position;
         br.Align(0x10);
         PaddingLength = (int)br.BaseStream.Position - pos;
-        RearRightWheelPosition = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-        FrontRightWheelPosition = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-        CoMOffset = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-        BrakeScaleToFactor = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+        RearRightWheelPosition = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+        FrontRightWheelPosition = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+        CoMOffset = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+        BrakeScaleToFactor = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
         YawDampingOnTakeOff = br.ReadSingle();
         TractionLineLength = br.ReadSingle();
         TimeForFullBrake = br.ReadSingle();
@@ -243,10 +311,10 @@ public class Physicsvehiclebaseattribs : IAttribute
     public void Write(BinaryWriter2 bw)
     {
         bw.Align(0x10);
-        bw.Write(RearRightWheelPosition.toBytes(bw.BigEndian));
-        bw.Write(FrontRightWheelPosition.toBytes(bw.BigEndian));
-        bw.Write(CoMOffset.toBytes(bw.BigEndian));
-        bw.Write(BrakeScaleToFactor.toBytes(bw.BigEndian));
+        bw.Write(RearRightWheelPosition.ToBytes(bw.BigEndian));
+        bw.Write(FrontRightWheelPosition.ToBytes(bw.BigEndian));
+        bw.Write(CoMOffset.ToBytes(bw.BigEndian));
+        bw.Write(BrakeScaleToFactor.ToBytes(bw.BigEndian));
         bw.Write(YawDampingOnTakeOff);
         bw.Write(TractionLineLength);
         bw.Write(TimeForFullBrake);

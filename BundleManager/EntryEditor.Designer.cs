@@ -96,7 +96,7 @@ namespace BundleManager
             tabInfo.Name = "tabInfo";
             tabInfo.Size = new System.Drawing.Size(720, 459);
             tabInfo.TabIndex = 3;
-            tabInfo.Text = "Info";
+            tabInfo.Text = "info";
             tabInfo.UseVisualStyleBackColor = true;
             // 
             // txtInfo

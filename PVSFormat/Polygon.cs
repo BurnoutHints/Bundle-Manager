@@ -5,11 +5,7 @@ namespace PVSFormat;
 
 public class Polygon
 {
-    public PointF[] Points
-    {
-        get;
-        set;
-    }
+    public PointF[] Points { get; set; }
 
     public float MinX
     {
@@ -87,7 +83,7 @@ public class Polygon
     {
         get
         {
-            return new RectangleF(MinX, MinY, MaxX - MinX, MaxY - MinY);
+            return new(MinX, MinY, MaxX - MinX, MaxY - MinY);
         }
     }
 

@@ -8,11 +8,12 @@ public static class GraphicsUtil
     {
         float[] r = new float[bitmap.Width * bitmap.Height * 4];
         int index = 0;
+
         for (int y = 0; y < bitmap.Height; y++)
         {
             for (int x = 0; x < bitmap.Width; x++)
             {
-                var pixel = bitmap.GetPixel(x, y);
+                Color pixel = bitmap.GetPixel(x, y);
                 r[index++] = pixel.R / 255.0f;
                 r[index++] = pixel.G / 255.0f;
                 r[index++] = pixel.B / 255.0f;

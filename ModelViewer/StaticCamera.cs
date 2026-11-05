@@ -19,6 +19,6 @@ public class StaticCamera : ICamera
 
     public void Update()
     {
-        
+
     }
 }

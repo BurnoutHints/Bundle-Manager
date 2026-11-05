@@ -46,21 +46,21 @@ public partial class MainForm : Form
 
     private string CurrentFileName { get; set; }
 
-    public bool _console => CurrentArchive.Console;
+    public bool Console => CurrentArchive.Console;
 
     public bool ForceOnlySpecificEntry = false;
 
-    private readonly Lock _saveLock = new();
+    private readonly Lock saveLock = new();
 
     private const int NameColumn = 1;
-    private readonly Font _inferredNameFont;
+    private readonly Font inferredNameFont;
 
     #endregion
 
     public MainForm()
     {
         InitializeComponent();
-        _inferredNameFont = new Font(lstEntries.Font, FontStyle.Italic);
+        inferredNameFont = new(lstEntries.Font, FontStyle.Italic);
 
         //doNew();
         UpdateDisplay();
@@ -102,14 +102,21 @@ public partial class MainForm : Form
             ];
 
             // Sub item styles so the name alone can be italic
-            ListViewItem item = new(values) { UseItemStyleForSubItems = false };
+            ListViewItem item = new(values)
+            {
+                UseItemStyleForSubItems = false
+            };
+
             Color color = BundleEntry.GetColor(entry.Type);
+
             foreach (ListViewItem.ListViewSubItem subItem in item.SubItems)
             {
                 subItem.BackColor = color;
+
                 if (color != Color.Transparent)
                     subItem.ForeColor = Color.Black; // Readable on the light type colours in dark mode too
             }
+
             ShowName(item, entry);
             lstEntries.Items.Add(item);
         }
@@ -137,8 +144,10 @@ public partial class MainForm : Form
 
         if (commands.Length == 0)
         {
-            ToolStripItem item = new ToolStripMenuItem("No Plugin Commands");
-            item.Enabled = false;
+            ToolStripItem item = new ToolStripMenuItem("No Plugin Commands")
+            {
+                Enabled = false
+            };
 
             toolsToolStripMenuItem.DropDownItems.Insert(index, item);
         }
@@ -149,6 +158,7 @@ public partial class MainForm : Form
                 PluginCommand command = commands[i];
 
                 ToolStripItem item = new ToolStripMenuItem(command.Text);
+
                 if (CurrentArchive == null)
                     item.Enabled = false;
                 else if (command.CheckConditions == null)
@@ -169,18 +179,21 @@ public partial class MainForm : Form
             return;
 
         // Retail bundles are compressed, the decomp's x64 ones aren't
-        CurrentArchive = new BundleArchive
+        CurrentArchive = new()
         {
             BNDVersion = 2,
             Version = 2,
             Platform = platform,
-            Flags = Flags.UnusedFlag1 | Flags.UnusedFlag2 | (platform == BundlePlatform.PCx64 ? 0 : Flags.Compressed)
+            Flags = Flags.UnusedFlag1 | Flags.UnusedFlag2 | (platform == BundlePlatform.PCx64
+                ? 0
+                : Flags.Compressed)
         };
         CurrentFileName = null;
         Text = "Bundle Manager - Untitled";
 
         if (import)
             ImportResourceForm.ShowImport(this, CurrentArchive);
+
         UpdateDisplay();
     }
 
@@ -193,7 +206,12 @@ public partial class MainForm : Form
         {
             Caption = "New Bundle",
             Heading = "Add a first resource?",
-            Buttons = { import, empty, TaskDialogButton.Cancel },
+            Buttons =
+            {
+                import,
+                empty,
+                TaskDialogButton.Cancel
+            },
             AllowCancel = true
         };
 
@@ -203,8 +221,10 @@ public partial class MainForm : Form
             Heading = "Which platform is this bundle for?",
             AllowCancel = true
         };
+
         BundlePlatform platform = default;
-        foreach (var (value, text, note) in new (BundlePlatform, string, string)[]
+
+        foreach ((BundlePlatform value, string text, string note) in new (BundlePlatform, string, string)[]
         {
             (BundlePlatform.PC, "PC", "Burnout Paradise Remastered, or The Ultimate Box (2009)"),
             (BundlePlatform.X360, "Xbox 360", null),
@@ -212,7 +232,11 @@ public partial class MainForm : Form
             (BundlePlatform.PCx64, "PC x64", "Builds of the Burnout Paradise decompilation")
         })
         {
-            TaskDialogCommandLinkButton button = new(text, note) { AllowCloseDialog = false };
+            TaskDialogCommandLinkButton button = new(text, note)
+            {
+                AllowCloseDialog = false
+            };
+
             button.Click += (_, _) =>
             {
                 platform = value;
@@ -221,19 +245,29 @@ public partial class MainForm : Form
             };
             platforms.Buttons.Add(button);
         }
+
         platforms.Buttons.Add(TaskDialogButton.Cancel);
 
         TaskDialogButton result = TaskDialog.ShowDialog(this, platforms);
-        return result == import ? (platform, true) : result == empty ? (platform, false) : null;
+        return result == import
+            ? (platform: platform, true)
+            : result == empty
+                ? (platform: platform, false)
+                : null;
     }
 
     private async Task Open()
     {
         if (!await CheckSave())
             return;
-        OpenFileDialog ofd = new();
-        ofd.Filter = "Supported Files|*.BUNDLE;*.BIN;*.BNDL;*.DAT;*.TEX|All Files|*.*";
+
+        OpenFileDialog ofd = new()
+        {
+            Filter = "Supported Files|*.BUNDLE;*.BIN;*.BNDL;*.DAT;*.TEX|All Files|*.*"
+        };
+
         DialogResult result = ofd.ShowDialog(this);
+
         if (result == DialogResult.OK)
         {
             if (!Utilities.FileExists(ofd.FileName))
@@ -264,6 +298,7 @@ public partial class MainForm : Form
             CurrentFileName = null;
             Text = "Bundle Manager";
         }
+
         UpdateDisplay();
     }
 
@@ -274,6 +309,7 @@ public partial class MainForm : Form
             MessageBox.Show(this, "Nothing to save!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return true;
         }
+
         if (string.IsNullOrEmpty(CurrentFileName))
         {
             return await SaveAs();
@@ -289,9 +325,14 @@ public partial class MainForm : Form
             MessageBox.Show(this, "Nothing to save!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return true;
         }
-        SaveFileDialog sfd = new();
-        sfd.Filter = "Supported Files|*.BUNDLE;*.BIN;*.BNDL;*.DAT;*.TEX|All Files|*.*";
+
+        SaveFileDialog sfd = new()
+        {
+            Filter = "Supported Files|*.BUNDLE;*.BIN;*.BNDL;*.DAT;*.TEX|All Files|*.*"
+        };
+
         DialogResult result = sfd.ShowDialog(this);
+
         if (result == DialogResult.OK)
         {
             if (!Utilities.IsValidPath(sfd.FileName) || !await SaveTo(sfd.FileName))
@@ -302,6 +343,7 @@ public partial class MainForm : Form
 
             return true;
         }
+
         return false;
     }
 
@@ -309,11 +351,12 @@ public partial class MainForm : Form
     private async Task<bool> SaveTo(string path)
     {
         BundleArchive archive = CurrentArchive;
+
         try
         {
             await LoadingDialog.RunAsync(this, "Saving: " + path, (_, cancel) =>
             {
-                lock (_saveLock)
+                lock (saveLock)
                     archive.Write(path, cancel);
                 return true;
             });
@@ -343,6 +386,7 @@ public partial class MainForm : Form
     public async Task EditSelectedEntry(bool forceHex = false, bool forceDebug = false)
     {
         int count = lstEntries.SelectedIndices.Count;
+
         if (count <= 0)
             return;
 
@@ -356,11 +400,16 @@ public partial class MainForm : Form
     {
         if (CurrentArchive == null || index < 0 || index >= CurrentArchive.Entries.Count) // From the command line
             return;
+
         BundleEntry entry = GetEntry(index);
 
         if (!EntryTypeRegistry.IsRegistered(entry.Type) || forceHex)
         {
-            using EntryEditor editor = new() { ForceHex = forceHex };
+            using EntryEditor editor = new()
+            {
+                ForceHex = forceHex
+            };
+
             editor.Entry = entry;
             editor.ShowDialog(this);
             return;
@@ -368,9 +417,11 @@ public partial class MainForm : Form
 
         IEntryData data = EntryTypeRegistry.GetHandler(entry.Type);
         TextureCache.ResetCache();
+
         try
         {
             bool loaded;
+
             try
             {
                 loaded = await LoadingDialog.RunAsync(this, "Loading: " + entry.ID.ToString("X8"), (loader, _) => data.Read(entry, loader));
@@ -381,10 +432,13 @@ public partial class MainForm : Form
             }
             catch (Exception ex)
             {
-                Console.Out.WriteLine(ex.ToString());
-                MessageBox.Show(this, ex is ReadFailedError ? ex.Message : "Failed to load Entry", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Console.Out.WriteLine(ex.ToString());
+                MessageBox.Show(this, ex is ReadFailedError
+                    ? ex.Message
+                    : "Failed to load Entry", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+
             if (!loaded)
             {
                 MessageBox.Show(this, "Failed to load Entry", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -393,7 +447,9 @@ public partial class MainForm : Form
 
             if (forceDebug)
                 DebugUtil.ShowDebug(this, data);
+
             IEntryEditor editor = data.GetEditor(entry);
+
             if (editor != null)
             {
                 editor.ShowDialog(this);
@@ -401,6 +457,7 @@ public partial class MainForm : Form
             }
             else
                 DebugUtil.ShowDebug(this, data);
+
             if (ForceOnlySpecificEntry)
                 Environment.Exit(0);
         }
@@ -487,26 +544,42 @@ public partial class MainForm : Form
             return;
 
         ListViewItem item = lstEntries.SelectedItems[0];
+
         if (!int.TryParse(item.Text, out int index))
             return;
+
         BundleEntry entry = GetEntry(index);
 
         item.EnsureVisible();
         string shown = item.SubItems[NameColumn].Text;
-        TextBox box = new() { AutoSize = false, BorderStyle = BorderStyle.FixedSingle, Font = lstEntries.Font, Bounds = item.SubItems[NameColumn].Bounds, Text = shown };
+        TextBox box = new()
+        {
+            AutoSize = false,
+            BorderStyle = BorderStyle.FixedSingle,
+            Font = lstEntries.Font,
+            Bounds = item.SubItems[NameColumn].Bounds,
+            Text = shown
+        };
 
         bool finished = false;
+
         void Finish(bool keep, bool enter = false)
         {
             if (finished)
                 return;
+
             finished = true;
 
             // Enter also stores an italic name left as it is, clicking away only keeps edits
             string name = box.Text.Trim();
-            if (keep && name != (enter ? entry.DebugInfo.Name ?? "" : shown))
+
+            if (keep && name != (enter
+                ? entry.DebugInfo.Name ?? ""
+                : shown))
             {
-                entry.DebugInfo.Name = name.Length > 0 ? name : null;
+                entry.DebugInfo.Name = name.Length > 0
+                    ? name
+                    : null;
                 entry.Dirty = true;
                 ShowName(item, entry);
             }
@@ -520,9 +593,10 @@ public partial class MainForm : Form
         {
             if (e.KeyCode is not (Keys.Enter or Keys.Escape))
                 return;
+
             e.SuppressKeyPress = true;
-            bool enter = e.KeyCode == Keys.Enter;
-            Finish(enter, enter);
+            bool currentEnter = e.KeyCode == Keys.Enter;
+            Finish(currentEnter, currentEnter);
         };
         box.LostFocus += (_, _) => Finish(true);
 
@@ -537,17 +611,23 @@ public partial class MainForm : Form
         ListViewItem.ListViewSubItem name = item.SubItems[NameColumn];
         name.Text = entry.DetectName();
         bool inferred = string.IsNullOrWhiteSpace(entry.DebugInfo.Name) && name.Text.Length > 0;
-        name.Font = inferred ? _inferredNameFont : null;
-        item.ToolTipText = inferred ? "Likely name, not stored in the bundle. Rename and press Enter, or Tools > Fill missing names, to store it." : "";
+        name.Font = inferred
+            ? inferredNameFont
+            : null;
+        item.ToolTipText = inferred
+            ? "Likely name, not stored in the bundle. Rename and press Enter, or Tools > Fill missing names, to store it."
+            : "";
     }
 
     private void fillMissingNamesToolStripMenuItem_Click(object sender, EventArgs e)
     {
         int filled = 0;
+
         foreach (ListViewItem item in lstEntries.Items)
         {
             BundleEntry entry = GetEntry(int.Parse(item.Text));
             string name = item.SubItems[NameColumn].Text;
+
             if (!string.IsNullOrWhiteSpace(entry.DebugInfo.Name) || name.Length == 0)
                 continue;
 
@@ -557,16 +637,18 @@ public partial class MainForm : Form
             filled++;
         }
 
-        MessageBox.Show(this, filled > 0 ? $"Filled {filled} missing names." : "No missing names were found.", "Fill missing names",
+        MessageBox.Show(this, filled > 0
+            ? $"Filled {filled} missing names."
+            : "No missing names were found.", "Fill missing names",
             MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     // Closing can't wait for a save, so with unsaved changes it stops, asks (and saves), then closes again
-    private bool _closeConfirmed;
+    private bool closeConfirmed;
 
     private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
     {
-        if (!_closeConfirmed && CurrentArchive?.Dirty == true)
+        if (!closeConfirmed && CurrentArchive?.Dirty == true)
         {
             e.Cancel = true;
             BeginInvoke(CloseAfterCheckingSave);
@@ -581,7 +663,8 @@ public partial class MainForm : Form
     {
         if (!await CheckSave())
             return;
-        _closeConfirmed = true;
+
+        closeConfirmed = true;
         Close();
     }
 
@@ -632,11 +715,17 @@ public partial class MainForm : Form
                 Heading = "There are unsaved changes",
                 Text = "Would you like to save them first?",
                 Icon = TaskDialogIcon.Warning,
-                Buttons = { save, dontSave, TaskDialogButton.Cancel },
+                Buttons =
+                {
+                    save,
+                    dontSave,
+                    TaskDialogButton.Cancel
+                },
                 AllowCancel = true
             };
 
             TaskDialogButton result = TaskDialog.ShowDialog(this, page);
+
             if (result == save)
             {
                 return await Save();
@@ -669,24 +758,27 @@ public partial class MainForm : Form
         search.Search += id =>
         {
             BundleEntry entry = CurrentArchive.GetEntryByID(id);
+
             if (entry == null)
             {
-                MessageBox.Show(this, "Entry not found!", "Information", MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                MessageBox.Show(this, "Entry not found!", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
             string indexText = entry.Index.ToString("D3");
             int listIndex = -1;
+
             for (int i = 0; i < lstEntries.Items.Count; i++)
             {
                 ListViewItem item = lstEntries.Items[i];
+
                 if (item.Text == indexText)
                 {
                     listIndex = i;
                     break;
                 }
             }
+
             if (listIndex < 0)
                 return;
 
@@ -708,7 +800,7 @@ public partial class MainForm : Form
 
         Hide();
         Program.SavePreferredMode(true);
-        Program.folderModeForm.Show();
+        Program.FolderModeForm.Show();
     }
 
     private void SortColumn(int column)
@@ -724,16 +816,19 @@ public partial class MainForm : Form
         else
         {
             // first time
-            sorter = new EntrySorter(column);
+            sorter = new(column);
             lstEntries.ListViewItemSorter = sorter;
         }
+
         // if you're clicking the same column already being sorted
         //if (sorter.Column == column)
         //{
         // change the direction state from true to false or vice-versa
         sorter.Swap();
+
         // bop-it
         lstEntries.Sort();
+
         //}
     }
 
@@ -744,8 +839,8 @@ public partial class MainForm : Form
 
         public EntrySorter(int column)
         {
-            this.Column = column;
-            this.Direction = false;
+            Column = column;
+            Direction = false;
         }
 
         public int Compare(object x, object y)
@@ -755,8 +850,9 @@ public partial class MainForm : Form
 
             if (Column > itemX?.SubItems.Count || Column > itemY?.SubItems.Count)
             {
-                if (this.Direction)
+                if (Direction)
                     return -1;
+
                 return 1;
             }
 
@@ -767,15 +863,17 @@ public partial class MainForm : Form
             int val = long.TryParse(iX, out long nX) && long.TryParse(iY, out long nY)
                 ? nX.CompareTo(nY)
                 : Math.Sign(string.Compare(iX, iY, StringComparison.CurrentCultureIgnoreCase));
-            if (this.Direction)
+
+            if (Direction)
                 return val * -1;
+
             return val;
 
         }
 
         public void Swap()
         {
-            this.Direction = !this.Direction;
+            Direction = !Direction;
         }
     }
 

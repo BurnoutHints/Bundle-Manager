@@ -21,12 +21,13 @@ public class EntryBlock
         set
         {
             field = value;
-            _data = null;
+            data = null;
         }
     }
 
     // RawData inflated once, as the list, handlers and saving all read Data repeatedly
-    private byte[] _data;
+    private byte[] data;
+
     public byte[] Data
     {
         get
@@ -35,15 +36,18 @@ public class EntryBlock
                 return null;
 
             if (Compressed)
-                return _data ??= RawData.Decompress();
+                return data ??= RawData.Decompress();
 
             return RawData;
         }
         set
         {
-            RawData = Compressed ? value.Compress() : value;
+            RawData = Compressed
+                ? value.Compress()
+                : value;
+
             if (Compressed)
-                _data = value;
+                data = value;
 
             UncompressedSize = (uint)value.Length;
             CompressedSize = (uint)RawData.Length;
@@ -75,7 +79,12 @@ public struct Dependency
 
     public static Dependency Read(BinaryReader2 br)
     {
-        Dependency dep = new() { ID = br.ReadUInt64(), EntryPointerOffset = br.ReadUInt32() };
+        Dependency dep = new()
+        {
+            ID = br.ReadUInt64(),
+            EntryPointerOffset = br.ReadUInt32()
+        };
+
         br.ReadUInt32(); // Padding, not always zero on console
         return dep;
     }
@@ -91,8 +100,10 @@ public struct Dependency
     {
         MemoryStream ms = new();
         BinaryWriter2 bw = new(ms, bigEndian);
+
         foreach (Dependency dep in imports)
             dep.Write(bw);
+
         return ms.ToArray();
     }
 
@@ -104,8 +115,10 @@ public struct Dependency
         // Compare id and offset only, padding isn't always zero on console
         int start = data.Length - table.Length;
         bool present = start >= 0;
+
         for (int i = 0; present && i < table.Length; i++)
             present = i % Size >= 12 || data[start + i] == table[i];
+
         return present;
     }
 
@@ -149,7 +162,7 @@ public struct Dependency
 
         // Drop leading records until the last pointer slot fits before the table
         while (imports.Count > 0
-            && imports[^1].EntryPointerOffset + pointerSize > data.Length - imports.Count * Size)
+                    && imports[^1].EntryPointerOffset + pointerSize > data.Length - imports.Count * Size)
             imports.RemoveAt(0);
 
         return imports;
@@ -165,8 +178,8 @@ public struct DebugInfo
 public class BundleEntry
 {
     public BundleArchive Archive;
-    //public BundleReference Archive;
 
+    //public BundleReference Archive;
     public int Index;
 
     public ulong ID;
@@ -179,12 +192,15 @@ public class BundleEntry
     public EntryBlock[] EntryBlocks;
 
     public bool HasPrimary => HasSection(0);
+
     public bool HasSecondary => HasSection(1);
+
     public bool HasThird => HasSection(2);
 
     public EntryType Type;
 
     public BundlePlatform Platform;
+
     public bool Console => Platform == BundlePlatform.X360 || Platform == BundlePlatform.PS3;
 
     public bool Dirty;
@@ -192,6 +208,7 @@ public class BundleEntry
     public BundleEntry(BundleArchive archive)
     {
         Archive = archive;
+
         /*Archive = new BundleReference();
         Archive.Path = archive.Path;
         Archive.EntryCount = (uint)archive.Entries.Count;*/
@@ -201,7 +218,11 @@ public class BundleEntry
     public ulong ImportID => Imports().Aggregate(0UL, (id, dep) => id | dep.ID);
 
     // Secondary data is memory type 2 on PS3 and 1 elsewhere
-    public int SecondaryBlock => HasSection(1) ? 1 : (HasSection(2) || Platform == BundlePlatform.PS3) ? 2 : 1;
+    public int SecondaryBlock => HasSection(1)
+        ? 1
+        : (HasSection(2) || Platform == BundlePlatform.PS3)
+            ? 2
+            : 1;
 
     public bool HasSection(int section)
     {
@@ -217,7 +238,9 @@ public class BundleEntry
         if (EntryBlocks == null)
             return null;
 
-        return new MemoryStream(EntryBlocks[body ? 1 : 0].Data, false);
+        return new(EntryBlocks[body
+            ? 1
+            : 0].Data, false);
     }
 
     // The import table: the bundle's own list (BND1), or the one at the end of primary data
@@ -229,8 +252,10 @@ public class BundleEntry
         List<Dependency> imports = [];
         using BinaryReader2 br = new(MakeStream(), Console);
         br.BaseStream.Position = DependenciesListOffset;
+
         for (int i = 0; i < DependencyCount; i++)
             imports.Add(Dependency.Read(br));
+
         return imports;
     }
 
@@ -240,7 +265,9 @@ public class BundleEntry
     public byte[] GetPrimaryWithoutImports()
     {
         byte[] data = EntryBlocks[0].Data;
-        return DependencyCount > 0 && Dependencies.Count == 0 ? data[..DependenciesListOffset] : data;
+        return DependencyCount > 0 && Dependencies.Count == 0
+            ? data[..DependenciesListOffset]
+            : data;
     }
 
     // Replaces primary data, and puts the import table at its end
@@ -250,25 +277,31 @@ public class BundleEntry
         EntryBlocks[0].Data = data;
         Dependencies.Clear(); // A BND1 import list would hide the table
         DependencyCount = (short)imports.Count;
-        DependenciesListOffset = imports.Count > 0 ? data.Length - imports.Count * Dependency.Size : 0;
+        DependenciesListOffset = imports.Count > 0
+            ? data.Length - imports.Count * Dependency.Size
+            : 0;
         Dirty = true;
     }
 
     public List<BundleDependency> GetDependencies()
     {
         List<BundleDependency> result = [];
+
         foreach (Dependency dep in Imports())
         {
             // TODO: look in other bundles through BundleCache.GetFileByEntryID
             int index = Archive.Entries.FindLastIndex(e => e.ID == dep.ID);
-            result.Add(new BundleDependency
+            result.Add(new()
             {
                 EntryID = dep.ID,
                 EntryPointerOffset = (int)dep.EntryPointerOffset,
                 EntryIndex = Math.Max(index, 0),
-                Entry = index >= 0 ? Archive.Entries[index] : null
+                Entry = index >= 0
+                    ? Archive.Entries[index]
+                    : null
             });
         }
+
         return result;
     }
 

@@ -55,19 +55,21 @@ public static class OBJImporter
                 if (line.StartsWith("v "))
                 {
                     string[] split = line.Split([' '], StringSplitOptions.RemoveEmptyEntries);
+
                     if (split.Length < 4)
                         throw new ReadFailedError("Invalid Vertex: " + line);
 
                     Utilities.Parse(split[1], false, out float x);
                     Utilities.Parse(split[2], false, out float y);
                     Utilities.Parse(split[3], false, out float z);
-                    
+
                     // Add to global vertices as we might not have a mesh yet.
-                    globalVertices.Add(new Vector3(x, y, z));
+                    globalVertices.Add(new(x, y, z));
                 }
                 else if (line.StartsWith("vt "))
                 {
                     string[] split = line.Split([' '], StringSplitOptions.RemoveEmptyEntries);
+
                     if (split.Length < 3)
                         throw new ReadFailedError("Invalid UV: " + line);
 
@@ -75,11 +77,12 @@ public static class OBJImporter
                     Utilities.Parse(split[2], false, out float v);
 
                     // Add to global uvs as we might not have a mesh yet.
-                    globalUVs.Add(new Vector2(u, v));
+                    globalUVs.Add(new(u, v));
                 }
                 else if (line.StartsWith("f "))
                 {
                     string[] split = line.Split([' '], StringSplitOptions.RemoveEmptyEntries);
+
                     if (split.Length < 4)
                         throw new ReadFailedError("Invalid Face: " + line);
 
@@ -94,6 +97,7 @@ public static class OBJImporter
                     bool isQuad = false;
                     uint v4 = 0;
                     uint uv4 = 1;
+
                     if (split.Length > 5)
                     {
                         isQuad = true;
@@ -119,23 +123,27 @@ public static class OBJImporter
                     v1--;
                     v2--;
                     v3--;
+
                     if (isQuad)
                         v4--;
+
                     uv1--;
                     uv2--;
                     uv3--;
+
                     if (isQuad)
                         uv4--;
 
                     Face face;
+
                     if (isQuad)
                     {
-                        face = new Face([v1 - startIndex, v2 - startIndex, v3 - startIndex, v4 - startUVIndex],
+                        face = new([v1 - startIndex, v2 - startIndex, v3 - startIndex, v4 - startUVIndex],
                             [uv1 - startUVIndex, uv2 - startUVIndex, uv3 - startUVIndex, uv4 - startUVIndex], lastMaterial);
                     }
                     else
                     {
-                        face = new Face([v1 - startIndex, v2 - startIndex, v3 - startIndex],
+                        face = new([v1 - startIndex, v2 - startIndex, v3 - startIndex],
                             [uv1 - startUVIndex, uv2 - startUVIndex, uv3 - startUVIndex], lastMaterial);
                     }
 
@@ -143,30 +151,36 @@ public static class OBJImporter
                     // so we should just make one here.
                     if (currentMesh == -1)
                     {
-                        result.Meshes.Add(new GenericMesh());
+                        result.Meshes.Add(new());
                         currentMesh++;
                     }
 
                     while (globalUVs.Count <= uv1 || globalUVs.Count <= uv2 || globalUVs.Count <= uv3 || (isQuad && globalUVs.Count <= uv4))
                     {
-                        globalUVs.Add(new Vector2(0, 0));
+                        globalUVs.Add(new(0, 0));
                     }
 
                     if (!result.Meshes[currentMesh].UVs.ContainsKey(face.UVIndices[0]))
                         result.Meshes[currentMesh].UVs.Add(face.UVIndices[0], globalUVs[(int)uv1]);
+
                     if (!result.Meshes[currentMesh].UVs.ContainsKey(face.UVIndices[1]))
                         result.Meshes[currentMesh].UVs.Add(face.UVIndices[1], globalUVs[(int)uv2]);
+
                     if (!result.Meshes[currentMesh].UVs.ContainsKey(face.UVIndices[2]))
                         result.Meshes[currentMesh].UVs.Add(face.UVIndices[2], globalUVs[(int)uv3]);
+
                     if (isQuad && (!result.Meshes[currentMesh].UVs.ContainsKey(face.UVIndices[3])))
                         result.Meshes[currentMesh].UVs.Add(face.UVIndices[3], globalUVs[(int)uv4]);
 
                     if (!result.Meshes[currentMesh].Vertices.ContainsKey(face.Indices[0]))
                         result.Meshes[currentMesh].Vertices.Add(face.Indices[0], globalVertices[(int)v1]);
+
                     if (!result.Meshes[currentMesh].Vertices.ContainsKey(face.Indices[1]))
                         result.Meshes[currentMesh].Vertices.Add(face.Indices[1], globalVertices[(int)v2]);
+
                     if (!result.Meshes[currentMesh].Vertices.ContainsKey(face.Indices[2]))
                         result.Meshes[currentMesh].Vertices.Add(face.Indices[2], globalVertices[(int)v3]);
+
                     if (isQuad && (!result.Meshes[currentMesh].Vertices.ContainsKey(face.Indices[3])))
                         result.Meshes[currentMesh].Vertices.Add(face.Indices[3], globalVertices[(int)v4]);
 
@@ -175,21 +189,25 @@ public static class OBJImporter
                 else if (line.StartsWith("usemtl "))
                 {
                     string[] split = line.Split([' '], StringSplitOptions.RemoveEmptyEntries);
+
                     if (split.Length < 2)
                         throw new ReadFailedError("Invalid Material: " + line);
-                    lastMaterial = new Material(split[1], Color.White);
+
+                    lastMaterial = new(split[1], Color.White);
                 }
                 else if (line.StartsWith("g "))
                 {
                     string meshName = "";
                     string[] split = line.Split([' '], StringSplitOptions.RemoveEmptyEntries);
+
                     if (split.Length >= 2)
                         meshName = split[1];
-                    result.Meshes.Add(new GenericMesh(meshName));
+
+                    result.Meshes.Add(new(meshName));
                     currentMesh++;
 
-                    startIndex = (uint) globalVertices.Count;
-                    startUVIndex = (uint) globalUVs.Count;
+                    startIndex = (uint)globalVertices.Count;
+                    startUVIndex = (uint)globalUVs.Count;
                 }
             }
         }
@@ -202,7 +220,7 @@ public static class OBJImporter
             sr.Close();
             ms.Close();
         }
-        
+
         return result;
     }
 }

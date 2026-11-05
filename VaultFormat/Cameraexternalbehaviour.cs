@@ -8,31 +8,50 @@ namespace VaultFormat;
 public class Cameraexternalbehaviour : IAttribute
 {
     public AttributeHeader header { get; set; }
+
     public SizeAndPositionInformation info { get; set; }
+
     public float ZDistanceScale { get; set; }
+
     public float ZAndTiltCutoffSpeedMPH { get; set; }
+
     public float YawSpring { get; set; }
+
     public float TiltCameraScale { get; set; }
+
     public float TiltAroundCar { get; set; }
+
     public float SlideZOffsetMax { get; set; }
+
     public float SlideYScale { get; set; }
+
     public float SlideXScale { get; set; }
+
     public float PivotZOffset { get; set; }
+
     public float PivotLength { get; set; }
+
     public float PivotHeight { get; set; }
+
     public float PitchSpring { get; set; }
+
     public float FieldOfView { get; set; }
+
     public float DriftYawSpring { get; set; }
+
     public float DownAngle { get; set; }
+
     public float BoostFieldOfViewZoom { get; set; }
+
     public float BoostFieldOfView { get; set; }
+
     public Cameraexternalbehaviour(SizeAndPositionInformation chunk, AttributeHeader dataChunk)
     {
         header = dataChunk;
         info = chunk;
     }
 
-    public int getDataSize()
+    public int GetDataSize()
     {
         List<byte[]> bytes =
         [
@@ -57,12 +76,12 @@ public class Cameraexternalbehaviour : IAttribute
         return bytes.SelectMany(i => i).Count();
     }
 
-    public AttributeHeader getHeader()
+    public AttributeHeader GetHeader()
     {
         return header;
     }
 
-    public SizeAndPositionInformation getInfo()
+    public SizeAndPositionInformation GetInfo()
     {
         return info;
     }

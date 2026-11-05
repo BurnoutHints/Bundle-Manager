@@ -7,13 +7,15 @@ namespace BaseHandlers;
 
 public class BasePlugin : IPlugin
 {
-    public string Id => "baseplugin";
+    public string ID => "baseplugin";
+
     public string Name => "Base Resource Handlers";
 
     public static void Init()
     {
         EntryTypeRegistry.Register(EntryType.Renderable, new Renderable());
         EntryTypeRegistry.Register(EntryType.EntryList, new IDList());
+
         //EntryTypeRegistry.Register(EntryType.AptData, new AptData());
         EntryTypeRegistry.Register(EntryType.InstanceList, new InstanceList());
         EntryTypeRegistry.Register(EntryType.TrafficData, new Traffic());

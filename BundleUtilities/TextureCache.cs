@@ -7,34 +7,35 @@ namespace BundleUtilities;
 // Locked, as entries load on a worker thread while MainForm resets the cache on the UI thread
 public static class TextureCache
 {
-    private static readonly Dictionary<ulong, Image> _cachedTextures = [];
-    private static readonly Lock _lock = new();
+    private static readonly Dictionary<ulong, Image> cachedTextures = [];
+    private static readonly Lock cacheLock = new();
 
     public static void ResetCache()
     {
-        lock (_lock)
+        lock (cacheLock)
         {
-            foreach (Image img in _cachedTextures.Values)
+            foreach (Image img in cachedTextures.Values)
                 img?.Dispose();
-            _cachedTextures.Clear();
+
+            cachedTextures.Clear();
         }
     }
 
     public static void AddToCache(ulong id, Image image)
     {
-        lock (_lock)
-            _cachedTextures[id] = image;
+        lock (cacheLock)
+            cachedTextures[id] = image;
     }
 
     public static bool Contains(ulong key)
     {
-        lock (_lock)
-            return _cachedTextures.ContainsKey(key);
+        lock (cacheLock)
+            return cachedTextures.ContainsKey(key);
     }
 
     public static Image GetTexture(ulong key)
     {
-        lock (_lock)
-            return _cachedTextures[key];
+        lock (cacheLock)
+            return cachedTextures[key];
     }
 }

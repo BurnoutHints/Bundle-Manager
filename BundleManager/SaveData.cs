@@ -11,13 +11,14 @@ public static class SaveData
 
     public static List<string> RecentPaths = [];
 
-    private static bool _initialized;
+    private static bool initialized;
 
     public static void Init()
     {
-        if (_initialized)
+        if (initialized)
             return;
-        _initialized = true;
+
+        initialized = true;
 
         if (!Directory.Exists(SaveFolder))
             Directory.CreateDirectory(SaveFolder);
@@ -38,6 +39,7 @@ public static class SaveData
         while (!sr.EndOfStream)
         {
             string line = sr.ReadLine();
+
             if (line != null && line.Trim().Length > 0)
                 RecentPaths.Add(line);
         }
@@ -66,9 +68,12 @@ public static class SaveData
     public static void AddRecentPath(string path)
     {
         Load();
+
         if (RecentPaths.Contains(path))
             RecentPaths.Remove(path);
+
         RecentPaths.Add(path);
+
         if (RecentPaths.Count > 10)
             RecentPaths.RemoveAt(0);
     }

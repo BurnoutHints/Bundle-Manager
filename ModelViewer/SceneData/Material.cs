@@ -6,8 +6,11 @@ namespace ModelViewer.SceneData;
 public class Material
 {
     public string Name;
+
     public Image DiffuseMap { get; set; }
+
     public Image NormalMap { get; set; }
+
     public Image SpecularMap { get; set; }
 
     public Color Color { get; set; }
@@ -35,10 +38,18 @@ public class Material
     {
         unchecked
         {
-            var hashCode = (Name != null ? Name.GetHashCode() : 0);
-            hashCode = (hashCode * 397) ^ (DiffuseMap != null ? DiffuseMap.GetHashCode() : 0);
-            hashCode = (hashCode * 397) ^ (NormalMap != null ? NormalMap.GetHashCode() : 0);
-            hashCode = (hashCode * 397) ^ (SpecularMap != null ? SpecularMap.GetHashCode() : 0);
+            int hashCode = (Name != null
+                ? Name.GetHashCode()
+                : 0);
+            hashCode = (hashCode * 397) ^ (DiffuseMap != null
+                ? DiffuseMap.GetHashCode()
+                : 0);
+            hashCode = (hashCode * 397) ^ (NormalMap != null
+                ? NormalMap.GetHashCode()
+                : 0);
+            hashCode = (hashCode * 397) ^ (SpecularMap != null
+                ? SpecularMap.GetHashCode()
+                : 0);
             hashCode = (hashCode * 397) ^ Color.GetHashCode();
             return hashCode;
         }

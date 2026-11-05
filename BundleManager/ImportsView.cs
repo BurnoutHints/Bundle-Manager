@@ -11,7 +11,7 @@ namespace BundleManager;
 
 public class ImportsView : UserControl
 {
-    private const int OffsetColumn = 0, IdColumn = 1, ResourceColumn = 2;
+    private const int OffsetColumn = 0, IDColumn = 1, ResourceColumn = 2;
     private const int PreviewRows = 8;
 
     private readonly DataGridView grid;
@@ -22,9 +22,13 @@ public class ImportsView : UserControl
 
     public event Action<BundleEntry> OpenEntry;
 
+    public event Action Changed;
+
+    public bool CommitEdit() => grid.EndEdit();
+
     public ImportsView()
     {
-        grid = new DataGridView
+        grid = new()
         {
             Dock = DockStyle.Fill,
             AllowUserToAddRows = false,
@@ -36,9 +40,28 @@ public class ImportsView : UserControl
             AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
             BackgroundColor = SystemColors.Window
         };
-        grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Offset", ToolTipText = "Where the pointer to the resource goes in the primary data.", FillWeight = 15, SortMode = DataGridViewColumnSortMode.NotSortable });
-        grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "ID", ToolTipText = "ID of the resource it points to.", FillWeight = 15, SortMode = DataGridViewColumnSortMode.NotSortable });
-        grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Resource", ToolTipText = "Click a resource in this bundle to open it.", ReadOnly = true, FillWeight = 70, SortMode = DataGridViewColumnSortMode.NotSortable });
+        grid.Columns.Add(new DataGridViewTextBoxColumn()
+        {
+            HeaderText = "Offset",
+            ToolTipText = "Where the pointer to the resource goes in the primary data.",
+            FillWeight = 15,
+            SortMode = DataGridViewColumnSortMode.NotSortable
+        });
+        grid.Columns.Add(new DataGridViewTextBoxColumn()
+        {
+            HeaderText = "ID",
+            ToolTipText = "ID of the resource it points to.",
+            FillWeight = 15,
+            SortMode = DataGridViewColumnSortMode.NotSortable
+        });
+        grid.Columns.Add(new DataGridViewTextBoxColumn()
+        {
+            HeaderText = "Resource",
+            ToolTipText = "Click a resource in this bundle to open it.",
+            ReadOnly = true,
+            FillWeight = 70,
+            SortMode = DataGridViewColumnSortMode.NotSortable
+        });
 
         grid.CellEndEdit += (_, e) => Apply(e.RowIndex, e.ColumnIndex);
         grid.CellContentClick += (_, e) =>
@@ -49,12 +72,16 @@ public class ImportsView : UserControl
         grid.CurrentCellChanged += (_, _) => ShowPointer();
         grid.DataError += (_, e) => e.ThrowException = false;
 
-        preview = new HexView { Dock = DockStyle.Bottom, Font = new Font("Courier New", 10F) };
+        preview = new()
+        {
+            Dock = DockStyle.Bottom,
+            Font = new("Courier New", 10F)
+        };
         preview.Height = preview.Font.Height * PreviewRows + 12;
 
         Controls.Add(grid);
         Controls.Add(preview);
-        inferredFont = new Font(grid.Font, FontStyle.Italic);
+        inferredFont = new(grid.Font, FontStyle.Italic);
     }
 
     [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -67,13 +94,17 @@ public class ImportsView : UserControl
             imports = entry.GetImports();
             preview.HexData = entry.GetPrimaryWithoutImports();
             grid.Rows.Clear();
+
             foreach (Dependency _ in imports)
                 FillRow(grid.Rows.Add());
+
             ShowPointer();
         }
     }
 
-    private int PointerSize => entry.Platform == BundlePlatform.PCx64 ? 8 : 4;
+    private int PointerSize => entry.Platform == BundlePlatform.PCx64
+        ? 8
+        : 4;
 
     private BundleEntry Target(ulong id) => entry.Archive?.Entries.FindLast(e => e.ID == id);
 
@@ -82,35 +113,56 @@ public class ImportsView : UserControl
         Dependency import = imports[index];
         DataGridViewRow row = grid.Rows[index];
         row.Cells[OffsetColumn].Value = $"0x{import.EntryPointerOffset:X}";
-        row.Cells[OffsetColumn].ErrorText = import.EntryPointerOffset + PointerSize > preview.HexData.Length ? "The pointer goes past the end of the primary data." : "";
-        row.Cells[IdColumn].Value = $"0x{import.ID:X8}";
-        row.Cells[IdColumn].ErrorText = "";
+        row.Cells[OffsetColumn].ErrorText = import.EntryPointerOffset + PointerSize > preview.HexData.Length
+            ? "The pointer goes past the end of the primary data."
+            : "";
+        row.Cells[IDColumn].Value = $"0x{import.ID:X8}";
+        row.Cells[IDColumn].ErrorText = "";
 
         // Only resources that can be opened are links
         BundleEntry target = Target(import.ID);
-        DataGridViewCell cell = target != null ? new DataGridViewLinkCell { TrackVisitedState = false } : new DataGridViewTextBoxCell();
+        DataGridViewCell cell = target != null
+            ? new DataGridViewLinkCell()
+            {
+                TrackVisitedState = false
+            }
+            : new DataGridViewTextBoxCell();
+
         row.Cells[ResourceColumn] = cell;
         (cell.Value, bool inferred) = Describe(import.ID, target);
-        cell.Style.Font = inferred ? inferredFont : null;
-        cell.ToolTipText = inferred ? "Likely name for this resource" : "";
+        cell.Style.Font = inferred
+            ? inferredFont
+            : null;
+        cell.ToolTipText = inferred
+            ? "Likely name for this resource"
+            : "";
     }
 
     // Names no bundle stores are italic, as in the resource list
     private (string Text, bool Inferred) Describe(ulong id, BundleEntry target)
     {
-        string name = target != null ? target.DebugInfo.Name : BundleCache.GetEntryDebugInfoByID(id).Name;
+        string name = target != null
+            ? target.DebugInfo.Name
+            : BundleCache.GetEntryDebugInfoByID(id).Name;
         bool inferred = string.IsNullOrWhiteSpace(name);
+
         if (inferred)
             name = ResourceDB.Lookup(id) ?? entry.Archive?.GuessName(id);
+
         inferred &= !string.IsNullOrEmpty(name);
 
-        EntryType? type = target?.Type ?? BundleCache.GetInfoByEntryID(id)?.Type;
-        string label = string.Join(" ", new[] { type?.ToString(), name }.Where(s => !string.IsNullOrEmpty(s)));
-        if (target != null)
-            return ($"{label} (#{target.Index:D3})", inferred);
+        EntryType? currentType = target?.Type ?? BundleCache.GetInfoByEntryID(id)?.Type;
+        string label = string.Join(" ", ((string[])[currentType?.ToString(), name]).Where(s => !string.IsNullOrEmpty(s)));
 
-        string file = BundleCache.GetFileByEntryID(id);
-        return ((file != null ? $"In {BundleCache.GetRelativePath(file)}" : "Not in this bundle") + (label != "" ? ": " + label : ""), inferred);
+        if (target != null)
+            return ($"{label} (#{target.Index:D3})", inferred: inferred);
+
+        string currentFile = BundleCache.GetFileByEntryID(id);
+        return ((currentFile != null
+            ? $"In {BundleCache.GetRelativePath(currentFile)}"
+            : "Not in this bundle") + (label != ""
+            ? ": " + label
+            : ""), inferred: inferred);
     }
 
     // A value that isn't usable goes back to what it was, with the reason on the cell
@@ -118,11 +170,12 @@ public class ImportsView : UserControl
     {
         Dependency import = imports[index];
         string error = null;
+
         if (!ResourceImport.TryParseHex((grid.Rows[index].Cells[column].Value as string ?? "").Trim(), out uint value))
             error = "Enter a hexadecimal number.";
         else if (column == OffsetColumn && value + PointerSize > preview.HexData.Length)
             error = $"The pointer has to fit in the primary data, which is 0x{preview.HexData.Length:X} bytes.";
-        else if (column == IdColumn && value == 0)
+        else if (column == IDColumn && value == 0)
             error = "Enter the ID of a resource.";
         else if (column == OffsetColumn)
             import.EntryPointerOffset = value;
@@ -133,13 +186,16 @@ public class ImportsView : UserControl
         {
             imports[index] = import;
             entry.SetPrimary(preview.HexData, imports);
+            Changed?.Invoke();
         }
 
         BeginInvoke(() => // Not while the grid is still ending the edit
         {
             FillRow(index);
+
             if (error != null)
                 grid.Rows[index].Cells[column].ErrorText = error;
+
             ShowPointer();
         });
     }

@@ -43,6 +43,7 @@ public class RefSpec
         bytes.Add([.. padding]);
         return [.. bytes.SelectMany(i => i)];
     }
+
     public void Write(BinaryWriter2 bw)
     {
         bw.Write(ClassKey);
@@ -50,6 +51,5 @@ public class RefSpec
         bw.Write(CollectionPtr);
         bw.WriteUniquePadding(4);
     }
-
 
 }

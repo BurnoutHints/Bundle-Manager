@@ -8,22 +8,39 @@ namespace VaultFormat;
 public class Physicsvehicleboostattribs : IAttribute
 {
     public AttributeHeader header { get; set; }
+
     public SizeAndPositionInformation info { get; set; }
+
     public float MaxBoostSpeed { get; set; }
+
     public int BoostRule { get; set; }
+
     public float BoostKickTime { get; set; }
+
     public float BoostKickMinTime { get; set; }
+
     public float BoostKickMaxTime { get; set; }
+
     public float BoostKickMaxStartSpeed { get; set; }
+
     public float BoostKickHeightOffset { get; set; }
+
     public float BoostKickAcceleration { get; set; }
+
     public float BoostKick { get; set; }
+
     public float BoostHeightOffset { get; set; }
+
     public float BoostBase { get; set; }
+
     public float BoostAcceleration { get; set; }
+
     public float BlueMaxBoostSpeed { get; set; }
+
     public float BlueBoostKickTime { get; set; }
+
     public float BlueBoostKick { get; set; }
+
     public float BlueBoostBase { get; set; }
 
     public Physicsvehicleboostattribs(SizeAndPositionInformation chunk, AttributeHeader dataChunk)
@@ -32,7 +49,7 @@ public class Physicsvehicleboostattribs : IAttribute
         info = chunk;
     }
 
-    public int getDataSize()
+    public int GetDataSize()
     {
         List<byte[]> bytes =
         [
@@ -57,12 +74,12 @@ public class Physicsvehicleboostattribs : IAttribute
         return CountingUtilities.AddPadding(bytes);
     }
 
-    public AttributeHeader getHeader()
+    public AttributeHeader GetHeader()
     {
         return header;
     }
 
-    public SizeAndPositionInformation getInfo()
+    public SizeAndPositionInformation GetInfo()
     {
         return info;
     }

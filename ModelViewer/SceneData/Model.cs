@@ -5,22 +5,22 @@ namespace ModelViewer.SceneData;
 
 public class Model
 {
-    internal List<Mesh> Meshes;
+    internal List<Mesh> meshes;
 
-    public int MeshCount => Meshes.Count;
+    public int MeshCount => meshes.Count;
 
     public Model(params Mesh[] meshes)
     {
-        Meshes = [.. meshes];
+        meshes = [.. meshes];
     }
 
     public Model Copy()
     {
         Model result = new();
 
-        foreach (Mesh mesh in Meshes)
+        foreach (Mesh mesh in meshes)
         {
-            result.Meshes.Add(mesh.Copy());
+            result.meshes.Add(mesh.Copy());
         }
 
         return result;
@@ -28,31 +28,31 @@ public class Model
 
     public void AddMesh(Mesh mesh)
     {
-        Meshes.Add(mesh);
+        meshes.Add(mesh);
     }
 
     public void RemoveMesh(int index)
     {
-        Meshes.RemoveAt(index);
+        meshes.RemoveAt(index);
     }
 
     public void RemoveMesh(Mesh mesh)
     {
-        Meshes.Remove(mesh);
+        meshes.Remove(mesh);
     }
 
     public bool ContainsMesh(Mesh mesh)
     {
-        return Meshes.Contains(mesh);
+        return meshes.Contains(mesh);
     }
 
     public Model Transformed(Matrix4 transform)
     {
         Model result = new();
 
-        foreach (Mesh mesh in Meshes)
+        foreach (Mesh mesh in meshes)
         {
-            result.Meshes.Add(mesh.Transformed(transform));
+            result.meshes.Add(mesh.Transformed(transform));
         }
 
         return result;
@@ -61,8 +61,8 @@ public class Model
     public Mesh MergeMeshes()
     {
         Mesh result = new();
-        
-        foreach (Mesh mesh in Meshes)
+
+        foreach (Mesh mesh in meshes)
         {
             result = result.Merged(mesh);
         }
@@ -72,27 +72,27 @@ public class Model
 
     public bool InitGraphics()
     {
-        foreach (Mesh mesh in Meshes)
+        foreach (Mesh mesh in meshes)
             mesh.InitGraphics();
-        
+
         return true;
     }
 
     public void Update()
     {
-        foreach (Mesh mesh in Meshes)
+        foreach (Mesh mesh in meshes)
             mesh.Update();
     }
 
     public void Render(ICamera camera, Matrix4 transform)
     {
-        foreach (Mesh mesh in Meshes)
+        foreach (Mesh mesh in meshes)
             mesh.Render(camera, transform);
     }
 
     public void Dispose()
     {
-        foreach (Mesh mesh in Meshes)
+        foreach (Mesh mesh in meshes)
             mesh.Dispose();
     }
 }

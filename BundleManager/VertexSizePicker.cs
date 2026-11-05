@@ -15,6 +15,7 @@ public partial class VertexSizePicker : Form
 
             if (!int.TryParse(val, out int result))
                 return -1;
+
             return result;
         }
     }
@@ -28,10 +29,12 @@ public partial class VertexSizePicker : Form
             field = value;
 
             cboSelect.Items.Clear();
+
             foreach (int size in field)
             {
                 cboSelect.Items.Add(size);
             }
+
             cboSelect.SelectedIndex = 0;
         }
     }

@@ -6,7 +6,7 @@ public static class BitScan
 {
     private const ulong DeBruijnSequence = 0x37E84A99DAE458F;
 
-    private static readonly int[] MultiplyDeBruijnBitPosition =
+    private static readonly int[] multiplyDeBruijnBitPosition =
     [
     0, 1, 17, 2, 18, 50, 3, 57,
     47, 19, 22, 51, 29, 4, 33, 58,
@@ -24,16 +24,20 @@ public static class BitScan
     /// </summary>
     /// <param name="b">Target number.</param>
     /// <returns>Zero-based position of LSB (from right to left).</returns>
+
     public static int BitScanForward(ulong b)
     {
         Debug.Assert(b > 0, "Target number should not be zero");
-        return MultiplyDeBruijnBitPosition[((ulong)((long)b & -(long)b) * DeBruijnSequence) >> 58];
+        return multiplyDeBruijnBitPosition[((ulong)((long)b & -(long)b) * DeBruijnSequence) >> 58];
     }
 
     public static int BitScanReverse(uint mask)
     {
         int i;
-        for (i = 31; (mask >> i) == 0 && i >= 0; i--) ;
+
+        for (i = 31; (mask >> i) == 0 && i >= 0; i--)
+            ;
+
         return i;
     }
 }

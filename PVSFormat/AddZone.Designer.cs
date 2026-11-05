@@ -1,4 +1,4 @@
-﻿namespace PVSFormat
+namespace PVSFormat
 {
     partial class AddZone
     {

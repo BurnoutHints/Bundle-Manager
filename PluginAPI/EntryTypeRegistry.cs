@@ -6,7 +6,7 @@ namespace PluginAPI;
 
 public static class EntryTypeRegistry
 {
-    private static Dictionary<EntryType, IEntryData> _handlers = [];
+    private static Dictionary<EntryType, IEntryData> handlers = [];
 
     public static void Register(EntryType type, IEntryData handler)
     {
@@ -15,14 +15,16 @@ public static class EntryTypeRegistry
             Console.WriteLine("WARN: Handler for " + type.ToString() + " already registered!");
             return;
         }
-        _handlers.Add(type, handler);
+
+        handlers.Add(type, handler);
     }
 
     public static void Unregister(EntryType type)
     {
         if (!IsRegistered(type))
             return;
-        _handlers.Remove(type);
+
+        handlers.Remove(type);
     }
 
     public static IEntryData GetHandler(EntryType type)
@@ -30,11 +32,11 @@ public static class EntryTypeRegistry
         if (!IsRegistered(type))
             return null;
 
-        return _handlers[type];
+        return handlers[type];
     }
 
     public static bool IsRegistered(EntryType type)
     {
-        return _handlers.ContainsKey(type);
+        return handlers.ContainsKey(type);
     }
 }

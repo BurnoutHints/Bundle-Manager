@@ -20,6 +20,7 @@ public class Face
     public Face(uint[] indices, uint[] uvIndices = null, Material material = null) : this(material)
     {
         Indices.AddRange(indices);
+
         if (uvIndices != null)
             UVIndices.AddRange(uvIndices);
     }

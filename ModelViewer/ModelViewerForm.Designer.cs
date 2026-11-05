@@ -1,4 +1,4 @@
-﻿namespace ModelViewer
+namespace ModelViewer
 {
     partial class ModelViewerForm
     {

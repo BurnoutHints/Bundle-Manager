@@ -13,7 +13,7 @@ public class TextureState
 
     public TextureState()
     {
-        
+
     }
 
     public static TextureState Read(BundleEntry entry)
@@ -21,6 +21,7 @@ public class TextureState
         TextureState result = new();
 
         List<BundleDependency> dependencies = entry.GetDependencies();
+
         foreach (BundleDependency dependency in dependencies)
         {
             ulong id = dependency.EntryID;
@@ -46,11 +47,12 @@ public class TextureState
         }
 
         MemoryStream ms = entry.MakeStream();
-        BinaryReader2 br = new(ms);
-        br.BigEndian = entry.Console;
+        BinaryReader2 br = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         // TODO: Read Texture State
-
         br.Close();
         ms.Close();
 

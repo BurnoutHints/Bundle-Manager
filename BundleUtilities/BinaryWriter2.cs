@@ -66,7 +66,7 @@ public class BinaryWriter2 : BinaryWriter
     {
         if (BigEndian)
         {
-            var bytes = BitConverter.GetBytes(value);
+            byte[] bytes = BitConverter.GetBytes(value);
             Array.Reverse(bytes);
             base.Write(bytes);
         }
@@ -78,7 +78,7 @@ public class BinaryWriter2 : BinaryWriter
     {
         if (BigEndian)
         {
-            var bytes = BitConverter.GetBytes(value);
+            byte[] bytes = BitConverter.GetBytes(value);
             Array.Reverse(bytes);
             base.Write(bytes);
         }
@@ -90,6 +90,7 @@ public class BinaryWriter2 : BinaryWriter
     {
         if (BaseStream.Position % alignment == 0)
             return;
+
         BaseStream.Position = alignment * ((BaseStream.Position + (alignment - 1)) / alignment);
         BaseStream.Position--;
         Write((byte)0);
@@ -98,8 +99,10 @@ public class BinaryWriter2 : BinaryWriter
     public void WriteCStr(string value)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(value);
+
         for (int i = 0; i < bytes.Length; i++)
             Write(bytes[i]);
+
         Write((byte)0);
     }
 
@@ -124,10 +127,12 @@ public class BinaryWriter2 : BinaryWriter
     public void WritePadding()
     {
         long currentLength = BaseStream.Length;
+
         if (currentLength % 16 != 0)
         {
             for (int i = 0; i < (16 - currentLength % 16); i++)
                 Write((byte)0);
-        };
+        }
+
     }
 }

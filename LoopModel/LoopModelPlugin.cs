@@ -5,7 +5,8 @@ namespace LoopModel;
 
 public class LoopModelPlugin : IPlugin
 {
-    public string Id => "loopmodelplugin";
+    public string ID => "loopmodelplugin";
+
     public string Name => "LoopModel Resource Handler";
 
     public static void Init()

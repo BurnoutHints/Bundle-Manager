@@ -15,13 +15,16 @@ public class WheelListData : IEntryData
 
     public WheelListData()
     {
-        
+
     }
 
     public IEntryEditor GetEditor(BundleEntry entry)
     {
-        WheelListForm wheelList = new();
-        wheelList.List = this;
+        WheelListForm wheelList = new()
+        {
+            List = this
+        };
+
         wheelList.Edit += () =>
         {
             Write(entry);
@@ -40,8 +43,10 @@ public class WheelListData : IEntryData
         Clear();
 
         MemoryStream ms = new(entry.EntryBlocks[0].Data);
-        BinaryReader2 br = new(ms);
-        br.BigEndian = entry.Console;
+        BinaryReader2 br = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         NumWheels = br.ReadInt32();
         EntriesPtr = br.ReadInt32();
@@ -49,11 +54,12 @@ public class WheelListData : IEntryData
 
         for (int i = 0; i < NumWheels; i++)
         {
-            Wheel wheel = new();
-
-            wheel.Index = i;
-            wheel.ID = new EncryptedString(br.ReadUInt64());
-            wheel.Name = Encoding.ASCII.GetString(br.ReadBytes(64));
+            Wheel wheel = new()
+            {
+                Index = i,
+                ID = new(br.ReadUInt64()),
+                Name = Encoding.ASCII.GetString(br.ReadBytes(64))
+            };
 
             Entries.Add(wheel);
         }
@@ -66,8 +72,10 @@ public class WheelListData : IEntryData
     public bool Write(BundleEntry entry)
     {
         MemoryStream ms = new();
-        BinaryWriter2 bw = new(ms);
-        bw.BigEndian = entry.Console;
+        BinaryWriter2 bw = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         bw.Write(Entries.Count);
         bw.Write(EntriesPtr);

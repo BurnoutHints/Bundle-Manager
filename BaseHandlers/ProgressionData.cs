@@ -51,6 +51,7 @@ public struct LicenceData
     public byte Unknown61;
     public byte Unknown62;
     public byte Unknown63;
+
     // 4 bytes padding
     public EncryptedString VehicleUnlocked;
 }
@@ -103,8 +104,8 @@ public struct EventData
     public int UnknownF0; // 0
     public byte UnknownF4; // 0
     public byte UnknownF5; // 0, 1, 2 (0 for RR & SR)
-    // 2 byte padding
 
+    // 2 byte padding
     public override string ToString() => $"ID: {GameDBID}";
 }
 
@@ -286,8 +287,10 @@ public class ProgressionData : IEntryData
         Clear();
 
         MemoryStream ms = entry.MakeStream();
-        BinaryReader2 br = new(ms);
-        br.BigEndian = entry.Console;
+        BinaryReader2 br = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         FormatRevision = br.ReadInt32();
         FileSize = br.ReadUInt32();
@@ -310,124 +313,132 @@ public class ProgressionData : IEntryData
         PlayerOpponentsDataOffset = br.ReadUInt32();
         PlayerOpponentsDataCount = br.ReadInt32();
 
-
         br.BaseStream.Position = InitialCarIDListOffset;
+
         for (int i = 0; i < InitialCarIDCount; i++)
         {
-            InitialCarIDEntries.Add(new EncryptedString(br.ReadUInt64()));
+            InitialCarIDEntries.Add(new(br.ReadUInt64()));
         }
 
-
         br.BaseStream.Position = LicenceDataOffset;
+
         for (int i = 0; i < LicenceDataCount; i++)
         {
-            LicenceData licenceData = new();
+            LicenceData licenceData = new()
+            {
+                Unknown00 = br.ReadSingle(),
+                Unknown04 = br.ReadSingle(),
+                Unknown08 = br.ReadSingle(),
+                Unknown0C = br.ReadSingle(),
+                Unknown10 = br.ReadSingle(),
+                Unknown14 = br.ReadSingle(),
+                Unknown18 = br.ReadSingle(),
+                Unknown1C = br.ReadSingle(),
+                Unknown20 = br.ReadSingle(),
+                Unknown24 = br.ReadSingle(),
+                GameDBID = br.ReadInt32(),
+                Unknown2C = br.ReadSingle(),
+                Unknown30 = br.ReadSingle(),
+                Unknown34 = br.ReadSingle(),
+                Unknown38 = br.ReadSingle(),
+                Unknown3C = br.ReadSingle(),
+                Unknown40 = br.ReadSingle(),
+                Unknown44 = br.ReadSingle(),
+                Unknown48 = br.ReadSingle(),
+                NumEventWinsRequired = br.ReadInt16(),
+                Unknown4E = br.ReadInt16(),
+                Unknown50 = br.ReadInt16(),
+                Unknown52 = br.ReadInt16(),
+                Unknown54 = br.ReadInt16(),
+                Unknown56 = br.ReadInt16(),
+                Unknown58 = br.ReadInt16(),
+                Unknown5A = br.ReadInt16(),
+                Unknown5C = br.ReadByte(),
+                Unknown5D = br.ReadByte(),
+                Unknown5E = br.ReadByte(),
+                Unknown5F = br.ReadByte(),
+                Unknown60 = br.ReadByte(),
+                Unknown61 = br.ReadByte(),
+                Unknown62 = br.ReadByte(),
+                Unknown63 = br.ReadByte()
+            };
 
-            licenceData.Unknown00 = br.ReadSingle();
-            licenceData.Unknown04 = br.ReadSingle();
-            licenceData.Unknown08 = br.ReadSingle();
-            licenceData.Unknown0C = br.ReadSingle();
-            licenceData.Unknown10 = br.ReadSingle();
-            licenceData.Unknown14 = br.ReadSingle();
-            licenceData.Unknown18 = br.ReadSingle();
-            licenceData.Unknown1C = br.ReadSingle();
-            licenceData.Unknown20 = br.ReadSingle();
-            licenceData.Unknown24 = br.ReadSingle();
-            licenceData.GameDBID = br.ReadInt32();
-            licenceData.Unknown2C = br.ReadSingle();
-            licenceData.Unknown30 = br.ReadSingle();
-            licenceData.Unknown34 = br.ReadSingle();
-            licenceData.Unknown38 = br.ReadSingle();
-            licenceData.Unknown3C = br.ReadSingle();
-            licenceData.Unknown40 = br.ReadSingle();
-            licenceData.Unknown44 = br.ReadSingle();
-            licenceData.Unknown48 = br.ReadSingle();
-            licenceData.NumEventWinsRequired = br.ReadInt16();
-            licenceData.Unknown4E = br.ReadInt16();
-            licenceData.Unknown50 = br.ReadInt16();
-            licenceData.Unknown52 = br.ReadInt16();
-            licenceData.Unknown54 = br.ReadInt16();
-            licenceData.Unknown56 = br.ReadInt16();
-            licenceData.Unknown58 = br.ReadInt16();
-            licenceData.Unknown5A = br.ReadInt16();
-            licenceData.Unknown5C = br.ReadByte();
-            licenceData.Unknown5D = br.ReadByte();
-            licenceData.Unknown5E = br.ReadByte();
-            licenceData.Unknown5F = br.ReadByte();
-            licenceData.Unknown60 = br.ReadByte();
-            licenceData.Unknown61 = br.ReadByte();
-            licenceData.Unknown62 = br.ReadByte();
-            licenceData.Unknown63 = br.ReadByte();
             br.BaseStream.Position += 4; // padding
-            licenceData.VehicleUnlocked = new EncryptedString(br.ReadUInt64());
-            
+            licenceData.VehicleUnlocked = new(br.ReadUInt64());
+
             LicenceDataEntries.Add(licenceData);
         }
 
-
         br.BaseStream.Position = EventJunctionOffset;
+
         for (int i = 0; i < EventJunctionCount; i++)
         {
-            EventJunction eventJunction = new();
+            EventJunction eventJunction = new()
+            {
+                GameDBID = br.ReadInt32(),
+                CarEventDataOffset = br.ReadUInt32(),
+                BTTEventDataOffset = br.ReadUInt32()
+            };
 
-            eventJunction.GameDBID = br.ReadInt32();
-            eventJunction.CarEventDataOffset = br.ReadUInt32();
-            eventJunction.BTTEventDataOffset = br.ReadUInt32();
             if (FormatRevision >= 44)
                 eventJunction.BikeEventDataOffset = br.ReadUInt32();
+
             eventJunction.UnknownGameDBID = br.ReadInt32();
 
             EventJunctionEntries.Add(eventJunction);
         }
 
-
         br.BaseStream.Position = EventDataOffset;
+
         for (int i = 0; i < EventDataCount; i++)
         {
             long origPosition = br.BaseStream.Position;
 
-            EventData eventData = new();
+            EventData eventData = new()
+            {
+                GameDBID = br.ReadInt32(),
+                AppearsWhen = br.ReadInt32(),
+                TrafficDensityMultiplier = br.ReadSingle(),
+                Unknown0C = br.ReadSingle(),
+                LockVehicleID = new(br.ReadUInt64()),
+                EventLandmarkDataOffset = br.ReadUInt32(),
+                EventLandmarkCount = br.ReadInt32(),
+                TargetTimeUnused = br.ReadSingle(),
+                TargetTime = br.ReadSingle(),
+                StuntRunTargetScoreTier1 = br.ReadInt32(),
+                StuntRunTargetScoreTier2 = br.ReadInt32(),
+                StuntRunTargetScoreTier3 = br.ReadInt32(),
+                StuntRunTargetScoreTier4 = br.ReadInt32(),
+                StuntRunTargetScoreTier5 = br.ReadInt32(),
+                StuntRunTargetScoreTier6 = br.ReadInt32(),
+                StuntRunTimeLimitTier1 = br.ReadSingle(),
+                StuntRunTimeLimitTier2 = br.ReadSingle(),
+                StuntRunTimeLimitTier3 = br.ReadSingle(),
+                StuntRunTimeLimitTier4 = br.ReadSingle(),
+                StuntRunTimeLimitTier5 = br.ReadSingle(),
+                StuntRunTimeLimitTier6 = br.ReadSingle(),
+                Unknown58 = br.ReadInt32(),
 
-            eventData.GameDBID = br.ReadInt32();
-            eventData.AppearsWhen = br.ReadInt32();
-            eventData.TrafficDensityMultiplier = br.ReadSingle();
-            eventData.Unknown0C = br.ReadSingle();
-            eventData.LockVehicleID = new EncryptedString(br.ReadUInt64());
-            eventData.EventLandmarkDataOffset = br.ReadUInt32();
-            eventData.EventLandmarkCount = br.ReadInt32();
-            eventData.TargetTimeUnused = br.ReadSingle();
-            eventData.TargetTime = br.ReadSingle();
-            eventData.StuntRunTargetScoreTier1 = br.ReadInt32();
-            eventData.StuntRunTargetScoreTier2 = br.ReadInt32();
-            eventData.StuntRunTargetScoreTier3 = br.ReadInt32();
-            eventData.StuntRunTargetScoreTier4 = br.ReadInt32();
-            eventData.StuntRunTargetScoreTier5 = br.ReadInt32();
-            eventData.StuntRunTargetScoreTier6 = br.ReadInt32();
-            eventData.StuntRunTimeLimitTier1 = br.ReadSingle();
-            eventData.StuntRunTimeLimitTier2 = br.ReadSingle();
-            eventData.StuntRunTimeLimitTier3 = br.ReadSingle();
-            eventData.StuntRunTimeLimitTier4 = br.ReadSingle();
-            eventData.StuntRunTimeLimitTier5 = br.ReadSingle();
-            eventData.StuntRunTimeLimitTier6 = br.ReadSingle();
-            eventData.Unknown58 = br.ReadInt32();
+                RivalData = new EventRivalData[7]
+            };
 
-            eventData.RivalData = new EventRivalData[7];
             for (int j = 0; j < 7; j++)
             {
-                EventRivalData rivalData = new();
-
-                rivalData.Unknown00 = br.ReadInt32();
-                rivalData.Unknown04 = br.ReadInt32();
-                rivalData.Unknown08 = br.ReadInt32();
-                rivalData.Unknown0C = br.ReadInt32();
-                rivalData.Unknown10 = br.ReadByte();
-                rivalData.Unknown11 = br.ReadByte();
-                rivalData.Unknown12 = br.ReadByte();
-                rivalData.Unknown13 = br.ReadByte();
+                EventRivalData rivalData = new()
+                {
+                    Unknown00 = br.ReadInt32(),
+                    Unknown04 = br.ReadInt32(),
+                    Unknown08 = br.ReadInt32(),
+                    Unknown0C = br.ReadInt32(),
+                    Unknown10 = br.ReadByte(),
+                    Unknown11 = br.ReadByte(),
+                    Unknown12 = br.ReadByte(),
+                    Unknown13 = br.ReadByte()
+                };
 
                 eventData.RivalData[j] = rivalData;
             }
-            
+
             eventData.RivalDataCount = br.ReadInt32();
             Array.Resize(ref eventData.RivalData, eventData.RivalDataCount);
 
@@ -443,22 +454,28 @@ public class ProgressionData : IEntryData
             long oldPos = br.BaseStream.Position;
             eventData.EventLandmarkData = new EventLandmarkData[eventData.EventLandmarkCount];
             br.BaseStream.Position = eventData.EventLandmarkDataOffset;
+
             for (int j = 0; j < eventData.EventLandmarkCount; j++)
             {
-                EventLandmarkData landmarkData = new();
+                EventLandmarkData landmarkData = new()
+                {
+                    TriggerID = br.ReadInt32(),
+                    NumAIGameDBIDs = br.ReadInt32()
+                };
 
-                landmarkData.TriggerID = br.ReadInt32();
-                landmarkData.NumAIGameDBIDs = br.ReadInt32();
                 landmarkData.AIGameDBIDs = new int[landmarkData.NumAIGameDBIDs];
+
                 for (int k = 0; k < 8; k++)
                 {
                     int gameDBID = br.ReadInt32();
+
                     if (k < landmarkData.NumAIGameDBIDs)
                         landmarkData.AIGameDBIDs[k] = gameDBID;
                 }
 
                 eventData.EventLandmarkData[j] = landmarkData;
             }
+
             br.BaseStream.Position = oldPos;
 
             EventDataEntries.Add((uint)origPosition, eventData);
@@ -470,129 +487,135 @@ public class ProgressionData : IEntryData
 
             if (junction.CarEventDataOffset != 0)
                 junction.CarEventData = EventDataEntries[junction.CarEventDataOffset];
+
             if (junction.BTTEventDataOffset != 0)
                 junction.BTTEventData = EventDataEntries[junction.BTTEventDataOffset];
+
             if (junction.BikeEventDataOffset != 0)
                 junction.BikeEventData = EventDataEntries[junction.BikeEventDataOffset];
 
             EventJunctionEntries[i] = junction;
         }
 
-
         br.BaseStream.Position = RivalOffset;
+
         for (int i = 0; i < RivalCount; i++)
         {
-            Rival rival = new();
-
-            rival.RivalID = br.ReadInt64();
-            rival.VehicleID = new EncryptedString(br.ReadUInt64());
-            rival.Unknown10 = br.ReadInt16();
-            rival.Unknown12 = br.ReadInt16();
-            rival.Unknown14 = br.ReadByte();
-            rival.Unknown15 = br.ReadByte();
-            rival.WinsUntilRoam = br.ReadByte();
-            rival.DoesNotRoam = br.ReadBoolean();
-            rival.Name = br.ReadLenString(0x20);
+            Rival rival = new()
+            {
+                RivalID = br.ReadInt64(),
+                VehicleID = new(br.ReadUInt64()),
+                Unknown10 = br.ReadInt16(),
+                Unknown12 = br.ReadInt16(),
+                Unknown14 = br.ReadByte(),
+                Unknown15 = br.ReadByte(),
+                WinsUntilRoam = br.ReadByte(),
+                DoesNotRoam = br.ReadBoolean(),
+                Name = br.ReadLenString(0x20)
+            };
 
             RivalEntries.Add(rival);
         }
 
-
         br.BaseStream.Position = Section6Offset;
+
         for (int i = 0; i < Section6Count; i++)
         {
-            ProgressionSection6Entry section6Entry = new();
-
-            section6Entry.Unknown00 = br.ReadSingle();
-            section6Entry.Unknown04 = br.ReadSingle();
-            section6Entry.Unknown08 = br.ReadSingle();
-            section6Entry.Unknown0C = br.ReadSingle();
-            section6Entry.Unknown10 = br.ReadSingle();
-            section6Entry.Unknown14 = br.ReadSingle();
-            section6Entry.Unknown18 = br.ReadSingle();
-            section6Entry.Unknown1C = br.ReadSingle();
-            section6Entry.Unknown20 = br.ReadSingle();
-            section6Entry.Unknown24 = br.ReadSingle();
-            section6Entry.Unknown28 = br.ReadSingle();
-            section6Entry.Unknown2C = br.ReadSingle();
-            section6Entry.Unknown30 = br.ReadSingle();
-            section6Entry.Unknown34 = br.ReadSingle();
-            section6Entry.Unknown38 = br.ReadSingle();
-            section6Entry.Unknown3C = br.ReadSingle();
-            section6Entry.Unknown40 = br.ReadByte();
-            section6Entry.Unknown41 = br.ReadByte();
-            section6Entry.Unknown42 = br.ReadByte();
-            section6Entry.Unknown43 = br.ReadByte();
+            ProgressionSection6Entry section6Entry = new()
+            {
+                Unknown00 = br.ReadSingle(),
+                Unknown04 = br.ReadSingle(),
+                Unknown08 = br.ReadSingle(),
+                Unknown0C = br.ReadSingle(),
+                Unknown10 = br.ReadSingle(),
+                Unknown14 = br.ReadSingle(),
+                Unknown18 = br.ReadSingle(),
+                Unknown1C = br.ReadSingle(),
+                Unknown20 = br.ReadSingle(),
+                Unknown24 = br.ReadSingle(),
+                Unknown28 = br.ReadSingle(),
+                Unknown2C = br.ReadSingle(),
+                Unknown30 = br.ReadSingle(),
+                Unknown34 = br.ReadSingle(),
+                Unknown38 = br.ReadSingle(),
+                Unknown3C = br.ReadSingle(),
+                Unknown40 = br.ReadByte(),
+                Unknown41 = br.ReadByte(),
+                Unknown42 = br.ReadByte(),
+                Unknown43 = br.ReadByte()
+            };
 
             Section6Entries.Add(section6Entry);
         }
 
-
         br.BaseStream.Position = Section7Offset;
+
         for (int i = 0; i < Section7Count; i++)
         {
-            ProgressionSection7Entry section7Entry = new();
-
-            section7Entry.Unknown00 = br.ReadSingle();
-            section7Entry.Unknown04 = br.ReadSingle();
-            section7Entry.Unknown08 = br.ReadSingle();
-            section7Entry.Unknown0C = br.ReadSingle();
+            ProgressionSection7Entry section7Entry = new()
+            {
+                Unknown00 = br.ReadSingle(),
+                Unknown04 = br.ReadSingle(),
+                Unknown08 = br.ReadSingle(),
+                Unknown0C = br.ReadSingle()
+            };
 
             Section7Entries.Add(section7Entry);
         }
 
-
         br.BaseStream.Position = CarbonCarUnlockDataOffset;
+
         for (int i = 0; i < CarbonCarUnlockDataCount; i++)
         {
-            CarbonCarUnlockData unlockData = new();
-
-            unlockData.Unknown00 = br.ReadInt32();
-            unlockData.Unknown04 = br.ReadInt16();
-            unlockData.Unknown06 = br.ReadByte();
-            unlockData.Unknown07 = br.ReadByte();
-            unlockData.VehicleID = new EncryptedString(br.ReadUInt64());
+            CarbonCarUnlockData unlockData = new()
+            {
+                Unknown00 = br.ReadInt32(),
+                Unknown04 = br.ReadInt16(),
+                Unknown06 = br.ReadByte(),
+                Unknown07 = br.ReadByte(),
+                VehicleID = new(br.ReadUInt64())
+            };
 
             CarbonCarUnlockDataEntries.Add(unlockData);
         }
 
-
         br.BaseStream.Position = PlayerOpponentsDataOffset;
+
         for (int i = 0; i < PlayerOpponentsDataCount; i++)
         {
-            PlayerOpponentsData opponentsData = new();
-
-            opponentsData.PlayerVehicleID = new EncryptedString(br.ReadUInt64());
-            opponentsData.Unknown08 = br.ReadInt32();
-            opponentsData.Unknown0C = br.ReadInt32();
-            opponentsData.Opponent1VehicleID = new EncryptedString(br.ReadUInt64());
-            opponentsData.Unknown18 = br.ReadInt32();
-            opponentsData.Unknown1C = br.ReadInt32();
-            opponentsData.Opponent2VehicleID = new EncryptedString(br.ReadUInt64());
-            opponentsData.Unknown28 = br.ReadInt32();
-            opponentsData.Unknown2C = br.ReadInt32();
-            opponentsData.Opponent3VehicleID = new EncryptedString(br.ReadUInt64());
-            opponentsData.Unknown38 = br.ReadInt32();
-            opponentsData.Unknown3C = br.ReadInt32();
-            opponentsData.Opponent4VehicleID = new EncryptedString(br.ReadUInt64());
-            opponentsData.Unknown48 = br.ReadInt32();
-            opponentsData.Unknown4C = br.ReadInt32();
-            opponentsData.Opponent5VehicleID = new EncryptedString(br.ReadUInt64());
-            opponentsData.Unknown58 = br.ReadInt32();
-            opponentsData.Unknown5C = br.ReadInt32();
-            opponentsData.Opponent6VehicleID = new EncryptedString(br.ReadUInt64());
-            opponentsData.Unknown68 = br.ReadInt32();
-            opponentsData.Unknown6C = br.ReadInt32();
-            opponentsData.Opponent7VehicleID = new EncryptedString(br.ReadUInt64());
-            opponentsData.Unknown78 = br.ReadInt32();
-            opponentsData.Unknown7C = br.ReadInt32();
-            opponentsData.Opponent8VehicleID = new EncryptedString(br.ReadUInt64());
-            opponentsData.Unknown88 = br.ReadInt32();
-            opponentsData.NumOpponents = br.ReadInt32();
+            PlayerOpponentsData opponentsData = new()
+            {
+                PlayerVehicleID = new(br.ReadUInt64()),
+                Unknown08 = br.ReadInt32(),
+                Unknown0C = br.ReadInt32(),
+                Opponent1VehicleID = new(br.ReadUInt64()),
+                Unknown18 = br.ReadInt32(),
+                Unknown1C = br.ReadInt32(),
+                Opponent2VehicleID = new(br.ReadUInt64()),
+                Unknown28 = br.ReadInt32(),
+                Unknown2C = br.ReadInt32(),
+                Opponent3VehicleID = new(br.ReadUInt64()),
+                Unknown38 = br.ReadInt32(),
+                Unknown3C = br.ReadInt32(),
+                Opponent4VehicleID = new(br.ReadUInt64()),
+                Unknown48 = br.ReadInt32(),
+                Unknown4C = br.ReadInt32(),
+                Opponent5VehicleID = new(br.ReadUInt64()),
+                Unknown58 = br.ReadInt32(),
+                Unknown5C = br.ReadInt32(),
+                Opponent6VehicleID = new(br.ReadUInt64()),
+                Unknown68 = br.ReadInt32(),
+                Unknown6C = br.ReadInt32(),
+                Opponent7VehicleID = new(br.ReadUInt64()),
+                Unknown78 = br.ReadInt32(),
+                Unknown7C = br.ReadInt32(),
+                Opponent8VehicleID = new(br.ReadUInt64()),
+                Unknown88 = br.ReadInt32(),
+                NumOpponents = br.ReadInt32()
+            };
 
             PlayerOpponentsDataEntries.Add(opponentsData);
         }
-
 
         br.Close();
         ms.Close();
@@ -603,11 +626,12 @@ public class ProgressionData : IEntryData
     public bool Write(BundleEntry entry)
     {
         MemoryStream ms = new();
-        BinaryWriter2 bw = new(ms);
-        bw.BigEndian = entry.Console;
+        BinaryWriter2 bw = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         // TODO: Write
-
         bw.Flush();
         byte[] data = ms.ToArray();
         bw.Close();

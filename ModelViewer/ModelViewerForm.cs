@@ -30,9 +30,13 @@ public partial class ModelViewerForm : Form, IEntryEditor
 
     public void ExportCollada14()
     {
-        SaveFileDialog sfd = new();
-        sfd.Filter = "Collada Document|*.dae|All Files|*.*";
+        SaveFileDialog sfd = new()
+        {
+            Filter = "Collada Document|*.dae|All Files|*.*"
+        };
+
         DialogResult result = sfd.ShowDialog(this);
+
         if (result == DialogResult.OK)
         {
             if (string.IsNullOrEmpty(sfd.FileName))
@@ -44,9 +48,13 @@ public partial class ModelViewerForm : Form, IEntryEditor
 
     public void ExportWavefrontObj()
     {
-        SaveFileDialog sfd = new();
-        sfd.Filter = "Wavefront OBJ|*.obj|All Files|*.*";
+        SaveFileDialog sfd = new()
+        {
+            Filter = "Wavefront OBJ|*.obj|All Files|*.*"
+        };
+
         DialogResult result = sfd.ShowDialog(this);
+
         if (result == DialogResult.OK)
         {
             if (string.IsNullOrEmpty(sfd.FileName))

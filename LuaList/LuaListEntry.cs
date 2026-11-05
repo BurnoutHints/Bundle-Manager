@@ -7,10 +7,11 @@ using System;
 
 namespace LuaList;
 
-public enum ScoreMultiplier { 
-   StandardPoints = 0,
-   DoublePoints = 1 ,
-   TriplePoints = 2
+public enum ScoreMultiplier
+{
+    StandardPoints = 0,
+    DoublePoints = 1,
+    TriplePoints = 2
 }
 
 public enum ScoringMethod
@@ -22,19 +23,27 @@ public enum ScoringMethod
 public class LuaListEntry
 {
     [TypeConverter(typeof(EncryptedStringConverter))]
-    public EncryptedString CgsId { get; set; } = new EncryptedString("SC_1000000");
+    public EncryptedString CgsID { get; set; } = new("SC_1000000");
+
     public string Name { get; set; } = "";
+
     public string Goal { get; set; } = "";
+
     public string Description { get; set; } = "";
+
     public ScoreMultiplier ScoreMultiplier { get; set; } = ScoreMultiplier.StandardPoints;
+
     public ScoringMethod ScoringMethod { get; set; } = ScoringMethod.ScoreBySuccessOrFail;
+
     public int Type { get; set; } = 0;
+
     public int Variables { get; set; } = 0;
 
-    public int getDataSize() {
+    public int GetDataSize()
+    {
         List<byte[]> bytes =
         [
-            BitConverter.GetBytes(CgsId.Encrypted),
+            BitConverter.GetBytes(CgsID.Encrypted),
             Encoding.ASCII.GetBytes((Name.PadRight(128, '\0')[..128].ToCharArray())),
             Encoding.ASCII.GetBytes((Goal.PadRight(128, '\0')[..128].ToCharArray())),
             Encoding.ASCII.GetBytes((Description.PadRight(256, '\0')[..256].ToCharArray())),
@@ -47,13 +56,14 @@ public class LuaListEntry
         return bytes.SelectMany(i => i).Count();
     }
 
-    public void Read(ILoader loader, BinaryReader2 br) {
-        CgsId = new EncryptedString(br.ReadUInt64());
+    public void Read(ILoader loader, BinaryReader2 br)
+    {
+        CgsID = new(br.ReadUInt64());
         Name = br.ReadLenString(128);
         Goal = br.ReadLenString(128);
         Description = br.ReadLenString(256);
-        ScoreMultiplier = (ScoreMultiplier) br.ReadInt32();
-        ScoringMethod = (ScoringMethod) br.ReadInt32();
+        ScoreMultiplier = (ScoreMultiplier)br.ReadInt32();
+        ScoringMethod = (ScoringMethod)br.ReadInt32();
         Type = br.ReadInt32();
         Variables = br.ReadInt32();
         br.ReadBytes(8); // padding
@@ -61,7 +71,7 @@ public class LuaListEntry
 
     public void Write(BinaryWriter2 bw)
     {
-        bw.Write(CgsId.Encrypted);
+        bw.Write(CgsID.Encrypted);
         bw.Write(Encoding.ASCII.GetBytes((Name.PadRight(128, '\0')[..128].ToCharArray())));
         bw.Write(Encoding.ASCII.GetBytes((Goal.PadRight(128, '\0')[..128].ToCharArray())));
         bw.Write(Encoding.ASCII.GetBytes((Description.PadRight(256, '\0')[..256].ToCharArray())));

@@ -14,40 +14,49 @@ public record PrimaryResource(byte[] Data, byte[] ImageBody, List<Dependency> Im
 
 public static partial class ResourceImport
 {
-    private static readonly string[] ImageExtensions = [".dds", ".bmp", ".gif", ".jpg", ".jpeg", ".png", ".tif", ".tiff"];
+    private static readonly string[] imageExtensions = [".dds", ".bmp", ".gif", ".jpg", ".jpeg", ".png", ".tif", ".tiff"];
 
     public static PrimaryResource LoadPrimary(string path, BundleArchive archive, Func<PlatformType> choosePCTexturePlatform, Func<string, PlatformType, CompressionType?> chooseCompression)
     {
-        string extension = Path.GetExtension(path);
-        if (ImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+        string currentExtension = Path.GetExtension(path);
+
+        if (imageExtensions.Contains(currentExtension, StringComparer.OrdinalIgnoreCase))
         {
             BundleEntry sample = archive.Entries.FirstOrDefault(e => e.Type == EntryType.Texture && e.HasPrimary);
             PlatformType platform = GetImageTexturePlatform(archive, sample, choosePCTexturePlatform)
                 ?? throw new NotSupportedException($"Images can't be converted for {archive.Platform} bundles. Import the texture's header and body instead.");
 
-            CompressionType compression = string.Equals(extension, ".dds", StringComparison.OrdinalIgnoreCase)
+            CompressionType compression = string.Equals(currentExtension, ".dds", StringComparison.OrdinalIgnoreCase)
                 ? CompressionType.UNKNOWN // SetImage reads the DDS file's own format
                 : chooseCompression(path, platform) ?? throw new OperationCanceledException();
 
             // A blank header the size of the bundle's others, so 64-bit Remastered bundles get 64-bit headers
-            ImageInfo info = GameImage.SetImage(path, compression, platform, sample != null ? new byte[sample.EntryBlocks[0].Data.Length] : null);
+            ImageInfo info = GameImage.SetImage(path, compression, platform, sample != null
+                ? new byte[sample.EntryBlocks[0].Data.Length]
+                : null);
             return new(info.Header, info.Data, [], null, EntryType.Texture);
         }
 
         byte[] data = ReadPrimary(path, archive.Console, out List<Dependency> imports);
-        string importsSource = imports != null ? Path.GetFileName(GetImportsYamlPath(path)) : null;
+        string importsSource = imports != null
+            ? Path.GetFileName(GetImportsYAMLPath(path))
+            : null;
         imports ??= ScanImports(data, archive.Platform);
 
-        EntryType type = InferEntryType(data[..^(imports.Count * Dependency.Size)], imports.Count, archive.Console);
-        return new(data, null, imports, importsSource, type);
+        EntryType currentType = InferEntryType(data[..^(imports.Count * Dependency.Size)], imports.Count, archive.Console);
+        return new(data, null, imports, importsSource, currentType);
     }
 
     public static byte[] ReadPrimary(string path, bool bigEndian, out List<Dependency> imports)
     {
         byte[] data = File.ReadAllBytes(path);
-        string yamlPath = GetImportsYamlPath(path);
-        imports = yamlPath != null && File.Exists(yamlPath) ? LoadDependenciesFromYaml(yamlPath) : null;
-        return imports != null ? Dependency.AppendTable(data, imports, bigEndian) : data;
+        string yamlPath = GetImportsYAMLPath(path);
+        imports = yamlPath != null && File.Exists(yamlPath)
+            ? LoadDependenciesFromYAML(yamlPath)
+            : null;
+        return imports != null
+            ? Dependency.AppendTable(data, imports, bigEndian)
+            : data;
     }
 
     // We now export the primary data without its import table and include a YAP-style yaml file for imports
@@ -56,7 +65,8 @@ public static partial class ResourceImport
         List<BundleDependency> imports = entry.GetDependencies();
         File.WriteAllBytes(path, entry.GetPrimaryWithoutImports());
 
-        string yamlPath = GetImportsYamlPath(path);
+        string yamlPath = GetImportsYAMLPath(path);
+
         if (imports.Count > 0)
             File.WriteAllLines(yamlPath, imports.Select(d => $"- 0x{d.EntryPointerOffset:x8}: 0x{d.EntryID:x8}"));
         else if (File.Exists(yamlPath))
@@ -67,12 +77,14 @@ public static partial class ResourceImport
     {
         File.WriteAllBytes(path, entry.EntryBlocks[0].Data);
 
-        string yamlPath = GetImportsYamlPath(path);
+        string yamlPath = GetImportsYAMLPath(path);
+
         if (yamlPath == null || !File.Exists(yamlPath))
             return;
 
-        var listed = LoadDependenciesFromYaml(yamlPath).Select(d => (d.ID, (long)d.EntryPointerOffset));
-        var current = entry.GetDependencies().Select(d => (d.EntryID, (long)d.EntryPointerOffset));
+        IEnumerable<(ulong ID, long)> listed = LoadDependenciesFromYAML(yamlPath).Select(d => (d.ID, (long)d.EntryPointerOffset));
+        IEnumerable<(ulong EntryID, long)> current = entry.GetDependencies().Select(d => (d.EntryID, (long)d.EntryPointerOffset));
+
         if (!listed.SequenceEqual(current))
             File.Delete(yamlPath);
     }
@@ -80,7 +92,9 @@ public static partial class ResourceImport
     public static List<Dependency> ScanImports(byte[] data, BundlePlatform platform)
     {
         bool bigEndian = platform is BundlePlatform.X360 or BundlePlatform.PS3;
-        return Dependency.ScanTable(data, bigEndian, platform == BundlePlatform.PCx64 ? 8 : 4);
+        return Dependency.ScanTable(data, bigEndian, platform == BundlePlatform.PCx64
+            ? 8
+            : 4);
     }
 
     public static string GetResourceBaseName(string path)
@@ -96,19 +110,25 @@ public static partial class ResourceImport
     public static string FindSecondary(string primaryPath)
     {
         string secondary = Path.Combine(Path.GetDirectoryName(primaryPath), GetResourceBaseName(primaryPath) + "_secondary" + Path.GetExtension(primaryPath));
-        return File.Exists(secondary) ? secondary : null;
+        return File.Exists(secondary)
+            ? secondary
+            : null;
     }
 
     // Exports are named after the resource ID, e.g. 0A7B302C_primary.dat
     public static uint? GetIDFromFileName(string path)
     {
         Match match = ResourceIDPattern().Match(Path.GetFileNameWithoutExtension(path));
-        return match.Success ? uint.Parse(match.Value, NumberStyles.HexNumber) : null;
+        return match.Success
+            ? uint.Parse(match.Value, NumberStyles.HexNumber)
+            : null;
     }
 
     public static bool TryParseHex(string s, out uint value)
     {
-        return uint.TryParse(s.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? s[2..] : s,
+        return uint.TryParse(s.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+            ? s[2..]
+            : s,
             NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value);
     }
 
@@ -136,7 +156,9 @@ public static partial class ResourceImport
                 : TexturePlatform(archive.Platform);
 
         // GameImage.SetImage can only write these
-        return platform is PlatformType.PC or PlatformType.PCx64 or PlatformType.Remastered ? platform : null;
+        return platform is PlatformType.PC or PlatformType.PCx64 or PlatformType.Remastered
+            ? platform
+            : null;
     }
 
     private static EntryType InferEntryType(byte[] data, int importCount, bool bigEndian)
@@ -151,35 +173,40 @@ public static partial class ResourceImport
             return EntryType.AttribSysVault;
         }
 
-        EntryType type = EntryType.Invalid;
+        EntryType currentType = EntryType.Invalid;
 
         // Texture
         if (GameImage.DetectPlatform(data) is PlatformType p
-            && p != PlatformType.Invalid
-            && importCount == 0)
+                    && p != PlatformType.Invalid
+                    && importCount == 0)
         {
-            type = EntryType.Texture;
+            currentType = EntryType.Texture;
         }
+
         // Model
         else if (data.Length <= 0x20)
         {
             // 32 bit model, then 64 bit model (32 bit is technically padded to nearest 0x10, so this would run anyway)
             if ((data.Length > 0x13 && data[0x13] == 0x2)
                 || (data.Length > 0x1F && data[0x1F] == 0x2))
-                type = EntryType.Model;
+                currentType = EntryType.Model;
         }
+
         // Renderable
         else
         {
             ReadOnlySpan<byte> version = data.AsSpan(0x10); // mu16VersionNumber
-            if ((bigEndian ? BinaryPrimitives.ReadUInt16BigEndian(version) : BinaryPrimitives.ReadUInt16LittleEndian(version)) == 11)
-                type = EntryType.Renderable;
+
+            if ((bigEndian
+                ? BinaryPrimitives.ReadUInt16BigEndian(version)
+                : BinaryPrimitives.ReadUInt16LittleEndian(version)) == 11)
+                currentType = EntryType.Renderable;
         }
 
-        return type;
+        return currentType;
     }
 
-    private static string GetImportsYamlPath(string primaryPath)
+    private static string GetImportsYAMLPath(string primaryPath)
     {
         string dir = Path.GetDirectoryName(primaryPath);
         string name = GetResourceBaseName(primaryPath);
@@ -190,15 +217,20 @@ public static partial class ResourceImport
         return Path.Combine(dir, name + "_imports.yaml");
     }
 
-    private static List<Dependency> LoadDependenciesFromYaml(string yamlPath)
+    private static List<Dependency> LoadDependenciesFromYAML(string yamlPath)
     {
         List<Dependency> list = [];
 
         foreach (string line in File.ReadLines(yamlPath))
         {
             string[] parts = line.Trim().TrimStart('-').Split(':');
+
             if (parts.Length == 2 && TryParseHex(parts[0].Trim(), out uint offset) && TryParseHex(parts[1].Trim(), out uint id))
-                list.Add(new Dependency { EntryPointerOffset = offset, ID = id });
+                list.Add(new()
+                {
+                    EntryPointerOffset = offset,
+                    ID = id
+                });
         }
 
         return list;

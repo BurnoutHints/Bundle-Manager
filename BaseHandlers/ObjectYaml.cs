@@ -13,7 +13,7 @@ namespace BaseHandlers;
 
 // Converts an object's public properties to and from YAML: block mappings for objects and lists
 // of objects, flow sequences for vectors and lists of scalars. Base class properties come first.
-internal static class ObjectYaml
+internal static class ObjectYAML
 {
     public static string Serialize(object value)
     {
@@ -28,6 +28,7 @@ internal static class ObjectYaml
     {
         if (Yaml.Parse(yaml) is not YamlMappingNode mapping)
             throw Yaml.Error(1, "Expected \"property: value\" lines.");
+
         Fill(target, mapping);
     }
 
@@ -36,11 +37,14 @@ internal static class ObjectYaml
     {
         string pad = new(' ', indent);
         bool first = true;
-        foreach (PropertyInfo property in Properties(obj.GetType()))
+
+        foreach (PropertyInfo currentProperty in Properties(obj.GetType()))
         {
-            string key = (first && listPrefix != null ? listPrefix : pad) + property.Name + ":";
+            string key = (first && listPrefix != null
+                ? listPrefix
+                : pad) + currentProperty.Name + ":";
             first = false;
-            WriteValue(sb, key, property.GetValue(obj), indent);
+            WriteValue(sb, key, currentProperty.GetValue(obj), indent);
         }
 
         if (first) // No properties
@@ -54,6 +58,7 @@ internal static class ObjectYaml
         else if (value is IList list)
         {
             List<string> scalars = [];
+
             foreach (object item in list)
             {
                 if (!TryScalar(item, out string itemScalar))
@@ -61,6 +66,7 @@ internal static class ObjectYaml
                     scalars = null;
                     break;
                 }
+
                 scalars.Add(itemScalar);
             }
 
@@ -69,6 +75,7 @@ internal static class ObjectYaml
             else
             {
                 sb.AppendLine(key);
+
                 foreach (object item in list)
                     WriteObject(sb, item, indent + 4, new string(' ', indent + 2) + "- ");
             }
@@ -86,7 +93,9 @@ internal static class ObjectYaml
         {
             null => "null",
             string s => Yaml.Quote(s),
-            bool b => b ? "true" : "false",
+            bool b => b
+                ? "true"
+                : "false",
             float f => Yaml.Float(f),
             double d => Yaml.Float(d),
             Enum e => e.ToString(),
@@ -103,16 +112,19 @@ internal static class ObjectYaml
     {
         Dictionary<string, PropertyInfo> properties = Properties(target.GetType()).Where(p => p.CanWrite).ToDictionary(p => p.Name);
         List<(PropertyInfo Property, object Value)> values = [];
+
         foreach (KeyValuePair<YamlNode, YamlNode> entry in mapping.Children)
         {
             string key = (entry.Key as YamlScalarNode)?.Value;
-            if (key == null || !properties.TryGetValue(key, out PropertyInfo property))
+
+            if (key == null || !properties.TryGetValue(key, out PropertyInfo currentProperty))
                 throw Yaml.Error(Yaml.Line(entry.Key), $"{target.GetType().Name} has no property \"{key}\".");
-            values.Add((property, Convert(property.PropertyType, entry.Value, key)));
+
+            values.Add((property: currentProperty, Convert(currentProperty.PropertyType, entry.Value, key)));
         }
 
-        foreach ((PropertyInfo property, object value) in values)
-            property.SetValue(target, value);
+        foreach ((PropertyInfo currentProperty2, object value) in values)
+            currentProperty2.SetValue(target, value);
     }
 
     private static object Convert(Type type, YamlNode node, string name)
@@ -121,20 +133,27 @@ internal static class ObjectYaml
         {
             if (node is not YamlSequenceNode { Children.Count: 4 } v || v.Children.Any(i => i is not YamlScalarNode))
                 throw Yaml.Error(Yaml.Line(node), $"{name} should be [x, y, z, w].");
+
             float F(int i) => (float)Yaml.ParseFloat((YamlScalarNode)v.Children[i]);
+
             return new Vector4(F(0), F(1), F(2), F(3));
         }
 
         if (typeof(IList).IsAssignableFrom(type))
         {
             IList list = (IList)Activator.CreateInstance(type);
+
             if (node is YamlScalarNode empty && Yaml.IsNull(empty))
                 return list;
+
             if (node is not YamlSequenceNode sequence)
                 throw Yaml.Error(Yaml.Line(node), $"{name} should be a list.");
+
             Type itemType = type.GetGenericArguments()[0];
+
             foreach (YamlNode item in sequence.Children)
                 list.Add(Convert(itemType, item, name));
+
             return list;
         }
 
@@ -143,6 +162,7 @@ internal static class ObjectYaml
 
         if (node is not YamlMappingNode mapping || type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(CgsID))
             throw Yaml.Error(Yaml.Line(node), $"{name} should be a single value.");
+
         object obj = Activator.CreateInstance(type);
         Fill(obj, mapping);
         return obj;
@@ -151,29 +171,43 @@ internal static class ObjectYaml
     private static object ConvertScalar(Type type, YamlScalarNode scalar, string name)
     {
         int line = Yaml.Line(scalar);
+
         if (type == typeof(string))
-            return Yaml.IsNull(scalar) ? null : scalar.Value;
+            return Yaml.IsNull(scalar)
+                ? null
+                : scalar.Value;
+
         if (Yaml.IsNull(scalar))
             throw Yaml.Error(line, $"{name} needs a value.");
 
         if (type == typeof(CgsID))
-            return new CgsID { ID = Yaml.ParseUnsigned(scalar) };
+            return new CgsID()
+            {
+                ID = Yaml.ParseUnsigned(scalar)
+            };
+
         if (type == typeof(float))
             return (float)Yaml.ParseFloat(scalar);
+
         if (type == typeof(double))
             return Yaml.ParseFloat(scalar);
+
         if (type == typeof(bool))
         {
             if (!bool.TryParse(scalar.Value, out bool b))
                 throw Yaml.Error(line, $"{name} should be true or false.");
+
             return b;
         }
+
         if (type.IsEnum)
         {
             if (!Enum.TryParse(type, scalar.Value, false, out object value))
                 throw Yaml.Error(line, $"\"{scalar.Value}\" isn't a {type.Name}. Use one of: {string.Join(", ", Enum.GetNames(type))}.");
+
             return value;
         }
+
         if (type.IsPrimitive)
         {
             try
@@ -182,8 +216,10 @@ internal static class ObjectYaml
                 {
                     if (!long.TryParse(scalar.Value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out long signed))
                         throw Yaml.Error(line, $"\"{scalar.Value}\" is not a whole number.");
+
                     return System.Convert.ChangeType(signed, type, CultureInfo.InvariantCulture);
                 }
+
                 return System.Convert.ChangeType(Yaml.ParseUnsigned(scalar), type, CultureInfo.InvariantCulture);
             }
             catch (OverflowException)
@@ -191,6 +227,7 @@ internal static class ObjectYaml
                 throw Yaml.Error(line, $"{scalar.Value} is out of range for {name}.");
             }
         }
+
         throw Yaml.Error(line, $"{name} should be a list of properties, not a single value.");
     }
 
@@ -204,8 +241,10 @@ internal static class ObjectYaml
     private static int Depth(Type type)
     {
         int depth = 0;
+
         while ((type = type.BaseType) != null)
             depth++;
+
         return depth;
     }
 }

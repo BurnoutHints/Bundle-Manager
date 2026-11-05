@@ -25,13 +25,17 @@ public class PVSEditControl : Control
     protected const float Multiplier = 0.1f;
 
     protected float RenderScale;
+
     //protected float Zoom;
     protected PointF CameraPosition;
+
     protected PointF RenderOffset => new(-CameraPosition.X + ClientRectangle.Width / 2.0f, -CameraPosition.Y + ClientRectangle.Height / 2.0f);
+
     protected float MapSize => (RenderScale * 32);
-    protected bool isDragging;
-    protected Point lastMouse;
-    protected Point mousePos;
+
+    protected bool IsDragging;
+    protected Point LastMouse;
+    protected Point MousePos;
 
     protected enum MapSectionType
     {
@@ -44,7 +48,7 @@ public class PVSEditControl : Control
     {
         get
         {
-            return new PointF((mousePos.X - ClientRectangle.Width / 2.0f + CameraPosition.X) / RenderScale / Multiplier, (mousePos.Y - ClientRectangle.Height / 2.0f + CameraPosition.Y) / RenderScale / Multiplier);
+            return new((MousePos.X - ClientRectangle.Width / 2.0f + CameraPosition.X) / RenderScale / Multiplier, (MousePos.Y - ClientRectangle.Height / 2.0f + CameraPosition.Y) / RenderScale / Multiplier);
         }
     }
 
@@ -52,7 +56,7 @@ public class PVSEditControl : Control
     {
         get
         {
-            return new PointF(mousePos.X - ClientRectangle.Width / 2.0f + CameraPosition.X, mousePos.Y - ClientRectangle.Height / 2.0f + CameraPosition.Y);
+            return new(MousePos.X - ClientRectangle.Width / 2.0f + CameraPosition.X, MousePos.Y - ClientRectangle.Height / 2.0f + CameraPosition.Y);
         }
     }
 
@@ -62,7 +66,7 @@ public class PVSEditControl : Control
         Height = 300;
         ForeColor = Color.White;
         BackColor = Color.Black;
-        Font = new Font(FontFamily.GenericMonospace, 10.0f);
+        Font = new(FontFamily.GenericMonospace, 10.0f);
         DoubleBuffered = true;
 
         RenderScale = 1;
@@ -71,44 +75,51 @@ public class PVSEditControl : Control
     }
 
     // Get zone ID for UI update
-    public ulong GetZoneId()
+    public ulong GetZoneID()
     {
         ulong id = ulong.MaxValue;
+
         foreach (Zone zone in PVS.data.Zones)
         {
             List<PointF> points = [];
+
             foreach (Vector2 point in zone.Points)
-                points.Add(new PointF(point.X, point.Y));
+                points.Add(new(point.X, point.Y));
+
             Polygon polygon = new(points);
+
             if (MousePosOnMap.X >= polygon.MinX && MousePosOnMap.X < polygon.MaxX
-                && MousePosOnMap.Y >= polygon.MinY && MousePosOnMap.Y < polygon.MaxY)
+                            && MousePosOnMap.Y >= polygon.MinY && MousePosOnMap.Y < polygon.MaxY)
             {
                 id = zone.ZoneId;
                 break;
             }
         }
+
         return id;
     }
 
     // Get zone index for UI update
-    public int GetZoneIndex(ulong zoneId)
+    public int GetZoneIndex(ulong zoneID)
     {
-        return PVS.data.Zones.FindIndex(z => z.ZoneId == zoneId);
+        return PVS.data.Zones.FindIndex(z => z.ZoneId == zoneID);
     }
 
     // Get zone info for UI update
-    public List<Vector2> GetZonePoints(ulong zoneId)
+    public List<Vector2> GetZonePoints(ulong zoneID)
     {
         List<Vector2> points = [];
-        foreach (Vector2 point in PVS.data.Zones[GetZoneIndex(zoneId)].Points)
-            points.Add(new Vector2(point.X, point.Y));
+
+        foreach (Vector2 point in PVS.data.Zones[GetZoneIndex(zoneID)].Points)
+            points.Add(new(point.X, point.Y));
+
         return points;
     }
 
     // Get zone neighbours for UI update
-    public List<Neighbour> GetZoneNeighbours(ulong zoneId)
+    public List<Neighbour> GetZoneNeighbours(ulong zoneID)
     {
-        List<Neighbour> neighbours = [.. PVS.data.Zones[GetZoneIndex(zoneId)].UnsafeNeighbours];
+        List<Neighbour> neighbours = [.. PVS.data.Zones[GetZoneIndex(zoneID)].UnsafeNeighbours];
         return neighbours;
     }
 
@@ -117,9 +128,9 @@ public class PVSEditControl : Control
         // Move the camera
         if (e.Button == MouseButtons.Left)
         {
-            lastMouse = e.Location;
+            LastMouse = e.Location;
 
-            isDragging = true;
+            IsDragging = true;
         }
     }
 
@@ -127,8 +138,8 @@ public class PVSEditControl : Control
     {
         if (e.Button == MouseButtons.Left)
         {
-            isDragging = false;
-            lastMouse = new Point(0, 0);
+            IsDragging = false;
+            LastMouse = new(0, 0);
         }
     }
 
@@ -146,18 +157,19 @@ public class PVSEditControl : Control
 
     protected override void OnKeyUp(KeyEventArgs e)
     {
-        lastMouse = new Point(0, 0);
+        LastMouse = new(0, 0);
     }
 
     // Move the camera
     protected override void OnMouseMove(MouseEventArgs e)
     {
-        mousePos = e.Location;
+        MousePos = e.Location;
         Invalidate();
-        if (isDragging)
+
+        if (IsDragging)
         {
-            Size difference = new(e.X - lastMouse.X, e.Y - lastMouse.Y);
-            lastMouse = new Point(e.X, e.Y);
+            Size difference = new(e.X - LastMouse.X, e.Y - LastMouse.Y);
+            LastMouse = new(e.X, e.Y);
 
             CameraPosition -= difference;
             Invalidate();
@@ -214,7 +226,6 @@ public class PVSEditControl : Control
 
         //x = x + RenderOffset.X;
         //y = y + RenderOffset.Y;
-
         x = x * mult * RenderScale + RenderOffset.X;
         y = y * mult * RenderScale + RenderOffset.Y;
         width = width * mult * RenderScale;
@@ -232,6 +243,7 @@ public class PVSEditControl : Control
 
         // Draw all plates
         int selectedZoneIndex = PVS.data.Zones.FindIndex(z => z.ZoneId == PVS.selectedZoneId);
+
         for (int i = 0; i < PVS.data.Zones.Count; i++)
         {
             Zone plate = PVS.data.Zones[i];
@@ -243,13 +255,14 @@ public class PVSEditControl : Control
                     DrawMapSection(g, plate, MapSectionType.Current);
                     continue;
                 }
+
                 if (PVS.data.Zones[selectedZoneIndex].UnsafeNeighbours.FindIndex(n => n.ZoneId == plate.ZoneId) != -1)
                 {
                     DrawMapSection(g, plate, MapSectionType.Neighbour);
                     continue;
                 }
             }
-            
+
             DrawMapSection(g, plate);
         }
     }
@@ -257,10 +270,11 @@ public class PVSEditControl : Control
     protected void DrawMapSection(Graphics g, Zone entry, MapSectionType type = MapSectionType.Unloaded)
     {
         PointF[] points = new PointF[entry.Points.Count];
+
         for (int i = 0; i < entry.Points.Count; i++)
         {
             Vector2 data = entry.Points[i];
-            points[i] = new PointF(data.X * Multiplier * RenderScale + RenderOffset.X, data.Y * Multiplier * RenderScale + RenderOffset.Y);
+            points[i] = new(data.X * Multiplier * RenderScale + RenderOffset.X, data.Y * Multiplier * RenderScale + RenderOffset.Y);
         }
 
         Polygon poly = new(points);
@@ -272,7 +286,8 @@ public class PVSEditControl : Control
                 g.FillPolygon(new SolidBrush(Color.FromArgb(127, 255, 0, 0)), points); // Red
             else if (type == MapSectionType.Neighbour)
                 g.FillPolygon(new SolidBrush(Color.FromArgb(127, 255, 255, 0)), points); // Yellow
-            g.DrawPolygon(new Pen(Color.Cyan), points);
+
+            g.DrawPolygon(new(Color.Cyan), points);
 
             Font font;
 
@@ -289,12 +304,13 @@ public class PVSEditControl : Control
                 {
                     font = null;
                     infoText = null;
-                    textSize = new SizeF();
+                    textSize = new();
                     noRender = true;
                     break;
                 }
+
                 float textScale = RenderScale / (Multiplier * 2) - times;
-                font = new Font(Font.FontFamily, textScale);
+                font = new(Font.FontFamily, textScale);
                 infoText = entry.ZoneId.ToString();
                 textSize = g.MeasureString(infoText, font);
 
@@ -304,8 +320,11 @@ public class PVSEditControl : Control
             if (!noRender)
             {
                 // Render text
-                StringFormat format = new(StringFormat.GenericDefault);
-                format.Alignment = StringAlignment.Center;
+                StringFormat format = new(StringFormat.GenericDefault)
+                {
+                    Alignment = StringAlignment.Center
+                };
+
                 g.DrawString(infoText, font, new SolidBrush(ForeColor), bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2 - textSize.Height / 2, format);
             }
         }
@@ -314,14 +333,18 @@ public class PVSEditControl : Control
     protected void DrawOverlay(Graphics g)
     {
         // Render Overlay Text
-        string status = PVS == null ? "Nothing Loaded" : "Loaded";
+        string status = PVS == null
+            ? "Nothing Loaded"
+            : "Loaded";
         g.DrawString(status, Font, new SolidBrush(ForeColor), 10, 10);
 
         g.DrawString("Zoom x" + (int)RenderScale, Font, new SolidBrush(ForeColor), 10, 25);
         g.DrawString("Camera (" + CameraPosition.X + ", " + CameraPosition.Y + ")", Font, new SolidBrush(ForeColor), 10, 40);
-        g.DrawString("Mouse (" + mousePos.X + ", " + mousePos.Y + ")", Font, new SolidBrush(ForeColor), 10, 55);
+        g.DrawString("Mouse (" + MousePos.X + ", " + MousePos.Y + ")", Font, new SolidBrush(ForeColor), 10, 55);
+
         //g.DrawString("Map Size " + MapSize + "px", Font, new SolidBrush(ForeColor), 10, 70);
         g.DrawString("Mouse Pos On Map (" + MousePosOnMap.X + ", " + MousePosOnMap.Y + ")", Font, new SolidBrush(ForeColor), 10, 85);
+
         //g.DrawString("Scaled Mouse Pos On Map (" + ScaledMousePosOnMap.X + ", " + ScaledMousePosOnMap.Y + ")", Font, new SolidBrush(ForeColor), 10, 100);
     }
 

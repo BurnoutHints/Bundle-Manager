@@ -22,13 +22,14 @@ public partial class FileView : Form
     }
 
     private bool AlwaysIgnore => ignoreIDConflictsToolStripMenuItem.CheckState == CheckState.Checked;
-    private string _currentPath
+
+    private string CurrentPath
     {
         get => BundleCache.CurrentPath;
         set => BundleCache.CurrentPath = value;
     }
 
-    private bool HasPath => Utilities.IsValidPath(_currentPath);
+    private bool HasPath => Utilities.IsValidPath(CurrentPath);
 
     public FileView()
     {
@@ -41,7 +42,7 @@ public partial class FileView : Form
 
     private void Clear()
     {
-        _currentPath = null;
+        CurrentPath = null;
         BundleCache.Files.Clear();
         BundleCache.Paths.Clear();
         BundleCache.EntryInfos.Clear();
@@ -67,8 +68,10 @@ public partial class FileView : Form
 
         if (SaveData.RecentPaths.Count == 0)
         {
-            ToolStripItem item = new ToolStripMenuItem("No Recent Items");
-            item.Enabled = false;
+            ToolStripItem item = new ToolStripMenuItem("No Recent Items")
+            {
+                Enabled = false
+            };
 
             fileToolStripMenuItem.DropDownItems.Insert(index, item);
         }
@@ -76,6 +79,7 @@ public partial class FileView : Form
         {
             List<string> paths = SaveData.RecentPaths;
             paths.Reverse();
+
             for (int i = 0; i < paths.Count; i++)
             {
                 string path = paths[i];
@@ -92,19 +96,22 @@ public partial class FileView : Form
     {
         UpdateRecentFiles();
 
-        if (!Utilities.IsValidPath(_currentPath))
+        if (!Utilities.IsValidPath(CurrentPath))
         {
             BundleCache.Files.Clear();
             BundleCache.Paths.Clear();
             BundleCache.EntryInfos.Clear();
             lstMain.Items.Clear();
         }
-        lstMain.Enabled = Utilities.IsValidPath(_currentPath);
+
+        lstMain.Enabled = Utilities.IsValidPath(CurrentPath);
 
         lstMain.BeginUpdate();
         lstMain.Items.Clear();
+
         foreach (string path in BundleCache.Paths)
             lstMain.Items.Add(BundleCache.GetRelativePath(path));
+
         lstMain.EndUpdate();
     }
 
@@ -119,11 +126,13 @@ public partial class FileView : Form
     private async Task LoadFileList()
     {
         lstMain.Items.Clear();
+
         if (!HasPath)
             return;
 
         // A cancelled load may still be finishing its current file, but only into its own discarded result
-        string root = _currentPath;
+        string root = CurrentPath;
+
         try
         {
             FileList result = await LoadingDialog.RunAsync(this, "Loading: " + root, (loader, cancel) =>
@@ -136,27 +145,32 @@ public partial class FileView : Form
             BundleCache.Paths.Clear();
             BundleCache.Paths.AddRange(result.Paths);
             BundleCache.Files.Clear();
-            foreach (var file in result.Files)
-                BundleCache.Files.Add(file.Key, file.Value);
+
+            foreach (KeyValuePair<ulong, int> currentFile in result.Files)
+                BundleCache.Files.Add(currentFile.Key, currentFile.Value);
+
             BundleCache.EntryInfos.Clear();
-            foreach (var info in result.EntryInfos)
+
+            foreach (KeyValuePair<ulong, EntryInfo> info in result.EntryInfos)
                 BundleCache.EntryInfos.Add(info.Key, info.Value);
         }
         catch (OperationCanceledException) // Cancelled, or stopped at an ID conflict
         {
-            _currentPath = null;
+            CurrentPath = null;
         }
         catch (Exception ex)
         {
-            _currentPath = null;
+            CurrentPath = null;
             MessageBox.Show(this, $"Couldn't load {root}:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+
         UpdateDisplay();
     }
 
     private struct ConflictChoice
     {
         public bool Cancel { get; set; }
+
         public bool IgnoreAll { get; set; }
 
         public ConflictChoice(bool cancel, bool ignoreAll)
@@ -169,21 +183,25 @@ public partial class FileView : Form
     private ConflictChoice ResolveConflict(uint entryID, string file1, string file2)
     {
         if (AlwaysIgnore)
-            return new ConflictChoice(false, true);
+            return new(false, true);
 
         return Invoke(() =>
         {
             TaskDialogCommandLinkButton ignoreOnce = new("Ignore this conflict", "Keep the copy that was found first and continue loading.");
             TaskDialogCommandLinkButton ignoreAll = new("Ignore all conflicts", "Don't ask again while loading this folder.");
             TaskDialogCommandLinkButton stop = new("Stop loading");
-
             TaskDialogPage page = new()
             {
                 Caption = "ID Conflict",
                 Heading = $"Resource 0x{entryID:X8} is in more than one bundle",
                 Text = $"{file2}\n{file1}\n\nIgnoring this may cause other problems.",
                 Icon = TaskDialogIcon.Warning,
-                Buttons = { ignoreOnce, ignoreAll, stop },
+                Buttons =
+                {
+                    ignoreOnce,
+                    ignoreAll,
+                    stop
+                },
                 DefaultButton = stop
             };
 
@@ -200,12 +218,15 @@ public partial class FileView : Form
         Dictionary<string, bool> fileTypes = [];
 
         string cachePath = root + "/files.bmcache";
+
         if (File.Exists(cachePath))
         {
             string[] lines = File.ReadAllLines(cachePath);
+
             foreach (string line in lines)
             {
                 string[] data = line.Split('|');
+
                 if (data.Length < 2)
                     continue;
 
@@ -216,59 +237,69 @@ public partial class FileView : Form
 
         int index = 0;
         bool ignoreAllConflicts = false;
-        foreach (string file in files)
+
+        foreach (string currentFile in files)
         {
             cancel.ThrowIfCancellationRequested();
             index++;
-            if (!fileTypes.ContainsKey(file))
+
+            if (!fileTypes.ContainsKey(currentFile))
             {
-                bool isBundle = BundleArchive.IsBundle(file);
-                fileTypes.Add(file, isBundle);
+                bool isBundle = BundleArchive.IsBundle(currentFile);
+                fileTypes.Add(currentFile, isBundle);
 
                 if (!isBundle)
                     continue;
             }
-            else if (!fileTypes[file])
+            else if (!fileTypes[currentFile])
             {
                 continue;
             }
 
             int progress = index * 100 / files.Length;
-            loader.SetStatus("Loading(" + progress.ToString("D2") + "%): " + Path.GetFileName(file));
+            loader.SetStatus("Loading(" + progress.ToString("D2") + "%): " + Path.GetFileName(currentFile));
             loader.SetProgress(progress);
 
             List<EntryInfo> infos;
+
             try
             {
-                infos = BundleArchive.GetEntryInfos(file, false);
+                infos = BundleArchive.GetEntryInfos(currentFile, false);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Skipping {file}: {ex.Message}"); // One unreadable bundle shouldn't stop the folder loading
+                System.Diagnostics.Debug.WriteLine($"Skipping {currentFile}: {ex.Message}"); // One unreadable bundle shouldn't stop the folder loading
                 continue;
             }
+
             if (infos == null)
                 continue;
 
             foreach (EntryInfo info in infos)
             {
                 uint entryID = info.ID;
+
                 if (result.Files.TryGetValue(entryID, out int otherIndex))
                 {
                     if (ignoreAllConflicts)
                         continue;
-                    ConflictChoice choice = ResolveConflict(entryID, file, result.Paths[otherIndex]);
+
+                    ConflictChoice choice = ResolveConflict(entryID, currentFile, result.Paths[otherIndex]);
+
                     if (choice.Cancel)
                         throw new OperationCanceledException();
+
                     if (choice.IgnoreAll)
                         ignoreAllConflicts = true;
+
                     continue;
                 }
+
                 result.EntryInfos.TryAdd(entryID, info);
                 result.Files.Add(entryID, result.Paths.Count);
             }
 
-            result.Paths.Add(file);
+            result.Paths.Add(currentFile);
         }
 
         try
@@ -277,7 +308,9 @@ public partial class FileView : Form
             StreamWriter sw = new(s);
 
             foreach (string key in fileTypes.Keys)
-                sw.WriteLine(key + "|" + (fileTypes[key] ? "bundle" : "other"));
+                sw.WriteLine(key + "|" + (fileTypes[key]
+                    ? "bundle"
+                    : "other"));
 
             sw.Flush();
             sw.Close();
@@ -295,21 +328,24 @@ public partial class FileView : Form
         {
             FolderBrowserDialog fbd = new();
             SaveData.Load();
+
             if (SaveData.RecentPaths.Count > 0)
                 fbd.SelectedPath = SaveData.RecentPaths[^1];
+
             DialogResult result = fbd.ShowDialog(this);
+
             if (result == DialogResult.OK)
             {
-                _currentPath = fbd.SelectedPath;
-                SaveData.AddRecentPath(_currentPath);
+                CurrentPath = fbd.SelectedPath;
+                SaveData.AddRecentPath(CurrentPath);
                 SaveData.Save();
                 await LoadFileList();
             }
         }
         else
         {
-            _currentPath = path;
-            SaveData.AddRecentPath(_currentPath);
+            CurrentPath = path;
+            SaveData.AddRecentPath(CurrentPath);
             SaveData.Save();
             await LoadFileList();
         }
@@ -317,10 +353,13 @@ public partial class FileView : Form
 
     private void OpenBundle(int index)
     {
-        string file = BundleCache.Paths[index];
-        MainForm form = new();
-        form.SubForm = true;
-        form.Shown += async (_, _) => await form.Open(file); // Once it's showing, so the loading dialog has a window to sit over
+        string currentFile = BundleCache.Paths[index];
+        MainForm form = new()
+        {
+            SubForm = true
+        };
+
+        form.Shown += async (_, _) => await form.Open(currentFile); // Once it's showing, so the loading dialog has a window to sit over
         form.ShowDialog(this);
     }
 
@@ -350,7 +389,7 @@ public partial class FileView : Form
 
         Hide();
         Program.SavePreferredMode(false);
-        Program.fileModeForm.Show();
+        Program.FileModeForm.Show();
     }
 
     private void FileView_FormClosing(object sender, FormClosingEventArgs e)
@@ -386,15 +425,19 @@ public partial class FileView : Form
 
     private void dumpInfoToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        if (_currentPath == null)
+        if (CurrentPath == null)
         {
             MessageBox.Show("Please load a folder first!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
-        SaveFileDialog sfd = new();
-        sfd.Filter = "Text Files|*.txt|All Files|*.*";
+        SaveFileDialog sfd = new()
+        {
+            Filter = "Text Files|*.txt|All Files|*.*"
+        };
+
         DialogResult result = sfd.ShowDialog(this);
+
         if (result == DialogResult.OK)
         {
             string path = sfd.FileName;
@@ -406,9 +449,9 @@ public partial class FileView : Form
 
             Array types = Enum.GetValues(typeof(EntryType));
 
-            foreach (EntryType type in types)
+            foreach (EntryType currentType in types)
             {
-                int len = type.ToString().Length;
+                int len = currentType.ToString().Length;
 
                 maxLength = Math.Max(len, maxLength);
             }
@@ -419,7 +462,7 @@ public partial class FileView : Form
 
                 string thePath = info.Path;
                 string fixedPath = thePath.Replace('\\', '/');
-                string fixedCurrentPath = _currentPath.Replace('\\', '/');
+                string fixedCurrentPath = CurrentPath.Replace('\\', '/');
 
                 fixedPath = fixedPath.Replace(fixedCurrentPath, "");
 

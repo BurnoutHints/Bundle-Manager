@@ -17,7 +17,6 @@ namespace BaseHandlers;
 // Junction::mpaExits and Road::mpaSpans widen, and Road has no trailing
 // unknown field. 64-bit (Remastered) and big-endian (X360/PS3) are not
 // yet handled.
-
 public class ScoreList
 {
     public int[] maScores { get; set; } = new int[2]; // 0x0 0x8  int32_t[2] maScores
@@ -27,6 +26,7 @@ public class ScoreList
         get => maScores[0];
         set => maScores[0] = value;
     }
+
     public int Score1
     {
         get => maScores[1];
@@ -51,8 +51,10 @@ public class ScoreList
 public class ChallengeData
 {
     public byte[] mDirty { get; set; } = new byte[8];       // 0x0  0x8  BitArray<2u> mDirty
+
     public byte[] mValidScore { get; set; } = new byte[8];  // 0x8  0x8  BitArray<2u> mValidScores
-    public ScoreList mScoreList { get; set; } = new ScoreList(); // 0x10 0x8
+
+    public ScoreList mScoreList { get; set; } = new(); // 0x10 0x8
 
     public void Read(BinaryReader2 br)
     {
@@ -70,9 +72,14 @@ public class ChallengeData
 
     private static byte[] EnsureLen(byte[] a, int n)
     {
-        if (a != null && a.Length == n) return a;
+        if (a != null && a.Length == n)
+            return a;
+
         byte[] r = new byte[n];
-        if (a != null) Array.Copy(a, r, Math.Min(a.Length, n));
+
+        if (a != null)
+            Array.Copy(a, r, Math.Min(a.Length, n));
+
         return r;
     }
 }
@@ -80,8 +87,10 @@ public class ChallengeData
 public class Exit
 {
     public short mSpan { get; set; }   // 0x0 0x2  SpanIndex mSpan
+
     [Browsable(false)]
     public byte[] padding { get; set; } = new byte[2]; // 0x2 0x2
+
     public float mrAngle { get; set; } // 0x4 0x4  float
 
     public override string ToString() => "Exit(span=" + mSpan + ", angle=" + mrAngle + ")";
@@ -96,7 +105,9 @@ public class Exit
     public void Write(BinaryWriter2 bw)
     {
         bw.Write(mSpan);
-        bw.Write(padding != null && padding.Length == 2 ? padding : new byte[2]);
+        bw.Write(padding != null && padding.Length == 2
+            ? padding
+            : new byte[2]);
         bw.Write(mrAngle);
     }
 }
@@ -104,6 +115,7 @@ public class Exit
 public class AIInfo
 {
     public byte muMaxSpeedMPS { get; set; } // 0x0 0x1
+
     public byte muMinSpeedMPS { get; set; } // 0x1 0x1
 
     public override string ToString() => "AI(max=" + muMaxSpeedMPS + ", min=" + muMinSpeedMPS + ")";
@@ -131,9 +143,12 @@ public enum ESpanType
 public class SpanBase
 {
     public int miRoadIndex { get; set; }     // 0x0 0x4
+
     public short miSpanIndex { get; set; }   // 0x4 0x2
+
     [Browsable(false)]
     public byte[] padding { get; set; } = new byte[2]; // 0x6 0x2
+
     public ESpanType meSpanType { get; set; }// 0x8 0x4
 
     public override string ToString() =>
@@ -151,15 +166,19 @@ public class SpanBase
     {
         bw.Write(miRoadIndex);
         bw.Write(miSpanIndex);
-        bw.Write(padding != null && padding.Length == 2 ? padding : new byte[2]);
+        bw.Write(padding != null && padding.Length == 2
+            ? padding
+            : new byte[2]);
         bw.Write((int)meSpanType);
     }
 }
 
 public class Street
 {
-    public SpanBase super_SpanBase { get; set; } = new SpanBase(); // 0x0 0xC
-    public AIInfo mAiInfo { get; set; } = new AIInfo();            // 0xC 0x2
+    public SpanBase super_SpanBase { get; set; } = new(); // 0x0 0xC
+
+    public AIInfo mAiInfo { get; set; } = new();            // 0xC 0x2
+
     [Browsable(false)]
     public byte[] padding { get; set; } = new byte[2];             // 0xE 0x2
 
@@ -168,21 +187,25 @@ public class Street
         get => super_SpanBase.miRoadIndex;
         set => super_SpanBase.miRoadIndex = value;
     }
+
     public short SpanIndex
     {
         get => super_SpanBase.miSpanIndex;
         set => super_SpanBase.miSpanIndex = value;
     }
+
     public ESpanType SpanType
     {
         get => super_SpanBase.meSpanType;
         set => super_SpanBase.meSpanType = value;
     }
+
     public byte MaxSpeedMPS
     {
         get => mAiInfo.muMaxSpeedMPS;
         set => mAiInfo.muMaxSpeedMPS = value;
     }
+
     public byte MinSpeedMPS
     {
         get => mAiInfo.muMinSpeedMPS;
@@ -200,13 +223,16 @@ public class Street
     {
         super_SpanBase.Write(bw);
         mAiInfo.Write(bw);
-        bw.Write(padding != null && padding.Length == 2 ? padding : new byte[2]);
+        bw.Write(padding != null && padding.Length == 2
+            ? padding
+            : new byte[2]);
     }
 }
 
 public class Junction
 {
-    public SpanBase super_SpanBase { get; set; } = new SpanBase(); // 0x0 0xC
+    public SpanBase super_SpanBase { get; set; } = new(); // 0x0 0xC
+
     // mpaExits / miExitCount are written as 0 by the writer because the
     // game's StreetData::FixUp() corrupts the per-junction exit arrays
     // (see Write() for details), so the on-disk values are unreliable.
@@ -214,9 +240,12 @@ public class Junction
     // pointer if a tool wants to.
     [Browsable(false)]
     public int mpaExits { get; set; }                              // 0xC 0x4 (32-bit)
+
     [Browsable(false)]
     public int miExitCount { get; set; }                           // 0x10 0x4
+
     public string macName { get; set; }                            // 0x14 0x10
+
     // Decomp only, see StreetData.Write.
     [Browsable(false)]
     public Exit[] maExits { get; set; } = [];
@@ -226,16 +255,19 @@ public class Junction
         get => super_SpanBase.miRoadIndex;
         set => super_SpanBase.miRoadIndex = value;
     }
+
     public short SpanIndex
     {
         get => super_SpanBase.miSpanIndex;
         set => super_SpanBase.miSpanIndex = value;
     }
+
     public ESpanType SpanType
     {
         get => super_SpanBase.meSpanType;
         set => super_SpanBase.meSpanType = value;
     }
+
     public string Name
     {
         get => (macName ?? string.Empty).TrimEnd('\0');
@@ -245,34 +277,43 @@ public class Junction
     public void Read(BinaryReader2 br, bool x64)
     {
         super_SpanBase.Read(br);
+
         if (x64)
             br.ReadInt32(); // padding
-        mpaExits = x64 ? (int)br.ReadInt64() : br.ReadInt32();
+
+        mpaExits = x64
+            ? (int)br.ReadInt64()
+            : br.ReadInt32();
         miExitCount = br.ReadInt32();
         macName = Encoding.ASCII.GetString(br.ReadBytes(16));
+
         // Intentionally NOT reading the exit array. StreetData::FixUp()
         // in retail Burnout Paradise overwrites large parts of that
         // region (see StreetData.Write for the writeup), so the on-disk
         // bytes are not reliable Exit structs.
         if (!x64)
             return;
+
         br.ReadInt32(); // padding
 
         // The decomp's are kept as-is
         long pos = br.BaseStream.Position;
         br.BaseStream.Position = mpaExits;
         maExits = new Exit[miExitCount];
+
         for (int i = 0; i < miExitCount; i++)
         {
-            maExits[i] = new Exit();
+            maExits[i] = new();
             maExits[i].Read(br);
         }
+
         br.BaseStream.Position = pos;
     }
 
     public void Write(BinaryWriter2 bw, bool x64)
     {
         super_SpanBase.Write(bw);
+
         if (x64)
         {
             bw.Write(0); // padding
@@ -288,7 +329,9 @@ public class Junction
             bw.Write(0);
             bw.Write(0);
         }
+
         bw.Write(PadName(macName, 16));
+
         if (x64)
             bw.Write(0); // padding
     }
@@ -296,11 +339,13 @@ public class Junction
     internal static byte[] PadName(string name, int len)
     {
         byte[] buf = new byte[len];
+
         if (name != null)
         {
             byte[] src = Encoding.ASCII.GetBytes(name);
             Array.Copy(src, buf, Math.Min(src.Length, len));
         }
+
         return buf;
     }
 }
@@ -308,19 +353,29 @@ public class Junction
 public class Road
 {
     public Vector3 mReferencePosition { get; set; } // 0x0 0xC
+
     [Browsable(false)]
     public int mpaSpans { get; set; }               // 0xC 0x4 (32-bit)
+
     public long mId { get; set; }                   // 0x10 0x8
+
     public long miRoadLimitId0 { get; set; }        // 0x18 0x8
+
     public long miRoadLimitId1 { get; set; }        // 0x20 0x8
+
     public string macDebugName { get; set; }        // 0x28 0x10
+
     public int mChallenge { get; set; }             // 0x38 0x4
+
     // miSpanCount is written as 0; see Write() for the rationale.
     [Browsable(false)]
     public int miSpanCount { get; set; }            // 0x3C 0x4
+
     public int unknown { get; set; }                // 0x40 0x4  (spec: uint32, always 1)
+
     [Browsable(false)]
     public byte[] padding { get; set; } = new byte[4]; // 0x44 0x4
+
     // Decomp only, see StreetData.Write.
     [Browsable(false)]
     public short[] maSpans { get; set; } = [];
@@ -330,6 +385,7 @@ public class Road
         get => (macDebugName ?? string.Empty).TrimEnd('\0');
         set => macDebugName = value ?? string.Empty;
     }
+
     public float RefX
     {
         get => mReferencePosition.X;
@@ -340,6 +396,7 @@ public class Road
             mReferencePosition = v;
         }
     }
+
     public float RefY
     {
         get => mReferencePosition.Y;
@@ -350,6 +407,7 @@ public class Road
             mReferencePosition = v;
         }
     }
+
     public float RefZ
     {
         get => mReferencePosition.Z;
@@ -364,28 +422,37 @@ public class Road
     public void Read(BinaryReader2 br, bool x64)
     {
         mReferencePosition = br.ReadVector3F();
+
         if (x64)
             br.ReadInt32(); // padding
-        mpaSpans = x64 ? (int)br.ReadInt64() : br.ReadInt32();
+
+        mpaSpans = x64
+            ? (int)br.ReadInt64()
+            : br.ReadInt32();
         mId = br.ReadInt64();
         miRoadLimitId0 = br.ReadInt64();
         miRoadLimitId1 = br.ReadInt64();
         macDebugName = Encoding.ASCII.GetString(br.ReadBytes(16));
         mChallenge = br.ReadInt32();
         miSpanCount = br.ReadInt32();
+
         if (x64)
         {
             // Version 5 ends here. Its span array is kept as-is
             long pos = br.BaseStream.Position;
             br.BaseStream.Position = mpaSpans;
             maSpans = new short[miSpanCount];
+
             for (int i = 0; i < miSpanCount; i++)
                 maSpans[i] = br.ReadInt16();
+
             br.BaseStream.Position = pos;
             return;
         }
+
         unknown = br.ReadInt32();
         padding = br.ReadBytes(4);
+
         // Intentionally NOT reading the per-road span array. See
         // StreetData.Write for the FixUp corruption details.
     }
@@ -395,6 +462,7 @@ public class Road
         bw.Write(mReferencePosition.X);
         bw.Write(mReferencePosition.Y);
         bw.Write(mReferencePosition.Z);
+
         if (x64)
         {
             bw.Write(0); // padding
@@ -402,22 +470,30 @@ public class Road
         }
         else
             bw.Write(0); // Always emit zeroed pointer + count. See Junction.Write.
+
         bw.Write(mId);
         bw.Write(miRoadLimitId0);
         bw.Write(miRoadLimitId1);
         bw.Write(Junction.PadName(macDebugName, 16));
         bw.Write(mChallenge);
-        bw.Write(x64 ? maSpans.Length : 0);
+        bw.Write(x64
+            ? maSpans.Length
+            : 0);
+
         if (x64)
             return;
+
         bw.Write(unknown);
-        bw.Write(padding != null && padding.Length == 4 ? padding : new byte[4]);
+        bw.Write(padding != null && padding.Length == 4
+            ? padding
+            : new byte[4]);
     }
 }
 
 public class ChallengeParScores
 {
-    public ChallengeData challengeData { get; set; } = new ChallengeData(); // 0x0 0x18
+    public ChallengeData challengeData { get; set; } = new(); // 0x0 0x18
+
     public long[] mRivals { get; set; } = new long[2];                       // 0x18 0x10
 
     public int Score0
@@ -425,16 +501,19 @@ public class ChallengeParScores
         get => challengeData.mScoreList.maScores[0];
         set => challengeData.mScoreList.maScores[0] = value;
     }
+
     public int Score1
     {
         get => challengeData.mScoreList.maScores[1];
         set => challengeData.mScoreList.maScores[1] = value;
     }
+
     public long Rival0
     {
         get => mRivals[0];
         set => mRivals[0] = value;
     }
+
     public long Rival1
     {
         get => mRivals[1];
@@ -469,7 +548,7 @@ public class StreetData : IEntryData
     public List<Road> roads = [];
     public List<ChallengeParScores> challenges = [];
 
-    private const int SIZEOF_CHALLENGE_PAR_SCORES_ENTRY = 0x28;
+    private const int SIZEOFCHALLENGEPARSCORESENTRY = 0x28;
 
     private void Clear()
     {
@@ -489,11 +568,16 @@ public class StreetData : IEntryData
         Clear();
 
         MemoryStream ms = new(entry.EntryBlocks[0].Data);
-        BinaryReader2 br = new(ms);
-        br.BigEndian = entry.Console;
+        BinaryReader2 br = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
-        int ReadPtr() => x64 ? (int)br.ReadInt64() : br.ReadInt32();
+
+        int ReadPtr() => x64
+            ? (int)br.ReadInt64()
+            : br.ReadInt32();
 
         miVersion = br.ReadInt32();
         br.ReadInt32(); // miSize, recomputed on write
@@ -506,6 +590,7 @@ public class StreetData : IEntryData
         int miRoadCount = br.ReadInt32();
 
         br.BaseStream.Position = mpaStreets;
+
         for (int i = 0; i < miStreetCount; i++)
         {
             Street s = new();
@@ -514,6 +599,7 @@ public class StreetData : IEntryData
         }
 
         br.BaseStream.Position = mpaJunctions;
+
         for (int i = 0; i < miJunctionCount; i++)
         {
             Junction j = new();
@@ -522,6 +608,7 @@ public class StreetData : IEntryData
         }
 
         br.BaseStream.Position = mpaRoads;
+
         for (int i = 0; i < miRoadCount; i++)
         {
             Road r = new();
@@ -536,6 +623,7 @@ public class StreetData : IEntryData
         // matches the game allocation, so the file holds miRoadCount
         // entries here followed by partially-corrupt bytes.
         br.BaseStream.Position = mpaChallengeParScores;
+
         for (int i = 0; i < miRoadCount; i++)
         {
             ChallengeParScores c = new();
@@ -558,10 +646,13 @@ public class StreetData : IEntryData
                 ") must equal roads.Count (" + roads.Count + ").");
 
         MemoryStream ms = new();
-        BinaryWriter2 bw = new(ms);
-        bw.BigEndian = entry.Console;
+        BinaryWriter2 bw = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
+
         void WritePtr(int ptr)
         {
             if (x64)
@@ -583,19 +674,27 @@ public class StreetData : IEntryData
 
         bw.WritePadding();
         int streetsOffset = (int)ms.Position;
-        for (int i = 0; i < streets.Count; i++) streets[i].Write(bw);
+
+        for (int i = 0; i < streets.Count; i++)
+            streets[i].Write(bw);
 
         bw.WritePadding();
         int junctionsOffset = (int)ms.Position;
-        for (int i = 0; i < junctions.Count; i++) junctions[i].Write(bw, x64);
+
+        for (int i = 0; i < junctions.Count; i++)
+            junctions[i].Write(bw, x64);
 
         bw.WritePadding();
         int roadsOffset = (int)ms.Position;
-        for (int i = 0; i < roads.Count; i++) roads[i].Write(bw, x64);
+
+        for (int i = 0; i < roads.Count; i++)
+            roads[i].Write(bw, x64);
 
         bw.WritePadding();
         int challengesOffset = (int)ms.Position;
-        for (int i = 0; i < challenges.Count; i++) challenges[i].Write(bw);
+
+        for (int i = 0; i < challenges.Count; i++)
+            challenges[i].Write(bw);
 
         // The game's StreetData::FixUp() iterates miJunctionCount times
         // (a Burnout bug; it should be miRoadCount) when constructing
@@ -623,23 +722,34 @@ public class StreetData : IEntryData
             {
                 bw.WritePadding();
                 long spansPtr = ms.Position;
-                foreach (short span in roads[i].maSpans) bw.Write(span);
+
+                foreach (short span in roads[i].maSpans)
+                    bw.Write(span);
+
                 ms.Position = roadsOffset + i * 0x48 + 0x10;
                 bw.Write(spansPtr);
                 ms.Position = ms.Length;
             }
+
             for (int i = 0; i < junctions.Count; i++)
             {
                 bw.WritePadding();
                 long exitsPtr = ms.Position;
-                foreach (Exit exit in junctions[i].maExits) exit.Write(bw);
+
+                foreach (Exit exit in junctions[i].maExits)
+                    exit.Write(bw);
+
                 ms.Position = junctionsOffset + i * 0x30 + 0x10;
                 bw.Write(exitsPtr);
                 ms.Position = ms.Length;
             }
         }
-        int fixUpEnd = challengesOffset + junctions.Count * SIZEOF_CHALLENGE_PAR_SCORES_ENTRY;
-        while (ms.Position < fixUpEnd) bw.Write((byte)0);
+
+        int fixUpEnd = challengesOffset + junctions.Count * SIZEOFCHALLENGEPARSCORESENTRY;
+
+        while (ms.Position < fixUpEnd)
+            bw.Write((byte)0);
+
         int miSizeOut = (int)ms.Position;
         bw.WritePadding();
 
@@ -666,8 +776,11 @@ public class StreetData : IEntryData
 
     public IEntryEditor GetEditor(BundleEntry entry)
     {
-        StreetDataEditor editor = new();
-        editor.Model = this;
+        StreetDataEditor editor = new()
+        {
+            Model = this
+        };
+
         editor.EditEvent += () => Write(entry);
         return editor;
     }

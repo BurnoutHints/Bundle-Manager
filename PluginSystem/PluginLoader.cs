@@ -9,7 +9,7 @@ public static class PluginLoader
 {
     // Plugin classes. To add an entry here, the plugin's containing project
     // must be added as a reference.
-    private static readonly List<Type> registeredPlugins = 
+    private static readonly List<Type> registeredPlugins =
     [
         typeof(BaseHandlers.BasePlugin),
         typeof(LangEditor.LangPlugin),
@@ -27,6 +27,7 @@ public static class PluginLoader
     {
         Console.WriteLine("Initializing plugins...");
         int numPluginsInitialized = 0;
+
         foreach (Type pluginType in registeredPlugins)
         {
             if (pluginType.IsAssignableTo(typeof(IPlugin)))
@@ -40,6 +41,7 @@ public static class PluginLoader
                 Console.WriteLine($"{pluginType.AssemblyQualifiedName} is not a valid plugin. Skipping.");
             }
         }
+
         Console.WriteLine($"Initialized {numPluginsInitialized} plugins.");
     }
 }

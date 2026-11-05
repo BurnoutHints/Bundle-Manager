@@ -1,4 +1,3 @@
-using BundleUtilities;
 using PluginAPI;
 using System;
 using System.Collections;
@@ -11,6 +10,7 @@ namespace WheelList;
 public partial class WheelListForm : Form, IEntryEditor
 {
     public delegate void OnEdit();
+
     public event OnEdit Edit;
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
@@ -62,16 +62,21 @@ public partial class WheelListForm : Form, IEntryEditor
     {
         if (lstWheels.SelectedItems.Count > 1)
             return;
+
         if (List == null || lstWheels.SelectedIndices.Count <= 0)
             return;
 
         if (!int.TryParse(lstWheels.SelectedItems[0].Text, out int index))
             return;
+
         Wheel wheel = List.Entries[index];
 
-        WheelEditor editor = new(List.Entries.Count - 1);
-        editor.Wheel = wheel;
-        editor.OnDone += Editor_OnDone;
+        WheelEditor editor = new(List.Entries.Count - 1)
+        {
+            Wheel = wheel
+        };
+
+        editor.OnDone += EditorOnDone;
         editor.ShowDialog(this);
     }
 
@@ -79,14 +84,21 @@ public partial class WheelListForm : Form, IEntryEditor
     {
         if (List == null)
             return;
-        Wheel wheel = new();
-        wheel.Index = List.Entries.Count;
-        wheel.ID = new EncryptedString("");
-        wheel.Name = "";
 
-        WheelEditor editor = new(List.Entries.Count);
-        editor.Wheel = wheel;
-        editor.OnDone += Editor_OnDone1; ;
+        Wheel wheel = new()
+        {
+            Index = List.Entries.Count,
+            ID = new(""),
+            Name = ""
+        };
+
+        WheelEditor editor = new(List.Entries.Count)
+        {
+            Wheel = wheel
+        };
+
+        editor.OnDone += EditorOnDone1;
+        ;
         editor.ShowDialog(this);
     }
 
@@ -98,12 +110,18 @@ public partial class WheelListForm : Form, IEntryEditor
 
         if (!int.TryParse(lstWheels.SelectedItems[0].Text, out int index))
             return;
-        Wheel wheel = new(List.Entries[index]);
-        wheel.Index = List.Entries.Count;
 
-        WheelEditor editor = new(List.Entries.Count);
-        editor.Wheel = wheel;
-        editor.OnDone += Editor_OnDone1;
+        Wheel wheel = new(List.Entries[index])
+        {
+            Index = List.Entries.Count
+        };
+
+        WheelEditor editor = new(List.Entries.Count)
+        {
+            Wheel = wheel
+        };
+
+        editor.OnDone += EditorOnDone1;
         editor.ShowDialog(this);
     }
 
@@ -115,7 +133,9 @@ public partial class WheelListForm : Form, IEntryEditor
 
         if (!int.TryParse(lstWheels.SelectedItems[0].Text, out int index))
             return;
+
         List.Entries.RemoveAt(index);
+
         for (int i = index; i < List.Entries.Count; ++i)
             List.Entries[i].Index--;
 
@@ -123,7 +143,7 @@ public partial class WheelListForm : Form, IEntryEditor
         UpdateDisplay();
     }
 
-    private void Editor_OnDone1(Wheel wheel)
+    private void EditorOnDone1(Wheel wheel)
     {
         // Insert if not at end, else add
         if (wheel.Index != List.Entries.Count)
@@ -142,10 +162,11 @@ public partial class WheelListForm : Form, IEntryEditor
         UpdateDisplay();
     }
 
-    private void Editor_OnDone(Wheel wheel)
+    private void EditorOnDone(Wheel wheel)
     {
         // If the index has changed, edit the list
         int oldIndex = int.Parse(lstWheels.SelectedItems[0].Text); // Tried in EditSelectedEntry()
+
         if (oldIndex != wheel.Index)
         {
             Wheel old = List.Entries[oldIndex];
@@ -190,6 +211,7 @@ public partial class WheelListForm : Form, IEntryEditor
                 lstWheels.Sort();
                 return;
             }
+
             direction = sorter.Direction;
         }
 
@@ -197,6 +219,7 @@ public partial class WheelListForm : Form, IEntryEditor
         {
             Direction = !direction
         };
+
         lstWheels.ListViewItemSorter = newSorter;
         lstWheels.Sort();
     }
@@ -221,27 +244,31 @@ public partial class WheelListForm : Form, IEntryEditor
             {
                 if (Direction)
                     return -1;
+
                 return 1;
             }
 
             string iX = itemX.SubItems[Column].Text;
             string iY = itemY.SubItems[Column].Text;
 
-
             if (int.TryParse(iX, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out int iXint))
             {
                 if (int.TryParse(iY, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out int iYint))
                 {
                     int val2 = iXint.CompareTo(iYint);
-                    if (this.Direction)
+
+                    if (Direction)
                         return val2 * -1;
+
                     return val2;
                 }
             }
 
             int val = string.CompareOrdinal(iX, iY);
+
             if (Direction)
                 return val * -1;
+
             return val;
         }
 

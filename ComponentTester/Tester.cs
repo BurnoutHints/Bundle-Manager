@@ -20,13 +20,16 @@ public partial class Tester : Form
 
     private void Open()
     {
-        OpenFileDialog ofd = new();
-        ofd.Filter = "All Files|*.*";
-        ofd.FileOk += Ofd_FileOk;
+        OpenFileDialog ofd = new()
+        {
+            Filter = "All Files|*.*"
+        };
+
+        ofd.FileOk += ofd_FileOk;
         ofd.ShowDialog(this);
     }
 
-    private void Ofd_FileOk(object sender, CancelEventArgs e)
+    private void ofd_FileOk(object sender, CancelEventArgs e)
     {
         OpenFileDialog ofd = (OpenFileDialog)sender;
 
@@ -36,10 +39,12 @@ public partial class Tester : Form
         Stream s = ofd.OpenFile();
         BinaryReader br = new(s);
         List<byte> bytes = [];
+
         while (br.BaseStream.Position < br.BaseStream.Length)
         {
             bytes.Add(br.ReadByte());
         }
+
         br.Close();
 
         hexView1.HexData = [.. bytes];

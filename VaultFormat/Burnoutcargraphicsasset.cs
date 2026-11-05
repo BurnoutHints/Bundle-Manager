@@ -8,18 +8,29 @@ namespace VaultFormat;
 public class Burnoutcargraphicsasset : IAttribute
 {
     public int PlayerPalletteIndex { get; set; }
+
     public int PlayerColourIndex { get; set; }
+
     public short Alloc { get; set; } // Allocate space for x* Size. Always 1 in VEH_P*	
+
     public short Num_RandomTrafficColours { get; set; } // Count
+
     public short Size { get; set; } // Size of each entry
+
     public short EncodedTypePad { get; set; } // Padding
+
     public List<int> RandomTrafficColours { get; set; }
+
     public short Alloc_Offences { get; set; } // Allocate space for x* Size
+
     public short Num_Offences { get; set; } // Count
+
     public short Size_Offences { get; set; } // Size of each entry
+
     public short EncodedTypePad_Offences { get; set; } // Padding
 
     public AttributeHeader header { get; set; }
+
     public SizeAndPositionInformation info { get; set; }
 
     public Burnoutcargraphicsasset(SizeAndPositionInformation chunk, AttributeHeader dataChunk)
@@ -29,7 +40,7 @@ public class Burnoutcargraphicsasset : IAttribute
         RandomTrafficColours = [];
     }
 
-    public int getDataSize()
+    public int GetDataSize()
     {
         List<byte[]> bytes =
         [
@@ -40,25 +51,29 @@ public class Burnoutcargraphicsasset : IAttribute
             BitConverter.GetBytes(Size),
             BitConverter.GetBytes(EncodedTypePad),
         ];
-        for (int i = 0; i < Num_RandomTrafficColours; i++)
-            bytes.Add(BitConverter.GetBytes(RandomTrafficColours[i]));
-        for (int i = Num_RandomTrafficColours; i < Alloc; i++)
+
+        for (int currentI = 0; currentI < Num_RandomTrafficColours; currentI++)
+            bytes.Add(BitConverter.GetBytes(RandomTrafficColours[currentI]));
+
+        for (int currentI2 = Num_RandomTrafficColours; currentI2 < Alloc; currentI2++)
             bytes.Add(BitConverter.GetBytes(0));
+
         bytes.Add(BitConverter.GetBytes(Alloc_Offences));
         bytes.Add(BitConverter.GetBytes(Num_Offences));
         bytes.Add(BitConverter.GetBytes(Size_Offences));
         bytes.Add(BitConverter.GetBytes(EncodedTypePad_Offences));
         Console.Write("Length:" + bytes.SelectMany(i => i).Count());
+
         // 28 bytes but not padding...
         return bytes.SelectMany(i => i).Count();
     }
 
-    public AttributeHeader getHeader()
+    public AttributeHeader GetHeader()
     {
         return header;
     }
 
-    public SizeAndPositionInformation getInfo()
+    public SizeAndPositionInformation GetInfo()
     {
         return info;
     }
@@ -71,10 +86,13 @@ public class Burnoutcargraphicsasset : IAttribute
         Num_RandomTrafficColours = br.ReadInt16();
         Size = br.ReadInt16();
         EncodedTypePad = br.ReadInt16();
+
         for (int i = 0; i < Num_RandomTrafficColours; i++)
             RandomTrafficColours.Add(br.ReadInt32());
+
         for (int i = Num_RandomTrafficColours; i < Alloc; i++)
             br.SkipUniquePadding(4);
+
         Alloc_Offences = br.ReadInt16();
         Num_Offences = br.ReadInt16();
         Size_Offences = br.ReadInt16();
@@ -85,18 +103,23 @@ public class Burnoutcargraphicsasset : IAttribute
     {
         bw.Write(PlayerPalletteIndex);
         bw.Write(PlayerColourIndex);
+
         // Allocate space for x* Size. Always 1 in VEH_P*
         if (Alloc < Num_RandomTrafficColours)
             bw.Write(Num_RandomTrafficColours);
         else
             bw.Write(Alloc);
+
         bw.Write(Num_RandomTrafficColours); // Count
         bw.Write(Size); // Size of each entry
         bw.Write(EncodedTypePad); // Padding
+
         for (int i = 0; i < Num_RandomTrafficColours; i++)
             bw.Write(RandomTrafficColours[i]);
+
         for (int i = Num_RandomTrafficColours; i < Alloc; i++)
             bw.Write(0);
+
         bw.Write(Alloc_Offences); // Allocate space for x* Size
         bw.Write(Num_Offences); // Count
         bw.Write(Size_Offences); // Size of each entry

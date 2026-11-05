@@ -29,6 +29,7 @@ internal class ColourSet
         {
             // Check if this pixel is enabled
             int bit = 1 << i;
+
             if ((mask & bit) == 0)
             {
                 Remap[i] = -1;
@@ -58,8 +59,10 @@ internal class ColourSet
                     float w = (float)(rgba[4 * i + 3] + 1) / 256.0f;
 
                     // add the point
-                    Points[Count] = new Vec3(x, y, z);
-                    Weights[Count] = (weightByAlpha ? w : 1.0f);
+                    Points[Count] = new(x, y, z);
+                    Weights[Count] = (weightByAlpha
+                        ? w
+                        : 1.0f);
                     Remap[i] = Count;
 
                     // Advance
@@ -74,6 +77,7 @@ internal class ColourSet
                     && (rgba[4 * i + 1] == rgba[4 * j + 1])
                     && (rgba[4 * i + 2] == rgba[4 * j + 2])
                     && (rgba[4 * j + 3] >= 128 || !isDxt1);
+
                 if (match)
                 {
                     // get the index of the match
@@ -83,7 +87,9 @@ internal class ColourSet
                     float w = (float)(rgba[4 * i + 3] + 1) / 256.0f;
 
                     // map to this point and increase the weight
-                    Weights[index] += (weightByAlpha ? w : 1.0f);
+                    Weights[index] += (weightByAlpha
+                        ? w
+                        : 1.0f);
                     Remap[i] = index;
                     break;
                 }
@@ -100,6 +106,7 @@ internal class ColourSet
         for (int i = 0; i < 16; ++i)
         {
             int j = Remap[i];
+
             if (j == -1)
                 target[i] = 3;
             else

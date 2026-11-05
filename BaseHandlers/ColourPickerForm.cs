@@ -13,12 +13,32 @@ public class ColourPickerForm : Form
     private bool updating;
 
     private readonly Vector3 original;
-    private readonly PictureBox square = new() { Location = new Point(12, 12), Size = new Size(200, 200), BorderStyle = BorderStyle.FixedSingle };
-    private readonly PictureBox hueBar = new() { Location = new Point(220, 12), Size = new Size(24, 200), BorderStyle = BorderStyle.FixedSingle };
-    private readonly PictureBox preview = new() { Location = new Point(256, 12), Size = new Size(140, 60), BorderStyle = BorderStyle.FixedSingle };
+
+    private readonly PictureBox square = new()
+    {
+        Location = new(12, 12),
+        Size = new(200, 200),
+        BorderStyle = BorderStyle.FixedSingle
+    };
+
+    private readonly PictureBox hueBar = new()
+    {
+        Location = new(220, 12),
+        Size = new(24, 200),
+        BorderStyle = BorderStyle.FixedSingle
+    };
+
+    private readonly PictureBox preview = new()
+    {
+        Location = new(256, 12),
+        Size = new(140, 60),
+        BorderStyle = BorderStyle.FixedSingle
+    };
+
     private readonly NumericUpDown red = Number(), green = Number(), blue = Number(), strength = Number(), alpha = Number();
 
     public Vector3 Colour { get; private set; }
+
     public float Alpha => (float)alpha.Value;
 
     public ColourPickerForm(Vector3 colour, float? alphaValue = null)
@@ -29,51 +49,97 @@ public class ColourPickerForm : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = MinimizeBox = ShowInTaskbar = false;
         StartPosition = FormStartPosition.CenterParent;
-        ClientSize = new Size(408, 262);
+        ClientSize = new(408, 262);
 
         int y = 84;
+
         void AddRow(string label, NumericUpDown box)
         {
-            Controls.Add(new Label { Text = label, Location = new Point(256, y + 3), AutoSize = true });
-            box.Location = new Point(326, y);
+            Controls.Add(new Label()
+            {
+                Text = label,
+                Location = new(256, y + 3),
+                AutoSize = true
+            });
+
+            box.Location = new(326, y);
             Controls.Add(box);
+
             y += 26;
         }
+
         AddRow("Red", red);
         AddRow("Green", green);
         AddRow("Blue", blue);
         AddRow("Intensity", strength);
+
         if (alphaValue is float a)
         {
             AddRow("Alpha", alpha);
             alpha.Value = Clamp(alpha, a);
         }
 
-        Button ok = new() { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(240, 226), Size = new Size(75, 25) };
-        Button cancel = new() { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(321, 226), Size = new Size(75, 25) };
+        Button ok = new()
+        {
+            Text = "OK",
+            DialogResult = DialogResult.OK,
+            Location = new(240, 226),
+            Size = new(75, 25)
+        };
+
+        Button cancel = new()
+        {
+            Text = "Cancel",
+            DialogResult = DialogResult.Cancel,
+            Location = new(321, 226),
+            Size = new(75, 25)
+        };
+
         AcceptButton = ok;
         CancelButton = cancel;
         Controls.AddRange([square, hueBar, preview, ok, cancel]);
-        Controls.Add(new Label { Text = "Intensity scales the colour past 1.", Location = new Point(12, 226), AutoSize = true, ForeColor = SystemColors.GrayText });
 
         square.Paint += PaintSquare;
         hueBar.Paint += PaintHueBar;
         preview.Paint += PaintPreview;
         square.MouseDown += (_, e) => DragSquare(e);
-        square.MouseMove += (_, e) => { if (e.Button == MouseButtons.Left) DragSquare(e); };
+        square.MouseMove += (_, e) =>
+        {
+            if (e.Button == MouseButtons.Left)
+                DragSquare(e);
+        };
         hueBar.MouseDown += (_, e) => DragHue(e);
-        hueBar.MouseMove += (_, e) => { if (e.Button == MouseButtons.Left) DragHue(e); };
-        foreach (NumericUpDown box in (NumericUpDown[])[red, green, blue])
-            box.ValueChanged += (_, _) => FromRgb();
-        strength.ValueChanged += (_, _) => { if (!updating) { intensity = (float)strength.Value; FromHsv(); } };
+        hueBar.MouseMove += (_, e) =>
+        {
+            if (e.Button == MouseButtons.Left)
+                DragHue(e);
+        };
+
+        foreach (NumericUpDown currentBox in (NumericUpDown[])[red, green, blue])
+            currentBox.ValueChanged += (_, _) => FromRGB();
+
+        strength.ValueChanged += (_, _) =>
+        {
+            if (!updating)
+            {
+                intensity = (float)strength.Value;
+                FromHSV();
+            }
+        };
 
         SetColour(colour);
 
-        AutoScaleDimensions = new SizeF(96F, 96F);
+        AutoScaleDimensions = new(96F, 96F);
         AutoScaleMode = AutoScaleMode.Dpi;
     }
 
-    private static NumericUpDown Number() => new() { DecimalPlaces = 3, Increment = 0.05m, Maximum = 1000, Width = 70 };
+    private static NumericUpDown Number() => new()
+    {
+        DecimalPlaces = 3,
+        Increment = 0.05m,
+        Maximum = 1000,
+        Width = 70
+    };
 
     private static decimal Clamp(NumericUpDown box, float v) => Math.Clamp((decimal)v, box.Minimum, box.Maximum);
 
@@ -81,20 +147,20 @@ public class ColourPickerForm : Form
     private void SetColour(Vector3 colour)
     {
         intensity = Math.Max(1, Math.Max(colour.X, Math.Max(colour.Y, colour.Z)));
-        (hue, saturation, value) = ToHsv(colour / intensity, hue);
+        (hue, saturation, value) = ToHSV(colour / intensity, hue);
         Colour = colour;
         ShowValues();
     }
 
-    private void FromRgb()
+    private void FromRGB()
     {
         if (!updating)
-            SetColour(new Vector3((float)red.Value, (float)green.Value, (float)blue.Value));
+            SetColour(new((float)red.Value, (float)green.Value, (float)blue.Value));
     }
 
-    private void FromHsv()
+    private void FromHSV()
     {
-        Colour = FromHsv(hue, saturation, value) * intensity;
+        Colour = FromHSV(hue, saturation, value) * intensity;
         ShowValues();
     }
 
@@ -115,33 +181,35 @@ public class ColourPickerForm : Form
     {
         saturation = Math.Clamp(e.X / (float)(square.ClientSize.Width - 1), 0, 1);
         value = 1 - Math.Clamp(e.Y / (float)(square.ClientSize.Height - 1), 0, 1);
-        FromHsv();
+        FromHSV();
     }
 
     private void DragHue(MouseEventArgs e)
     {
         hue = Math.Clamp(e.Y / (float)(hueBar.ClientSize.Height - 1), 0, 1) * 360;
-        FromHsv();
+        FromHSV();
     }
 
     private void PaintSquare(object sender, PaintEventArgs e)
     {
         Rectangle r = square.ClientRectangle;
-        e.Graphics.Clear(ToColor(FromHsv(hue, 1, 1)));
+        e.Graphics.Clear(ToColor(FromHSV(hue, 1, 1)));
         using (LinearGradientBrush white = new(r, Color.White, Color.FromArgb(0, Color.White), LinearGradientMode.Horizontal))
             e.Graphics.FillRectangle(white, r);
         using (LinearGradientBrush black = new(r, Color.FromArgb(0, Color.Black), Color.Black, LinearGradientMode.Vertical))
             e.Graphics.FillRectangle(black, r);
 
         Point p = new((int)(saturation * (r.Width - 1)), (int)((1 - value) * (r.Height - 1)));
-        e.Graphics.DrawEllipse(value > 0.5f ? Pens.Black : Pens.White, p.X - 5, p.Y - 5, 10, 10);
+        e.Graphics.DrawEllipse(value > 0.5f
+            ? Pens.Black
+            : Pens.White, p.X - 5, p.Y - 5, 10, 10);
     }
 
     private void PaintHueBar(object sender, PaintEventArgs e)
     {
         Rectangle r = hueBar.ClientRectangle;
         using LinearGradientBrush brush = new(r, Color.Red, Color.Red, LinearGradientMode.Vertical);
-        brush.InterpolationColors = new ColorBlend
+        brush.InterpolationColors = new()
         {
             Colors = [Color.Red, Color.Yellow, Color.Lime, Color.Cyan, Color.Blue, Color.Magenta, Color.Red],
             Positions = [0, 1 / 6f, 2 / 6f, 3 / 6f, 4 / 6f, 5 / 6f, 1]
@@ -171,7 +239,7 @@ public class ColourPickerForm : Form
         return Color.FromArgb((int)MathF.Round(c.X), (int)MathF.Round(c.Y), (int)MathF.Round(c.Z));
     }
 
-    private static Vector3 FromHsv(float h, float s, float v)
+    private static Vector3 FromHSV(float h, float s, float v)
     {
         float c = v * s;
         float x = c * (1 - Math.Abs(h / 60 % 2 - 1));
@@ -188,14 +256,19 @@ public class ColourPickerForm : Form
     }
 
     // Grey and black have no hue, so the previous one is kept
-    private static (float Hue, float Saturation, float Value) ToHsv(Vector3 rgb, float previousHue)
+    private static (float Hue, float Saturation, float Value) ToHSV(Vector3 rgb, float previousHue)
     {
         float max = Math.Max(rgb.X, Math.Max(rgb.Y, rgb.Z));
         float delta = max - Math.Min(rgb.X, Math.Min(rgb.Y, rgb.Z));
-        if (delta <= 0 || max <= 0)
-            return (previousHue, 0, max);
 
-        float h = max == rgb.X ? (rgb.Y - rgb.Z) / delta % 6 : max == rgb.Y ? (rgb.Z - rgb.X) / delta + 2 : (rgb.X - rgb.Y) / delta + 4;
-        return ((h * 60 + 360) % 360, delta / max, max);
+        if (delta <= 0 || max <= 0)
+            return (previousHue, 0, max: max);
+
+        float h = max == rgb.X
+            ? (rgb.Y - rgb.Z) / delta % 6
+            : max == rgb.Y
+                ? (rgb.Z - rgb.X) / delta + 2
+                : (rgb.X - rgb.Y) / delta + 4;
+        return ((h * 60 + 360) % 360, delta / max, max: max);
     }
 }

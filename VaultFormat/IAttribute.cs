@@ -4,11 +4,11 @@ namespace VaultFormat;
 
 public interface IAttribute
 {
-    AttributeHeader getHeader();
+    AttributeHeader GetHeader();
 
-    SizeAndPositionInformation getInfo();
+    SizeAndPositionInformation GetInfo();
 
-    int getDataSize();
+    int GetDataSize();
 
     void Read(ILoader loader, BinaryReader2 br);
 

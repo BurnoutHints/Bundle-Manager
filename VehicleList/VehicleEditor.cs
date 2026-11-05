@@ -8,7 +8,9 @@ namespace VehicleList;
 public partial class VehicleEditor : Form
 {
     public delegate void Done(Vehicle vehicle);
+
     public event Done OnDone;
+
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public Vehicle Vehicle
     {
@@ -26,6 +28,7 @@ public partial class VehicleEditor : Form
     }
 
     private int maxIndex;
+
     public VehicleEditor(int max)
     {
         InitializeComponent();
@@ -72,6 +75,7 @@ public partial class VehicleEditor : Form
 
         // Class Unlock Stream Hash
         uint classUnlockHash = (uint)Vehicle.ClassUnlockStreamHash;
+
         // Set the selected index based on hash
         switch (classUnlockHash)
         {
@@ -100,6 +104,7 @@ public partial class VehicleEditor : Form
 
         //AI Music Hash
         uint aiMusicHash = (uint)Vehicle.AIMusicHash;
+
         switch (aiMusicHash)
         {
             case 0:
@@ -173,16 +178,18 @@ public partial class VehicleEditor : Form
             MessageBox.Show(this, "Index is invalid.\nEnsure the value is a decimal integer.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return null;
         }
+
         // Vehicle ID
         if (txtID.Text.Trim().Length == 0)
         {
             MessageBox.Show(this, "ID cannot be left blank.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return null;
         }
+
         try
         {
-            EncryptedString ID = new(txtID.Text);
-            result.ID = ID;
+            EncryptedString id = new(txtID.Text);
+            result.ID = id;
         }
         catch (ArgumentException e)
         {
@@ -193,8 +200,8 @@ public partial class VehicleEditor : Form
         // Parent ID
         try
         {
-            EncryptedString ParentID = new(txtParentID.Text);
-            result.ParentID = ParentID;
+            EncryptedString parentID = new(txtParentID.Text);
+            result.ParentID = parentID;
         }
         catch (ArgumentException e)
         {
@@ -204,6 +211,7 @@ public partial class VehicleEditor : Form
 
         // Wheel name
         result.WheelType = txtWheels.Text;
+
         if (result.WheelType.Trim().Length == 0)
         {
             MessageBox.Show(this, "Wheel name cannot be left blank.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -212,6 +220,7 @@ public partial class VehicleEditor : Form
 
         // Vehicle name
         result.CarName = txtName.Text;
+
         if (result.CarName.Trim().Length == 0)
         {
             MessageBox.Show(this, "Car name cannot be left blank.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -220,6 +229,7 @@ public partial class VehicleEditor : Form
 
         // Manufacturer name
         result.CarBrand = txtBrand.Text;
+
         if (result.CarBrand.Trim().Length == 0)
         {
             MessageBox.Show(this, "Manufacturer cannot be left blank.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -243,6 +253,7 @@ public partial class VehicleEditor : Form
         {
             // Write flags based on whether CheckedListBox fields are checked
             uint flags = 0;
+
             for (int i = 0; i < chlFlags.Items.Count; ++i)
             {
                 if ((int)chlFlags.GetItemCheckState(i) == 1)
@@ -250,6 +261,7 @@ public partial class VehicleEditor : Form
                     flags += (uint)(1 << i);
                 }
             }
+
             result.Flags = (Flags)flags;
         }
         else
@@ -303,9 +315,9 @@ public partial class VehicleEditor : Form
         }
 
         // AttribSys ID
-        if (long.TryParse(txtAttribSysCollectionKey.Text, out long attribsysId))
+        if (long.TryParse(txtAttribSysCollectionKey.Text, out long attribsysID))
         {
-            result.AttribSysCollectionKey = attribsysId;
+            result.AttribSysCollectionKey = attribsysID;
         }
         else
         {
@@ -319,10 +331,11 @@ public partial class VehicleEditor : Form
             MessageBox.Show(this, "Exhaust name cannot be left blank.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return null;
         }
+
         try
         {
-            EncryptedString OtherID1 = new(txtExhaustName.Text);
-            result.ExhaustName = OtherID1;
+            EncryptedString otherID1 = new(txtExhaustName.Text);
+            result.ExhaustName = otherID1;
         }
         catch (ArgumentException e)
         {
@@ -358,10 +371,11 @@ public partial class VehicleEditor : Form
             MessageBox.Show(this, "Engine name cannot be left blank.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return null;
         }
+
         try
         {
-            EncryptedString OtherID2 = new(txtEngineName.Text);
-            result.EngineName = OtherID2;
+            EncryptedString otherID2 = new(txtEngineName.Text);
+            result.EngineName = otherID2;
         }
         catch (ArgumentException e)
         {
@@ -393,6 +407,7 @@ public partial class VehicleEditor : Form
                     classUnlock = 0xEBE39AE9;
                     break;
             }
+
             result.ClassUnlockStreamHash = (ClassUnlock)classUnlock;
         }
         else
@@ -450,6 +465,7 @@ public partial class VehicleEditor : Form
                     aiMusic = 0xB12A34DD;
                     break;
             }
+
             result.AIMusicHash = (AIMusic)aiMusic;
         }
         else
@@ -495,6 +511,7 @@ public partial class VehicleEditor : Form
         if ((uint)Vehicle.Category < 0x100)
         {
             uint cat = 0;
+
             for (int i = 0; i < chlCategory.Items.Count; ++i)
             {
                 if ((int)chlCategory.GetItemCheckState(i) == 1)
@@ -502,6 +519,7 @@ public partial class VehicleEditor : Form
                     cat += (uint)(1 << i);
                 }
             }
+
             result.Category = (VehicleCategory)cat;
         }
         else
@@ -620,6 +638,7 @@ public partial class VehicleEditor : Form
     private void btnOk_Click(object sender, EventArgs e)
     {
         Vehicle retVehicle = GetModifiedVehicle();
+
         if (retVehicle == null)
         {
             return;

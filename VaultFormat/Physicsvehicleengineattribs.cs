@@ -9,25 +9,43 @@ namespace VaultFormat;
 public class Physicsvehicleengineattribs : IAttribute
 {
     public AttributeHeader header { get; set; }
+
     public SizeAndPositionInformation info { get; set; }
 
     public Vector4 TorqueScales2 { get; set; }
+
     public Vector4 TorqueScales1 { get; set; }
+
     public Vector4 GearUpRPMs2 { get; set; }
+
     public Vector4 GearUpRPMs1 { get; set; }
+
     public Vector4 GearRatios2 { get; set; }
+
     public Vector4 GearRatios1 { get; set; }
+
     public float TransmissionEfficiency { get; set; }
+
     public float TorqueFallOffRPM { get; set; }
+
     public float MaxTorque { get; set; }
+
     public float MaxRPM { get; set; }
+
     public float LSDMGearUpSpeed { get; set; }
+
     public float GearChangeTime { get; set; }
+
     public float FlyWheelInertia { get; set; }
+
     public float FlyWheelFriction { get; set; }
+
     public float EngineResistance { get; set; }
+
     public float EngineLowEndTorqueFactor { get; set; }
+
     public float EngineBraking { get; set; }
+
     public float Differential { get; set; }
 
     public Physicsvehicleengineattribs(SizeAndPositionInformation chunk, AttributeHeader dataChunk)
@@ -36,16 +54,16 @@ public class Physicsvehicleengineattribs : IAttribute
         info = chunk;
     }
 
-    public int getDataSize()
+    public int GetDataSize()
     {
         List<byte[]> bytes =
         [
-            TorqueScales2.toBytes(),
-            TorqueScales1.toBytes(),
-            GearUpRPMs2.toBytes(),
-            GearUpRPMs1.toBytes(),
-            GearRatios2.toBytes(),
-            GearRatios1.toBytes(),
+            TorqueScales2.ToBytes(),
+            TorqueScales1.ToBytes(),
+            GearUpRPMs2.ToBytes(),
+            GearUpRPMs1.ToBytes(),
+            GearRatios2.ToBytes(),
+            GearRatios1.ToBytes(),
             BitConverter.GetBytes(TransmissionEfficiency),
             BitConverter.GetBytes(TorqueFallOffRPM),
             BitConverter.GetBytes(MaxTorque),
@@ -64,12 +82,12 @@ public class Physicsvehicleengineattribs : IAttribute
 
     public void Write(BinaryWriter2 bw)
     {
-        bw.Write(TorqueScales2.toBytes(bw.BigEndian));
-        bw.Write(TorqueScales1.toBytes(bw.BigEndian));
-        bw.Write(GearUpRPMs2.toBytes(bw.BigEndian));
-        bw.Write(GearUpRPMs1.toBytes(bw.BigEndian));
-        bw.Write(GearRatios2.toBytes(bw.BigEndian));
-        bw.Write(GearRatios1.toBytes(bw.BigEndian));
+        bw.Write(TorqueScales2.ToBytes(bw.BigEndian));
+        bw.Write(TorqueScales1.ToBytes(bw.BigEndian));
+        bw.Write(GearUpRPMs2.ToBytes(bw.BigEndian));
+        bw.Write(GearUpRPMs1.ToBytes(bw.BigEndian));
+        bw.Write(GearRatios2.ToBytes(bw.BigEndian));
+        bw.Write(GearRatios1.ToBytes(bw.BigEndian));
         bw.Write(TransmissionEfficiency);
         bw.Write(TorqueFallOffRPM);
         bw.Write(MaxTorque);
@@ -86,12 +104,12 @@ public class Physicsvehicleengineattribs : IAttribute
 
     public void Read(ILoader loader, BinaryReader2 br)
     {
-        TorqueScales2 = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-        TorqueScales1 = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-        GearUpRPMs2 = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-        GearUpRPMs1 = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-        GearRatios2 = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-        GearRatios1 = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+        TorqueScales2 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+        TorqueScales1 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+        GearUpRPMs2 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+        GearUpRPMs1 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+        GearRatios2 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+        GearRatios1 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
         TransmissionEfficiency = br.ReadSingle();
         TorqueFallOffRPM = br.ReadSingle();
         MaxTorque = br.ReadSingle();
@@ -106,12 +124,12 @@ public class Physicsvehicleengineattribs : IAttribute
         Differential = br.ReadSingle();
     }
 
-    public AttributeHeader getHeader()
+    public AttributeHeader GetHeader()
     {
         return header;
     }
 
-    public SizeAndPositionInformation getInfo()
+    public SizeAndPositionInformation GetInfo()
     {
         return info;
     }

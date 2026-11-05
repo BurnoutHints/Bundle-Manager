@@ -5,31 +5,33 @@ namespace BundleUtilities;
 
 public class EncryptedString
 {
-    private ulong _encrypted;
+    private ulong encrypted;
+
     public ulong Encrypted
     {
         get
         {
-            return _encrypted;
+            return encrypted;
         }
         set
         {
-            _encrypted = value;
+            encrypted = value;
             DecryptBytes();
         }
     }
 
-    private string _value;
+    private string decodedValue;
+
     public string Value
     {
         get
         {
             DecryptBytes(); // TEMP
-            return _value;
+            return decodedValue;
         }
         set
         {
-            _value = value;
+            decodedValue = value;
             EncryptBytes();
         }
     }
@@ -46,10 +48,10 @@ public class EncryptedString
 
     private void DecryptBytes()
     {
-        byte[] bytes = DecryptString(_encrypted);
+        byte[] bytes = DecryptString(encrypted);
 
         string val = Encoding.ASCII.GetString(bytes);
-        _value = val.Trim();
+        decodedValue = val.Trim();
     }
 
     private byte[] DecryptString(ulong val)
@@ -81,7 +83,9 @@ public class EncryptedString
                     }
                     else
                     {
-                        c = (byte)(mod != 0 ? 0 : ' ');
+                        c = (byte)(mod != 0
+                            ? 0
+                            : ' ');
                     }
                 }
                 else
@@ -93,6 +97,7 @@ public class EncryptedString
             {
                 c = (byte)(mod + '4');
             }
+
             buf[--index + 1] = c;
         }
         while (index >= 0);
@@ -102,8 +107,8 @@ public class EncryptedString
 
     private void EncryptBytes()
     {
-        ulong value = EncryptString(Encoding.ASCII.GetBytes(_value));
-        _encrypted = value;
+        ulong currentValue = EncryptString(Encoding.ASCII.GetBytes(decodedValue));
+        encrypted = currentValue;
     }
 
     private ulong EncryptString(byte[] bytes)
@@ -121,6 +126,7 @@ public class EncryptedString
             {
                 int ind = ++index - 1;
                 byte c = 0;
+
                 if (ind < bytes.Length)
                     c = bytes[ind];
 
@@ -132,6 +138,7 @@ public class EncryptedString
                     throw new ArgumentException("Encrypted Strings cannot contain characters over ASCII 0x5F!");//0x5A!");
 
                 byte mod = 0;
+
                 if (c == ' ')
                     mod = 0;
                 else if (c == '-')
@@ -153,7 +160,6 @@ public class EncryptedString
             return current;
         }
     }
-
 
     public override string ToString() => Value;
 }

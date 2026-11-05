@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -10,7 +9,7 @@ namespace LangEditor;
 
 public class Language : IEntryData
 {
-    private enum LanguageId : uint
+    private enum LanguageID : uint
     {
         E_LANGUAGE_ARABIC,
         E_LANGUAGE_CHINESE,
@@ -38,8 +37,8 @@ public class Language : IEntryData
         E_LANGUAGE_SWEDISH,
         E_LANGUAGE_THAI
     }
-    
-    private LanguageId meLanguageID;
+
+    private LanguageID meLanguageID;
     private uint muSize; // Number of entries
     internal Dictionary<uint, string> mpEntries;
 
@@ -55,24 +54,32 @@ public class Language : IEntryData
         mpEntries.Clear(); // Clear any entries from a previous Bundle
 
         MemoryStream ms = entry.MakeStream();
-        BinaryReader2 br = new(ms);
-        br.BigEndian = entry.Console;
+        BinaryReader2 br = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
 
-        meLanguageID = (LanguageId)br.ReadUInt32();
+        meLanguageID = (LanguageID)br.ReadUInt32();
         muSize = br.ReadUInt32();
-        ms.Position = x64 ? (long)br.ReadUInt64() : br.ReadUInt32();
+        ms.Position = x64
+            ? (long)br.ReadUInt64()
+            : br.ReadUInt32();
 
         for (int i = 0; i < muSize; ++i)
         {
             uint hash = br.ReadUInt32();
+
             if (x64)
                 br.ReadUInt32(); // Padding
+
             mpEntries.Add(hash, br.ReadCStringPtr());
+
             if (x64)
                 br.ReadUInt32(); // High half of the string pointer
         }
+
         mpEntries.Remove(0); // If padding is present, remove it
 
         br.Close();
@@ -83,15 +90,22 @@ public class Language : IEntryData
     public bool Write(BundleEntry entry)
     {
         MemoryStream ms = new();
-        BinaryWriter2 bw = new(ms);
-        bw.BigEndian = entry.Console;
+        BinaryWriter2 bw = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
-        int entriesPtr = x64 ? 0x10 : 0xC;
-        int entrySize = x64 ? 0x10 : 8;
+        int entriesPtr = x64
+            ? 0x10
+            : 0xC;
+        int entrySize = x64
+            ? 0x10
+            : 8;
 
         bw.Write((uint)meLanguageID);
         bw.Write(mpEntries.Count);
+
         if (x64) // Pointer is always the same
             bw.Write((long)entriesPtr);
         else
@@ -104,9 +118,11 @@ public class Language : IEntryData
         ms.Position = entriesPtr;
 
         long lastPos;
+
         foreach (KeyValuePair<uint, string> langEntry in mpEntries)
         {
             bw.Write(langEntry.Key); // Hash + padding
+
             if (x64)
             {
                 bw.Write(0); // Padding
@@ -114,10 +130,13 @@ public class Language : IEntryData
             }
             else
                 bw.Write((uint)ms.Length); // String pointer
+
             lastPos = ms.Position;
             ms.Position = ms.Length;
+
             if (langEntry.Value != null)
                 bw.Write(langEntry.Value.ToCharArray()); // String data
+
             bw.Write((byte)0); // Null terminator
             ms.Position = lastPos;
         }
@@ -141,8 +160,11 @@ public class Language : IEntryData
 
     public IEntryEditor GetEditor(BundleEntry entry)
     {
-        LangEdit edit = new();
-        edit.Lang = this;
+        LangEdit edit = new()
+        {
+            Lang = this
+        };
+
         edit.Changed += () =>
         {
             edit.Lang.Write(entry);
@@ -170,14 +192,14 @@ public class Language : IEntryData
         result = (~result) & 0xFFFFFFFF;
 
         return result;*/
-
         byte[] message = Encoding.UTF8.GetBytes(id);
         uint hash = uint.MaxValue;
+
         for (uint i = 0; i < message.Length; i++)
         {
             uint index = message[i];
             index ^= (hash & 0x000000FF);
-            hash = Crc32.Crc32BTable[index] ^ (hash >> 8);
+            hash = CRC32.CRC32BTable[index] ^ (hash >> 8);
         }
 
         return hash;

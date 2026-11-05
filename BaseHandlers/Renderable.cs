@@ -45,6 +45,7 @@ public class RenderableMesh
     public VertexDesc[] VertexDescriptions;
 
     public int IndexOffset => IndexOffsetCount * 2;
+
     public int IndexCount => NumFaces * 3;
 
     public MaterialEntry Material;
@@ -56,7 +57,7 @@ public class Renderable : IEntryData
 {
     public static bool LoadMaterials => Config.LoadMaterials;
 
-    private Scene _scene;
+    private Scene scene;
 
     public float Unknown1;
     public float Unknown2;
@@ -74,6 +75,7 @@ public class Renderable : IEntryData
     public int Unknown13;
     public List<int> MeshVertexOffsets;
     public int NumIndices;
+
     //public short Unknown; // Console Only (PS3, X360?)
     public int Unknown15;
     public int Unknown16;
@@ -104,6 +106,7 @@ public class Renderable : IEntryData
             RenderableMesh rMesh = Meshes[i];
             Mesh mesh = new();
             meshes[i] = mesh;
+
             if (rMesh.Vertices == null) // No vertex descriptor to read them with
                 continue;
 
@@ -114,7 +117,7 @@ public class Renderable : IEntryData
                 Image normal = rMesh.Material.NormalMap;
                 Image specular = rMesh.Material.SpecularMap;
 
-                mesh.Material = new Material(rMesh.MaterialID.ToString("X8"), color, diffuse, normal, specular);
+                mesh.Material = new(rMesh.MaterialID.ToString("X8"), color, diffuse, normal, specular);
             }
 
             mesh.Indices = rMesh.Indices;
@@ -127,8 +130,8 @@ public class Renderable : IEntryData
                 mesh.UV1.Add(data.UV1);
             }
         }
-        
-        Model = new Model(meshes);
+
+        Model = new(meshes);
     }
 
     public VertexData ReadVertex(BinaryReader2 br, VertexAttribute attribute)
@@ -144,69 +147,73 @@ public class Renderable : IEntryData
         switch (attribute.Size) // We don't use type here. This is wrong tbh.
         {
             case 0xC:
-                return new VertexData()
+                return new()
                 {
-                    Vertex = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle())
+                    Vertex = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle())
                 };
             case 0x20:
-                return new VertexData()
+                return new()
                 {
-                    Vertex = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    Normal1 = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    UV1 = new Vector2(br.ReadSingle(), br.ReadSingle())
+                    Vertex = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    Normal1 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    UV1 = new(br.ReadSingle(), br.ReadSingle())
                 };
             case 0x28:
-                return new VertexData()
+                return new()
                 {
-                    Vertex = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    Normal1 = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    UV1 = new Vector2(br.ReadSingle(), br.ReadSingle()),
-                    UV2 = new Vector2(br.ReadSingle(), br.ReadSingle())
+                    Vertex = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    Normal1 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    UV1 = new(br.ReadSingle(), br.ReadSingle()),
+                    UV2 = new(br.ReadSingle(), br.ReadSingle())
                 };
             case 0x2C:
-                return new VertexData()
+                return new()
                 {
-                    Vertex = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    Normal1 = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    Normal2 = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    UV2 = new Vector2(br.ReadSingle(), br.ReadSingle())
+                    Vertex = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    Normal1 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    Normal2 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    UV2 = new(br.ReadSingle(), br.ReadSingle())
                 };
             case 0x30:
-                return new VertexData()
+                return new()
                 {
-                    Vertex = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    Normal1 = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    UV1 = new Vector2(br.ReadSingle(), br.ReadSingle()),
-                    UV2 = new Vector2(br.ReadSingle(), br.ReadSingle()),
+                    Vertex = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    Normal1 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    UV1 = new(br.ReadSingle(), br.ReadSingle()),
+                    UV2 = new(br.ReadSingle(), br.ReadSingle()),
                     ID1 = br.ReadInt32(),
                     ID2 = br.ReadInt32()
                 };
             case 0x34:
-                return new VertexData()
+                return new()
                 {
-                    Vertex = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    Normal1 = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    Normal2 = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    UV1 = new Vector2(br.ReadSingle(), br.ReadSingle()),
+                    Vertex = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    Normal1 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    Normal2 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    UV1 = new(br.ReadSingle(), br.ReadSingle()),
                     ID1 = br.ReadInt32(),
                     ID2 = br.ReadInt32()
                 };
             case 0x3C:
-                return new VertexData()
+                return new()
                 {
-                    Vertex = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    Normal1 = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    Normal2 = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                    UV1 = new Vector2(br.ReadSingle(), br.ReadSingle()),
-                    UV2 = new Vector2(br.ReadSingle(), br.ReadSingle()),
+                    Vertex = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    Normal1 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    Normal2 = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    UV1 = new(br.ReadSingle(), br.ReadSingle()),
+                    UV2 = new(br.ReadSingle(), br.ReadSingle()),
                     ID1 = br.ReadInt32(),
                     ID2 = br.ReadInt32()
                 };
         }
 
         if (attribute.Size >= 0xC)
-            return new VertexData { Vertex = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()) };
-        return new VertexData();
+            return new()
+            {
+                Vertex = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle())
+            };
+
+        return new();
     }
 
     public void ReadBody(BinaryReader2 br)
@@ -223,6 +230,7 @@ public class Renderable : IEntryData
             br.BaseStream.Position = mesh.IndexOffset;
 
             mesh.Indices = [];
+
             for (int j = 0; j < mesh.IndexCount; j++)
             {
                 uint index = br.ReadUInt16() - (uint)mesh.VertexOffsetCount;
@@ -231,6 +239,7 @@ public class Renderable : IEntryData
             }
 
             VertexAttribute attributeToUse = new();
+
             foreach (VertexDesc desc in mesh.VertexDescriptions)
             {
                 if (desc == null)
@@ -248,17 +257,25 @@ public class Renderable : IEntryData
             if (attributeToUse.Size == 0)
                 continue; // Leaves Vertices null, which BuildModel skips
 
-            uint first = mesh.Indices.Count > 0 ? mesh.Indices.Min() : 0;
-            uint last = mesh.Indices.Count > 0 ? mesh.Indices.Max() : 0;
+            uint first = mesh.Indices.Count > 0
+                ? mesh.Indices.Min()
+                : 0;
+            uint last = mesh.Indices.Count > 0
+                ? mesh.Indices.Max()
+                : 0;
             long start = VertexBlockAddress + mesh.VertexOffsetCount * attributeToUse.Size + attributeToUse.Offset;
             mesh.Vertices = [];
+
             for (long vertex = first; vertex <= last; vertex++)
             {
                 br.BaseStream.Position = start + vertex * attributeToUse.Size;
+
                 if (br.BaseStream.Position + attributeToUse.Size > br.BaseStream.Length)
                     break;
+
                 mesh.Vertices.Add(ReadVertex(br, attributeToUse));
             }
+
             for (int j = 0; j < mesh.Indices.Count; j++)
                 mesh.Indices[j] -= first;
         }
@@ -273,6 +290,7 @@ public class Renderable : IEntryData
             mesh.Vertices = [];
 
             VertexAttribute position = default, normal = default, uv = default;
+
             foreach (VertexDesc desc in mesh.VertexDescriptions)
             {
                 if (desc == null)
@@ -300,6 +318,7 @@ public class Renderable : IEntryData
             int indexCount = header.ReadInt32();
             header.BaseStream.Position = MeshVertexOffsets[i] + 0x29;
             int instanceCount = header.ReadByte();
+
             if (instanceCount > 1) // only the first instance, the rest index the same vertices
                 indexCount = (indexCount + 1) / instanceCount;
 
@@ -315,7 +334,7 @@ public class Renderable : IEntryData
             for (int j = 0; j < mesh.NumVertices; j++)
             {
                 long vertex = vertexBase + j * position.Size;
-                mesh.Vertices.Add(new VertexData()
+                mesh.Vertices.Add(new()
                 {
                     Vertex = ReadElementX64(br, vertex, position),
                     Normal1 = ReadElementX64(br, vertex, normal),
@@ -323,26 +342,39 @@ public class Renderable : IEntryData
                 });
             }
 
-            br.BaseStream.Position = indexBase + mesh.IndexOffsetCount * (index32 ? 4 : 2);
+            br.BaseStream.Position = indexBase + mesh.IndexOffsetCount * (index32
+                ? 4
+                : 2);
             uint a = 0, b = 0;
+
             for (int j = 0, run = 0; j < indexCount; j++)
             {
-                uint index = index32 ? br.ReadUInt32() : br.ReadUInt16();
-                if (index == (index32 ? uint.MaxValue : ushort.MaxValue)) // strip restart
+                uint index = index32
+                    ? br.ReadUInt32()
+                    : br.ReadUInt16();
+
+                if (index == (index32
+                    ? uint.MaxValue
+                    : ushort.MaxValue)) // strip restart
                 {
                     run = 0;
                     continue;
                 }
 
                 index += (uint)mesh.Unknown20;
+
                 if (mesh.Unknown19 != 6) // not a strip
                     mesh.Indices.Add(index);
                 else if (run >= 2 && a != b && b != index && a != index) // skip degenerates
-                    mesh.Indices.AddRange(run % 2 == 0 ? new[] { a, b, index } : [b, a, index]);
+                    mesh.Indices.AddRange(run % 2 == 0
+                        ? [a, b, index]
+                        : [b, a, index]);
+
                 a = b;
                 b = index;
                 run++;
             }
+
             mesh.NumFaces = mesh.Indices.Count / 3;
         }
     }
@@ -352,17 +384,18 @@ public class Renderable : IEntryData
         float Dec3N(uint value) => Math.Max(((int)(value << 22) >> 22) / 511f, -1f); // signed 10 bits
 
         br.BaseStream.Position = vertex + attribute.Offset;
+
         switch (attribute.Unknown1)
         {
             case 0x2A23B9: // FLOAT3
-                return new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                return new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
             case 0x2C23A5: // FLOAT2
-                return new Vector3(br.ReadSingle(), br.ReadSingle(), 0);
+                return new(br.ReadSingle(), br.ReadSingle(), 0);
             case 0x2C235F: // FLOAT16_2
-                return new Vector3((float)br.ReadHalf(), (float)br.ReadHalf(), 0);
+                return new((float)br.ReadHalf(), (float)br.ReadHalf(), 0);
             case 0x2A2187: // DEC3N
                 uint packed = br.ReadUInt32();
-                return new Vector3(Dec3N(packed), Dec3N(packed >> 10), Dec3N(packed >> 20));
+                return new(Dec3N(packed), Dec3N(packed >> 10), Dec3N(packed >> 20));
         }
 
         return Vector3.Zero;
@@ -370,7 +403,7 @@ public class Renderable : IEntryData
 
     private void Clear()
     {
-        _scene = null;
+        scene = null;
 
         Unknown1 = default;
         Unknown2 = default;
@@ -413,10 +446,13 @@ public class Renderable : IEntryData
         ID = entry.ID;
 
         MemoryStream ms = entry.MakeStream();
-        BinaryReader2 br = new(ms);
-        br.BigEndian = entry.Console;
+        BinaryReader2 br = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
+
         ulong ImportAt(long offset) => dependencies.Find(d => d.EntryPointerOffset == offset).EntryID;
 
         Unknown1 = br.ReadSingle();
@@ -425,6 +461,7 @@ public class Renderable : IEntryData
         Unknown4 = br.ReadSingle();
         Unknown5 = br.ReadInt16();
         MeshCount = br.ReadInt16();
+
         if (x64)
         {
             br.BaseStream.Position = 0x18;
@@ -448,8 +485,10 @@ public class Renderable : IEntryData
 
         for (int i = 0; i < MeshCount; i++)
         {
-            int offset = x64 ? (int)br.ReadInt64() : br.ReadInt32();
-            MeshVertexOffsets.Add(offset);
+            int currentOffset = x64
+                ? (int)br.ReadInt64()
+                : br.ReadInt32();
+            MeshVertexOffsets.Add(currentOffset);
         }
 
         if (!x64) // decomp meshes have their own index & vertex buffers
@@ -462,25 +501,28 @@ public class Renderable : IEntryData
             }
             else
             {*/
-                NumIndices = br.ReadInt32();
-            //}
+            NumIndices = br.ReadInt32();
 
+            //}
             Unknown15 = br.ReadInt32();
             Unknown16 = br.ReadInt32();
             Unknown17 = br.ReadInt32();
-            // some extra data here in BPR
 
+            // some extra data here in BPR
             br.BaseStream.Position = UnknownOffset;
+
             if (NumIndices == 0) // BPR
             {
                 // ???
                 br.BaseStream.Position += 12;
             }
+
             VertexBlockAddress = br.ReadInt32();
-            Unknown18 = (NumIndices == 0) ? 0 : br.ReadInt32();
+            Unknown18 = (NumIndices == 0)
+                ? 0
+                : br.ReadInt32();
             VertexBlockSize = br.ReadInt32();
         }
-
 
         for (int i = 0; i < MeshCount; i++)
         {
@@ -500,6 +542,7 @@ public class Renderable : IEntryData
                 mesh.VerticesOffsetPtr = (int)br.ReadInt64(); // first vertex buffer
 
                 mesh.VertexDescriptionIDs = new ulong[numVD];
+
                 for (int j = 0; j < numVD; j++)
                     mesh.VertexDescriptionIDs[j] = ImportAt(MeshVertexOffsets[i] + 0x38 + 8 * (numVB + j));
 
@@ -511,6 +554,7 @@ public class Renderable : IEntryData
             mesh.Unknown19 = br.ReadInt32();
             mesh.Unknown20 = br.ReadInt32();
             mesh.IndexOffsetCount = br.ReadInt32();
+
             if (NumIndices == 0) // BPR
             {
                 mesh.NumFaces = br.ReadInt32() / 3;
@@ -522,8 +566,10 @@ public class Renderable : IEntryData
                 mesh.VertexOffsetCount = 0;
                 mesh.NumFaces = br.ReadInt32();
             }
+
             int cPos = (int)br.BaseStream.Position;
             mesh.MaterialIDInternal = br.ReadInt32();
+
             foreach (BundleDependency dependency in dependencies)
             {
                 if (dependency.EntryPointerOffset == cPos)
@@ -532,6 +578,7 @@ public class Renderable : IEntryData
                     break;
                 }
             }
+
             mesh.Unknown21 = br.ReadInt16();
             mesh.Unknown22 = br.ReadInt16();
             mesh.NumIndicesOffset = br.ReadInt32();
@@ -539,9 +586,11 @@ public class Renderable : IEntryData
 
             mesh.VertexDescriptionsInternal = new int[6];
             mesh.VertexDescriptionIDs = new ulong[6];
+
             for (int j = 0; j < mesh.VertexDescriptionsInternal.Length; j++)
             {
                 int pos = (int)br.BaseStream.Position;
+
                 foreach (BundleDependency dependency in dependencies)
                 {
                     if (dependency.EntryPointerOffset == pos)
@@ -559,12 +608,14 @@ public class Renderable : IEntryData
 
         br.Close();
         ms.Close();
-        
+
         Dictionary<ulong, MaterialEntry> materials = [];
         Dictionary<ulong, VertexDesc> descriptions = [];
+
         BundleEntry Find(ulong id) => entry.Archive.GetEntryByID(id) ?? BundleCache.GetEntryByID(id);
 
         loader?.SetStatus("Loading Meshes");
+
         for (int i = 0; i < Meshes.Count; i++)
         {
             RenderableMesh mesh = Meshes[i];
@@ -579,35 +630,45 @@ public class Renderable : IEntryData
                 if (!materials.TryGetValue(mesh.MaterialID, out mesh.Material))
                 {
                     BundleEntry materialEntry = Find(mesh.MaterialID);
-                    materials[mesh.MaterialID] = mesh.Material = materialEntry == null ? null : MaterialEntry.Read(materialEntry);
+                    materials[mesh.MaterialID] = mesh.Material = materialEntry == null
+                        ? null
+                        : MaterialEntry.Read(materialEntry);
                 }
             }
 
             mesh.VertexDescriptions = new VertexDesc[mesh.VertexDescriptionIDs.Length];
+
             for (int j = 0; j < mesh.VertexDescriptions.Length; j++)
             {
                 ulong vertexDescID = mesh.VertexDescriptionIDs[j];
+
                 if (!descriptions.TryGetValue(vertexDescID, out mesh.VertexDescriptions[j]))
                 {
                     BundleEntry descEntry = Find(vertexDescID);
-                    descriptions[vertexDescID] = mesh.VertexDescriptions[j] = descEntry == null ? null : VertexDesc.Read(descEntry);
+                    descriptions[vertexDescID] = mesh.VertexDescriptions[j] = descEntry == null
+                        ? null
+                        : VertexDesc.Read(descEntry);
                 }
             }
         }
 
         ms = entry.MakeStream(true);
-        br = new BinaryReader2(ms);
-        br.BigEndian = entry.Console;
+        br = new(ms)
+        {
+            BigEndian = entry.Console
+        };
+
         if (x64)
-            ReadBodyX64(new BinaryReader2(entry.MakeStream()), br);
+            ReadBodyX64(new(entry.MakeStream()), br);
         else
             ReadBody(br);
+
         br.Close();
         ms.Close();
 
         BuildModel();
 
-        _scene = MakeScene(loader);
+        scene = MakeScene(loader);
 
         return true;
     }
@@ -625,17 +686,17 @@ public class Renderable : IEntryData
     public IEntryEditor GetEditor(BundleEntry entry)
     {
         ModelViewerForm viewer = new();
-        viewer.Renderer.Scene = _scene;
+        viewer.Renderer.Scene = scene;
 
         return viewer;
     }
 
     public Scene MakeScene(ILoader loader = null)
     {
-        Scene scene = new();
+        Scene currentScene = new();
         SceneObject obj = new(ID.ToString("X8"), Model);
-        scene.AddObject(obj);
+        currentScene.AddObject(obj);
 
-        return scene;
+        return currentScene;
     }
 }

@@ -19,14 +19,23 @@ public partial class LoadingDialog : Form, ILoader
     {
         InitializeComponent();
 
-        System.Windows.Forms.Timer refresh = new(components) { Interval = 50, Enabled = true };
+        System.Windows.Forms.Timer refresh = new(components)
+        {
+            Interval = 50,
+            Enabled = true
+        };
+
         refresh.Tick += (_, _) => ShowProgress();
     }
 
     // Shows the dialog while work runs on a worker thread
     public static async Task<T> RunAsync<T>(IWin32Window owner, string status, Func<ILoader, CancellationToken, T> work)
     {
-        using LoadingDialog dialog = new() { Status = status };
+        using LoadingDialog dialog = new()
+        {
+            Status = status
+        };
+
         CancellationTokenSource cancel = new(); // Not disposed, as abandoned work may still read its token
         Task<T> task = Task.Run(() => work(dialog, cancel.Token));
 
@@ -40,6 +49,7 @@ public partial class LoadingDialog : Form, ILoader
             {
                 // The caller gets it below
             }
+
             if (dialog.Visible)
                 dialog.Close();
         };
@@ -50,6 +60,7 @@ public partial class LoadingDialog : Form, ILoader
             cancel.Cancel();
             throw new OperationCanceledException();
         }
+
         return await task;
     }
 
@@ -58,24 +69,26 @@ public partial class LoadingDialog : Form, ILoader
         Close();
     }
 
-    private volatile string _status;
-    private volatile int _progress = -1;
+    private volatile string status;
+    private volatile int progress = -1;
 
-    public void SetStatus(string status) => _status = status;
+    public void SetStatus(string newStatus) => status = newStatus;
 
-    public void SetProgress(int progress) => _progress = progress;
+    public void SetProgress(int newProgress) => progress = newProgress;
 
     private void ShowProgress()
     {
-        string status = _status;
-        if (status != null && lblStatus.Text != status)
-            lblStatus.Text = status;
+        string currentStatus = status;
 
-        int progress = _progress;
-        if (progress >= 0 && pboMain.Value != progress)
+        if (currentStatus != null && lblStatus.Text != currentStatus)
+            lblStatus.Text = currentStatus;
+
+        int currentProgress = progress;
+
+        if (currentProgress >= 0 && pboMain.Value != currentProgress)
         {
             pboMain.Style = ProgressBarStyle.Blocks;
-            pboMain.Value = progress;
+            pboMain.Value = currentProgress;
         }
     }
 }

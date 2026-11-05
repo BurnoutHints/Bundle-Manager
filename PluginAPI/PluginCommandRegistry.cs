@@ -5,13 +5,13 @@ namespace PluginAPI;
 
 public static class PluginCommandRegistry
 {
-    private static Dictionary<string, PluginCommand> _commands = [];
+    private static Dictionary<string, PluginCommand> commands = [];
 
-    public static PluginCommand[] Commands => [.. _commands.Values];
+    public static PluginCommand[] Commands => [.. commands.Values];
 
     public static void Register(string id, string text, PluginCommand.OnUse use, PluginCommand.OnCheckConditions checkConditions = null)
     {
-        Register(new PluginCommand(id, text, use, checkConditions));
+        Register(new(id, text, use, checkConditions));
     }
 
     public static void Register(PluginCommand command)
@@ -22,7 +22,7 @@ public static class PluginCommandRegistry
             return;
         }
 
-        _commands.Add(command.ID, command);
+        commands.Add(command.ID, command);
     }
 
     public static void Unregister(string id)
@@ -30,7 +30,7 @@ public static class PluginCommandRegistry
         if (!IsRegistered(id))
             return;
 
-        _commands.Remove(id);
+        commands.Remove(id);
     }
 
     public static PluginCommand GetCommand(string id)
@@ -38,11 +38,11 @@ public static class PluginCommandRegistry
         if (!IsRegistered(id))
             return default;
 
-        return _commands[id];
+        return commands[id];
     }
 
     public static bool IsRegistered(string id)
     {
-        return _commands.ContainsKey(id);
+        return commands.ContainsKey(id);
     }
 }

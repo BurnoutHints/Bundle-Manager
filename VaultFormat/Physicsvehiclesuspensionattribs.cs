@@ -8,29 +8,44 @@ namespace VaultFormat;
 public class Physicsvehiclesuspensionattribs : IAttribute
 {
     public AttributeHeader header { get; set; }
+
     public SizeAndPositionInformation info { get; set; }
 
     public float UpwardMovement { get; set; }
+
     public float TimeToDampAfterLanding { get; set; }
+
     public float Strength { get; set; }
+
     public float SpringLength { get; set; }
+
     public float RearHeight { get; set; }
+
     public float MaxYawDampingOnLanding { get; set; }
+
     public float MaxVertVelocityDampingOnLanding { get; set; }
+
     public float MaxRollDampingOnLanding { get; set; }
+
     public float MaxPitchDampingOnLanding { get; set; }
+
     public float InAirDamping { get; set; }
+
     public float FrontHeight { get; set; }
+
     public float DownwardMovement { get; set; }
+
     public float Dampening { get; set; }
 
     public Physicsvehiclesuspensionattribs(SizeAndPositionInformation chunk, AttributeHeader dataChunk)
     {
-        this.info = chunk;
-        this.header = dataChunk;
+        info = chunk;
+        header = dataChunk;
     }
+
     // Hack, because of weird padding of suspension attribs
-    public static byte[][] getDefaultBytes() {
+    public static byte[][] GetDefaultBytes()
+    {
         float value = 0;
         List<byte[]> bytes =
         [
@@ -51,7 +66,7 @@ public class Physicsvehiclesuspensionattribs : IAttribute
         return [.. bytes];
     }
 
-    public int getDataSize()
+    public int GetDataSize()
     {
         // Hack, because of weird padding of suspension attribs
         /**
@@ -74,13 +89,12 @@ public class Physicsvehiclesuspensionattribs : IAttribute
         return 0;
     }
 
-
-    public AttributeHeader getHeader()
+    public AttributeHeader GetHeader()
     {
         return header;
     }
 
-    public SizeAndPositionInformation getInfo()
+    public SizeAndPositionInformation GetInfo()
     {
         return info;
     }

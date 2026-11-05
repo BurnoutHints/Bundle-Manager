@@ -16,6 +16,7 @@ public class HexConverter : TypeConverter
     {
         if (destinationType == typeof(string) && value is uint or ulong)
             return $"0x{value:X8}";
+
         return base.ConvertTo(context, culture, value, destinationType);
     }
 
@@ -26,8 +27,12 @@ public class HexConverter : TypeConverter
 
         s = s.Trim();
         bool hex = s.StartsWith("0x", StringComparison.OrdinalIgnoreCase);
-        ulong result = hex ? ulong.Parse(s[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture) : ulong.Parse(s, CultureInfo.InvariantCulture);
-        return context?.PropertyDescriptor?.PropertyType == typeof(uint) ? (object)checked((uint)result) : result;
+        ulong result = hex
+            ? ulong.Parse(s[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture)
+            : ulong.Parse(s, CultureInfo.InvariantCulture);
+        return context?.PropertyDescriptor?.PropertyType == typeof(uint)
+            ? (object)checked((uint)result)
+            : result;
     }
 }
 
@@ -41,6 +46,7 @@ public class NumberListConverter : TypeConverter
     {
         if (destinationType == typeof(string) && value is IEnumerable items)
             return string.Join(", ", items.Cast<object>());
+
         return base.ConvertTo(context, culture, value, destinationType);
     }
 
@@ -49,13 +55,19 @@ public class NumberListConverter : TypeConverter
         if (value is not string s || context?.PropertyDescriptor == null)
             return base.ConvertFrom(context, culture, value);
 
-        Type type = context.PropertyDescriptor.PropertyType;
-        Type elementType = type.IsArray ? type.GetElementType() : type.GetGenericArguments()[0];
+        Type currentType = context.PropertyDescriptor.PropertyType;
+        Type elementType = currentType.IsArray
+            ? currentType.GetElementType()
+            : currentType.GetGenericArguments()[0];
         string[] parts = s.Split([',', ' '], StringSplitOptions.RemoveEmptyEntries);
         Array result = Array.CreateInstance(elementType, parts.Length);
+
         for (int i = 0; i < parts.Length; i++)
             result.SetValue(Convert.ChangeType(parts[i], elementType, CultureInfo.InvariantCulture), i);
-        return type.IsArray ? result : Activator.CreateInstance(type, result);
+
+        return currentType.IsArray
+            ? result
+            : Activator.CreateInstance(currentType, result);
     }
 }
 
@@ -66,6 +78,7 @@ public class ArrayTextConverter : ArrayConverter
     {
         if (destinationType == typeof(string) && value is Array items)
             return string.Join(" | ", items.Cast<object>().Select(item => TypeDescriptor.GetConverter(item).ConvertToString(context, culture, item)));
+
         return base.ConvertTo(context, culture, value, destinationType);
     }
 }

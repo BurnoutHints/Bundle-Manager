@@ -2,7 +2,8 @@ namespace PluginAPI;
 
 public interface IPlugin
 {
-    string Id { get; }
+    string ID { get; }
+
     string Name { get; }
 
     public static abstract void Init();

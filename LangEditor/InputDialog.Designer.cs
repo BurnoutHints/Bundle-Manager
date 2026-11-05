@@ -1,4 +1,4 @@
-﻿namespace LangEditor
+namespace LangEditor
 {
     partial class InputDialog
     {

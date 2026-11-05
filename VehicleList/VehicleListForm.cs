@@ -1,4 +1,3 @@
-using BundleUtilities;
 using PluginAPI;
 using System;
 using System.Collections;
@@ -13,9 +12,10 @@ namespace VehicleList;
 public partial class VehicleListForm : Form, IEntryEditor
 {
     public delegate void OnEdit();
+
     public event OnEdit Edit;
 
-    private System.Windows.Forms.Timer _searchTimer;
+    private System.Windows.Forms.Timer searchTimer;
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public VehicleListData List
@@ -31,9 +31,11 @@ public partial class VehicleListForm : Form, IEntryEditor
     public VehicleListForm()
     {
         InitializeComponent();
-        _searchTimer = new System.Windows.Forms.Timer();
-        _searchTimer.Interval = 300;
-        _searchTimer.Tick += SearchTimer_Tick;
+        searchTimer = new()
+        {
+            Interval = 300
+        };
+        searchTimer.Tick += searchTimer_Tick;
 
         tstbSearchItem.Text = "Search by ID, Parent ID, Vehicle or Manufacturer";
         tstbSearchItem.ForeColor = System.Drawing.SystemColors.GrayText;
@@ -118,24 +120,18 @@ public partial class VehicleListForm : Form, IEntryEditor
 
         string lowerSearchText = searchText.ToLowerInvariant();
 
-        List<Vehicle> filteredVehicles = List.Entries.Where(vehicle =>
+        List<Vehicle> filteredVehicles = [.. List.Entries.Where(vehicle =>
         {
-            string[] searchableData = [
-                vehicle.ID.Value,
-                vehicle.ParentID.Value,
-                vehicle.CarName,
-                vehicle.CarBrand
-            ];
-
+            string[] searchableData = [vehicle.ID.Value, vehicle.ParentID.Value, vehicle.CarName, vehicle.CarBrand];
             return searchableData.Any(data => data != null && data.ToLowerInvariant().Contains(lowerSearchText));
-        }).ToList();
+        })];
 
         UpdateDisplay(filteredVehicles);
     }
 
-    private void SearchTimer_Tick(object sender, EventArgs e)
+    private void searchTimer_Tick(object sender, EventArgs e)
     {
-        _searchTimer.Stop();
+        searchTimer.Stop();
         PerformSearch(tstbSearchItem.Text);
     }
 
@@ -152,9 +148,12 @@ public partial class VehicleListForm : Form, IEntryEditor
         }
 
         Vehicle vehicle = List.Entries[index];
-        VehicleEditor editor = new(List.Entries.Count - 1);
-        editor.Vehicle = vehicle;
-        editor.OnDone += Editor_OnDone;
+        VehicleEditor editor = new(List.Entries.Count - 1)
+        {
+            Vehicle = vehicle
+        };
+
+        editor.OnDone += EditorOnDone;
         editor.ShowDialog(this);
     }
 
@@ -165,16 +164,21 @@ public partial class VehicleListForm : Form, IEntryEditor
             return;
         }
 
-        Vehicle vehicle = new();
-        vehicle.Index = List.Entries.Count;
-        vehicle.ID = new EncryptedString("");
-        vehicle.ParentID = new EncryptedString("");
-        vehicle.ExhaustName = new EncryptedString("");
-        vehicle.EngineName = new EncryptedString("");
+        Vehicle vehicle = new()
+        {
+            Index = List.Entries.Count,
+            ID = new(""),
+            ParentID = new(""),
+            ExhaustName = new(""),
+            EngineName = new("")
+        };
 
-        VehicleEditor editor = new(List.Entries.Count);
-        editor.Vehicle = vehicle;
-        editor.OnDone += Editor_OnDone1;
+        VehicleEditor editor = new(List.Entries.Count)
+        {
+            Vehicle = vehicle
+        };
+
+        editor.OnDone += EditorOnDone1;
         editor.ShowDialog(this);
     }
 
@@ -190,12 +194,17 @@ public partial class VehicleListForm : Form, IEntryEditor
             return;
         }
 
-        Vehicle vehicle = new(List.Entries[index]);
-        vehicle.Index = List.Entries.Count;
+        Vehicle vehicle = new(List.Entries[index])
+        {
+            Index = List.Entries.Count
+        };
 
-        VehicleEditor editor = new(List.Entries.Count);
-        editor.Vehicle = vehicle;
-        editor.OnDone += Editor_OnDone1;
+        VehicleEditor editor = new(List.Entries.Count)
+        {
+            Vehicle = vehicle
+        };
+
+        editor.OnDone += EditorOnDone1;
         editor.ShowDialog(this);
     }
 
@@ -222,7 +231,7 @@ public partial class VehicleListForm : Form, IEntryEditor
         PerformSearch(tstbSearchItem.Text);
     }
 
-    private void Editor_OnDone1(Vehicle vehicle)
+    private void EditorOnDone1(Vehicle vehicle)
     {
         if (vehicle.Index != List.Entries.Count)
         {
@@ -242,7 +251,7 @@ public partial class VehicleListForm : Form, IEntryEditor
         PerformSearch(tstbSearchItem.Text);
     }
 
-    private void Editor_OnDone(Vehicle vehicle)
+    private void EditorOnDone(Vehicle vehicle)
     {
         int oldIndex = int.Parse(lstVehicles.SelectedItems[0].Text);
 
@@ -290,6 +299,7 @@ public partial class VehicleListForm : Form, IEntryEditor
                 lstVehicles.Sort();
                 return;
             }
+
             direction = sorter.Direction;
         }
 
@@ -324,6 +334,7 @@ public partial class VehicleListForm : Form, IEntryEditor
                 {
                     return -1;
                 }
+
                 return 1;
             }
 
@@ -335,19 +346,23 @@ public partial class VehicleListForm : Form, IEntryEditor
                 if (int.TryParse(iY, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out int iYint))
                 {
                     int val2 = iXint.CompareTo(iYint);
-                    if (this.Direction)
+
+                    if (Direction)
                     {
                         return val2 * -1;
                     }
+
                     return val2;
                 }
             }
 
             int val = string.CompareOrdinal(iX, iY);
+
             if (Direction)
             {
                 return val * -1;
             }
+
             return val;
         }
 
@@ -399,8 +414,8 @@ public partial class VehicleListForm : Form, IEntryEditor
             return;
         }
 
-        _searchTimer.Stop();
-        _searchTimer.Start();
+        searchTimer.Stop();
+        searchTimer.Start();
     }
 
     private void tstbSearchItem_KeyPress(object sender, KeyPressEventArgs e)
@@ -418,7 +433,7 @@ public partial class VehicleListForm : Form, IEntryEditor
             tstbSearchItem.Text = "";
             tstbSearchItem.ForeColor = System.Drawing.SystemColors.WindowText;
 
-            _searchTimer.Stop();
+            searchTimer.Stop();
         }
     }
 

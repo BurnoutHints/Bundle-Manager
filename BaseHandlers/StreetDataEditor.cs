@@ -14,30 +14,47 @@ public partial class StreetDataEditor : Form, IEntryEditor
 {
     public event Notify EditEvent;
 
-    private StreetData _model;
+    private StreetData model;
+
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public StreetData Model
     {
-        get => _model;
+        get => model;
         set
         {
-            _model = value;
+            model = value;
             Rebuild();
         }
     }
 
-    private TabContext _streetsCtx;
-    private TabContext _junctionsCtx;
-    private TabContext _roadsCtx;
-    private TabContext _challengesCtx;
+    private TabContext streetsCtx;
+    private TabContext junctionsCtx;
+    private TabContext roadsCtx;
+    private TabContext challengesCtx;
 
     public StreetDataEditor()
     {
         InitializeComponent();
-        _streetsCtx = new TabContext { View = streetsList, ContextMenu = streetsContextMenu };
-        _junctionsCtx = new TabContext { View = junctionsList, ContextMenu = junctionsContextMenu };
-        _roadsCtx = new TabContext { View = roadsList, ContextMenu = roadsContextMenu };
-        _challengesCtx = new TabContext { View = challengesList, ContextMenu = challengesContextMenu };
+        streetsCtx = new()
+        {
+            View = streetsList,
+            ContextMenu = streetsContextMenu
+        };
+        junctionsCtx = new()
+        {
+            View = junctionsList,
+            ContextMenu = junctionsContextMenu
+        };
+        roadsCtx = new()
+        {
+            View = roadsList,
+            ContextMenu = roadsContextMenu
+        };
+        challengesCtx = new()
+        {
+            View = challengesList,
+            ContextMenu = challengesContextMenu
+        };
     }
 
     private sealed class TabContext
@@ -60,53 +77,46 @@ public partial class StreetDataEditor : Form, IEntryEditor
         challengesList.Items.Clear();
         propertyGrid.SelectedObject = null;
 
-        if (_model == null) return;
+        if (model == null)
+            return;
 
         ConfigureStreetsTab();
         ConfigureJunctionsTab();
         ConfigureRoadsTab();
         ConfigureChallengesTab();
 
-        _streetsCtx.Repopulate();
-        _junctionsCtx.Repopulate();
-        _roadsCtx.Repopulate();
-        _challengesCtx.Repopulate();
+        streetsCtx.Repopulate();
+        junctionsCtx.Repopulate();
+        roadsCtx.Repopulate();
+        challengesCtx.Repopulate();
 
         UpdateTabTitles();
     }
 
     private void ConfigureStreetsTab()
     {
-        TabContext ctx = _streetsCtx;
-        ctx.Get = i => _model.streets[i];
+        TabContext ctx = streetsCtx;
+        ctx.Get = i => model.streets[i];
         ctx.Format = i =>
         {
-            Street s = _model.streets[i];
-            return
-            [
-                i.ToString(),
-                s.super_SpanBase.miRoadIndex.ToString(),
-                s.super_SpanBase.miSpanIndex.ToString(),
-                s.super_SpanBase.meSpanType.ToString(),
-                s.mAiInfo.muMaxSpeedMPS.ToString(),
-                s.mAiInfo.muMinSpeedMPS.ToString(),
-            ];
+            Street s = model.streets[i];
+            return [i.ToString(), s.super_SpanBase.miRoadIndex.ToString(), s.super_SpanBase.miSpanIndex.ToString(), s.super_SpanBase.meSpanType.ToString(), s.mAiInfo.muMaxSpeedMPS.ToString(), s.mAiInfo.muMinSpeedMPS.ToString(),];
         };
-        ctx.Repopulate = () => RepopulateView(ctx, _model.streets.Count);
-        ctx.AddNew = () => _model.streets.Add(new Street());
-        ctx.Remove = i => _model.streets.RemoveAt(i);
+        ctx.Repopulate = () => RepopulateView(ctx, model.streets.Count);
+        ctx.AddNew = () => model.streets.Add(new());
+        ctx.Remove = i => model.streets.RemoveAt(i);
         ctx.Duplicate = i =>
         {
-            Street src = _model.streets[i];
-            _model.streets.Insert(i + 1, new Street
+            Street src = model.streets[i];
+            model.streets.Insert(i + 1, new()
             {
-                super_SpanBase = new SpanBase
+                super_SpanBase = new()
                 {
                     miRoadIndex = src.super_SpanBase.miRoadIndex,
                     miSpanIndex = src.super_SpanBase.miSpanIndex,
                     meSpanType = src.super_SpanBase.meSpanType,
                 },
-                mAiInfo = new AIInfo
+                mAiInfo = new()
                 {
                     muMaxSpeedMPS = src.mAiInfo.muMaxSpeedMPS,
                     muMinSpeedMPS = src.mAiInfo.muMinSpeedMPS,
@@ -118,35 +128,31 @@ public partial class StreetDataEditor : Form, IEntryEditor
 
     private void ConfigureJunctionsTab()
     {
-        TabContext ctx = _junctionsCtx;
-        ctx.Get = i => _model.junctions[i];
+        TabContext ctx = junctionsCtx;
+        ctx.Get = i => model.junctions[i];
         ctx.Format = i =>
         {
-            Junction j = _model.junctions[i];
+            Junction j = model.junctions[i];
+
             // SpanBase.miRoadIndex is always -1 for junctions; display
             // "-" so the column reads as n/a.
             int roadIdx = j.super_SpanBase.miRoadIndex;
-            return
-            [
-                i.ToString(),
-                roadIdx == -1 ? "-" : roadIdx.ToString(),
-                j.super_SpanBase.miSpanIndex.ToString(),
-                j.super_SpanBase.meSpanType.ToString(),
-                (j.macName ?? string.Empty).TrimEnd('\0'),
-            ];
+            return [i.ToString(), roadIdx == -1
+                ? "-"
+                : roadIdx.ToString(), j.super_SpanBase.miSpanIndex.ToString(), j.super_SpanBase.meSpanType.ToString(), (j.macName ?? string.Empty).TrimEnd('\0'), ];
         };
-        ctx.Repopulate = () => RepopulateView(ctx, _model.junctions.Count);
-        ctx.AddNew = () => _model.junctions.Add(new Junction
+        ctx.Repopulate = () => RepopulateView(ctx, model.junctions.Count);
+        ctx.AddNew = () => model.junctions.Add(new()
         {
-            macName = new string('\0', 16),
+            macName = new('\0', 16),
         });
-        ctx.Remove = i => _model.junctions.RemoveAt(i);
+        ctx.Remove = i => model.junctions.RemoveAt(i);
         ctx.Duplicate = i =>
         {
-            Junction src = _model.junctions[i];
+            Junction src = model.junctions[i];
             Junction copy = new()
             {
-                super_SpanBase = new SpanBase
+                super_SpanBase = new()
                 {
                     miRoadIndex = src.super_SpanBase.miRoadIndex,
                     miSpanIndex = src.super_SpanBase.miSpanIndex,
@@ -154,45 +160,41 @@ public partial class StreetDataEditor : Form, IEntryEditor
                 },
                 macName = src.macName,
             };
-            _model.junctions.Insert(i + 1, copy);
+
+            model.junctions.Insert(i + 1, copy);
         };
         BuildContextMenu(ctx);
     }
 
     private void ConfigureRoadsTab()
     {
-        TabContext ctx = _roadsCtx;
-        ctx.Get = i => _model.roads[i];
+        TabContext ctx = roadsCtx;
+        ctx.Get = i => model.roads[i];
         ctx.Format = i =>
         {
-            Road r = _model.roads[i];
-            return
-            [
-                i.ToString(),
-                (r.macDebugName ?? string.Empty).TrimEnd('\0'),
-                r.mReferencePosition.X.ToString("0.###", CultureInfo.InvariantCulture),
-                r.mReferencePosition.Y.ToString("0.###", CultureInfo.InvariantCulture),
-                r.mReferencePosition.Z.ToString("0.###", CultureInfo.InvariantCulture),
-                r.mChallenge.ToString(),
-                r.mId.ToString(),
-            ];
+            Road r = model.roads[i];
+            return [i.ToString(), (r.macDebugName ?? string.Empty).TrimEnd('\0'), r.mReferencePosition.X.ToString("0.###", CultureInfo.InvariantCulture), r.mReferencePosition.Y.ToString("0.###", CultureInfo.InvariantCulture), r.mReferencePosition.Z.ToString("0.###", CultureInfo.InvariantCulture), r.mChallenge.ToString(), r.mId.ToString(),];
         };
-        ctx.Repopulate = () => RepopulateView(ctx, _model.roads.Count);
+        ctx.Repopulate = () => RepopulateView(ctx, model.roads.Count);
         ctx.AddNew = () =>
         {
             // Roads and Challenges are 1:1; keep the counts aligned.
-            _model.roads.Add(new Road { macDebugName = new string('\0', 16) });
-            _model.challenges.Add(new ChallengeParScores());
+            model.roads.Add(new()
+            {
+                macDebugName = new('\0', 16)
+            });
+            model.challenges.Add(new());
         };
         ctx.Remove = i =>
         {
-            _model.roads.RemoveAt(i);
-            if (i < _model.challenges.Count)
-                _model.challenges.RemoveAt(i);
+            model.roads.RemoveAt(i);
+
+            if (i < model.challenges.Count)
+                model.challenges.RemoveAt(i);
         };
         ctx.Duplicate = i =>
         {
-            Road src = _model.roads[i];
+            Road src = model.roads[i];
             Road copy = new()
             {
                 mReferencePosition = src.mReferencePosition,
@@ -203,29 +205,24 @@ public partial class StreetDataEditor : Form, IEntryEditor
                 mChallenge = src.mChallenge,
                 unknown = src.unknown,
             };
-            _model.roads.Insert(i + 1, copy);
-            _model.challenges.Insert(i + 1, new ChallengeParScores());
+
+            model.roads.Insert(i + 1, copy);
+            model.challenges.Insert(i + 1, new());
         };
         BuildContextMenu(ctx);
     }
 
     private void ConfigureChallengesTab()
     {
-        TabContext ctx = _challengesCtx;
-        ctx.Get = i => _model.challenges[i];
+        TabContext ctx = challengesCtx;
+        ctx.Get = i => model.challenges[i];
         ctx.Format = i =>
         {
-            ChallengeParScores c = _model.challenges[i];
-            return
-            [
-                i.ToString(),
-                c.challengeData.mScoreList.maScores[0].ToString(),
-                c.challengeData.mScoreList.maScores[1].ToString(),
-                c.mRivals[0].ToString("X16"),
-                c.mRivals[1].ToString("X16"),
-            ];
+            ChallengeParScores c = model.challenges[i];
+            return [i.ToString(), c.challengeData.mScoreList.maScores[0].ToString(), c.challengeData.mScoreList.maScores[1].ToString(), c.mRivals[0].ToString("X16"), c.mRivals[1].ToString("X16"),];
         };
-        ctx.Repopulate = () => RepopulateView(ctx, _model.challenges.Count);
+        ctx.Repopulate = () => RepopulateView(ctx, model.challenges.Count);
+
         // Add/remove happens via the Roads tab to keep the counts aligned.
         ctx.AddNew = null;
         ctx.Remove = null;
@@ -237,30 +234,54 @@ public partial class StreetDataEditor : Form, IEntryEditor
     {
         ctx.ContextMenu.Items.Clear();
 
-        ToolStripMenuItem addItem = new("Add new") { Enabled = ctx.AddNew != null };
+        ToolStripMenuItem addItem = new("Add new")
+        {
+            Enabled = ctx.AddNew != null
+        };
+
         addItem.Click += (s, e) =>
         {
-            if (ctx.AddNew == null) return;
+            if (ctx.AddNew == null)
+                return;
+
             ctx.AddNew();
             AfterMutate(ctx);
         };
 
-        ToolStripMenuItem dupItem = new("Duplicate selected") { Enabled = ctx.Duplicate != null };
+        ToolStripMenuItem dupItem = new("Duplicate selected")
+        {
+            Enabled = ctx.Duplicate != null
+        };
+
         dupItem.Click += (s, e) =>
         {
-            if (ctx.Duplicate == null) return;
+            if (ctx.Duplicate == null)
+                return;
+
             int idx = SelectedModelIndex(ctx);
-            if (idx < 0) return;
+
+            if (idx < 0)
+                return;
+
             ctx.Duplicate(idx);
             AfterMutate(ctx);
         };
 
-        ToolStripMenuItem rmItem = new("Remove selected") { Enabled = ctx.Remove != null };
+        ToolStripMenuItem rmItem = new("Remove selected")
+        {
+            Enabled = ctx.Remove != null
+        };
+
         rmItem.Click += (s, e) =>
         {
-            if (ctx.Remove == null) return;
+            if (ctx.Remove == null)
+                return;
+
             int idx = SelectedModelIndex(ctx);
-            if (idx < 0) return;
+
+            if (idx < 0)
+                return;
+
             ctx.Remove(idx);
             AfterMutate(ctx);
         };
@@ -273,14 +294,19 @@ public partial class StreetDataEditor : Form, IEntryEditor
     private void AfterMutate(TabContext ctx)
     {
         ctx.Repopulate();
+
         // Roads and Challenges are 1:1, so a Roads mutation also needs
         // the Challenges tab refreshed (and vice versa).
-        if (ctx == _roadsCtx) _challengesCtx.Repopulate();
-        if (ctx == _challengesCtx) _roadsCtx.Repopulate();
+        if (ctx == roadsCtx)
+            challengesCtx.Repopulate();
+
+        if (ctx == challengesCtx)
+            roadsCtx.Repopulate();
+
         UpdateTabTitles();
 
         // Re-fire EditEvent so the bundle on disk reflects the mutation.
-        _editFired = false;
+        editFired = false;
         RaiseEdit();
     }
 
@@ -288,30 +314,45 @@ public partial class StreetDataEditor : Form, IEntryEditor
     // object) to find the model index instead of the row index.
     private int SelectedModelIndex(TabContext ctx)
     {
-        if (ctx.View.SelectedItems.Count == 0) return -1;
+        if (ctx.View.SelectedItems.Count == 0)
+            return -1;
+
         object tag = ctx.View.SelectedItems[0].Tag;
+
         switch (tag)
         {
-            case Street s: return _model.streets.IndexOf(s);
-            case Junction j: return _model.junctions.IndexOf(j);
-            case Road r: return _model.roads.IndexOf(r);
-            case ChallengeParScores c: return _model.challenges.IndexOf(c);
-            default: return -1;
+            case Street s:
+                return model.streets.IndexOf(s);
+            case Junction j:
+                return model.junctions.IndexOf(j);
+            case Road r:
+                return model.roads.IndexOf(r);
+            case ChallengeParScores c:
+                return model.challenges.IndexOf(c);
+            default:
+                return -1;
         }
     }
 
     private void RepopulateView(TabContext ctx, int count)
     {
         ctx.View.BeginUpdate();
+
         try
         {
             ctx.View.Items.Clear();
+
             for (int i = 0; i < count; i++)
             {
                 string[] row = ctx.Format(i);
-                ListViewItem item = new(row) { Tag = ctx.Get(i) };
+                ListViewItem item = new(row)
+                {
+                    Tag = ctx.Get(i)
+                };
+
                 ctx.View.Items.Add(item);
             }
+
             foreach (ColumnHeader col in ctx.View.Columns)
                 col.Width = -2; // auto-size to content + header
         }
@@ -323,25 +364,35 @@ public partial class StreetDataEditor : Form, IEntryEditor
 
     private void UpdateTabTitles()
     {
-        if (_model == null) return;
-        streetsPage.Text = "Streets (" + _model.streets.Count + ")";
-        junctionsPage.Text = "Junctions (" + _model.junctions.Count + ")";
-        roadsPage.Text = "Roads (" + _model.roads.Count + ")";
-        challengesPage.Text = "Challenges (" + _model.challenges.Count + ")";
+        if (model == null)
+            return;
+
+        streetsPage.Text = "Streets (" + model.streets.Count + ")";
+        junctionsPage.Text = "Junctions (" + model.junctions.Count + ")";
+        roadsPage.Text = "Roads (" + model.roads.Count + ")";
+        challengesPage.Text = "Challenges (" + model.challenges.Count + ")";
     }
 
     private void list_DoubleClick(object sender, EventArgs e)
     {
         ListView list = (ListView)sender;
-        if (list.SelectedItems.Count == 0) return;
+
+        if (list.SelectedItems.Count == 0)
+            return;
+
         propertyGrid.SelectedObject = list.SelectedItems[0].Tag;
     }
 
     private void list_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.KeyCode != Keys.Enter) return;
+        if (e.KeyCode != Keys.Enter)
+            return;
+
         ListView list = (ListView)sender;
-        if (list.SelectedItems.Count == 0) return;
+
+        if (list.SelectedItems.Count == 0)
+            return;
+
         propertyGrid.SelectedObject = list.SelectedItems[0].Tag;
         e.Handled = true;
         e.SuppressKeyPress = true;
@@ -350,6 +401,7 @@ public partial class StreetDataEditor : Form, IEntryEditor
     private void list_ColumnClick(object sender, ColumnClickEventArgs e)
     {
         ListView list = (ListView)sender;
+
         if (list.ListViewItemSorter is ListItemSorter existing && existing.Column == e.Column)
         {
             existing.Descending = !existing.Descending;
@@ -358,6 +410,7 @@ public partial class StreetDataEditor : Form, IEntryEditor
         {
             list.ListViewItemSorter = new ListItemSorter(e.Column);
         }
+
         list.Sort();
     }
 
@@ -365,6 +418,7 @@ public partial class StreetDataEditor : Form, IEntryEditor
     private sealed class ListItemSorter : IComparer
     {
         public int Column { get; }
+
         public bool Descending { get; set; }
 
         public ListItemSorter(int column)
@@ -385,8 +439,9 @@ public partial class StreetDataEditor : Form, IEntryEditor
             string sy = iy.SubItems[Column].Text;
 
             int cmp;
+
             if (long.TryParse(sx, NumberStyles.Integer, CultureInfo.InvariantCulture, out long lx) &&
-                long.TryParse(sy, NumberStyles.Integer, CultureInfo.InvariantCulture, out long ly))
+                            long.TryParse(sy, NumberStyles.Integer, CultureInfo.InvariantCulture, out long ly))
             {
                 cmp = lx.CompareTo(ly);
             }
@@ -399,18 +454,24 @@ public partial class StreetDataEditor : Form, IEntryEditor
             {
                 cmp = string.CompareOrdinal(sx, sy);
             }
-            return Descending ? -cmp : cmp;
+
+            return Descending
+                ? -cmp
+                : cmp;
         }
     }
 
     private void exportJsonItem_Click(object sender, EventArgs e)
     {
-        if (_model == null) return;
+        if (model == null)
+            return;
 
-        SaveFileDialog saveDialog = new();
-        saveDialog.Filter = "JSON File (*.json)|*.json";
-        saveDialog.Title = "Export StreetData as JSON";
-        saveDialog.FileName = "StreetData.json";
+        SaveFileDialog saveDialog = new()
+        {
+            Filter = "JSON File (*.json)|*.json",
+            Title = "Export StreetData as JSON",
+            FileName = "StreetData.json"
+        };
 
         if (saveDialog.ShowDialog() != DialogResult.OK)
             return;
@@ -422,7 +483,8 @@ public partial class StreetDataEditor : Form, IEntryEditor
                 WriteIndented = true,
                 NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
             };
-            string content = JsonSerializer.Serialize(_model, options);
+
+            string content = JsonSerializer.Serialize(model, options);
             File.WriteAllText(saveDialog.FileName, content);
             MessageBox.Show(this,
                 "Successfully exported to " + saveDialog.FileName,
@@ -436,11 +498,14 @@ public partial class StreetDataEditor : Form, IEntryEditor
         }
     }
 
-    private bool _editFired;
+    private bool editFired;
+
     private void RaiseEdit()
     {
-        if (_editFired) return;
-        _editFired = true;
+        if (editFired)
+            return;
+
+        editFired = true;
         EditEvent?.Invoke();
     }
 

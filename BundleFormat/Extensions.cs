@@ -16,11 +16,13 @@ public static class Extensions
         {
             if (self == null)
                 return "";
+
             StringBuilder sb = new();
 
             for (int i = 0; i < self.Length; i++)
             {
                 sb.Append(self[i].ToString("X2"));
+
                 if ((i + 1) % 16 == 0)
                     sb.Append("\r\n");
                 else
@@ -65,9 +67,10 @@ public static class Extensions
 
     extension(Vector4 vec)
     {
-        public byte[] toBytes(bool swap = false)
+        public byte[] ToBytes(bool swap = false)
         {
             List<byte> bytes = [];
+
             if (swap)
             {
                 bytes.AddRange(BitConverter.GetBytes(BinaryPrimitives.ReadSingleBigEndian(BitConverter.GetBytes(vec.X))));
@@ -82,6 +85,7 @@ public static class Extensions
                 bytes.AddRange(BitConverter.GetBytes(vec.Z));
                 bytes.AddRange(BitConverter.GetBytes(vec.W));
             }
+
             return [.. bytes];
         }
     }

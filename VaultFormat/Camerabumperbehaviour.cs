@@ -8,26 +8,38 @@ namespace VaultFormat;
 public class Camerabumperbehaviour : IAttribute
 {
     public AttributeHeader header { get; set; }
+
     public SizeAndPositionInformation info { get; set; }
 
     public float ZOffset { get; set; }
+
     public float YOffset { get; set; }
+
     public float YawSpring { get; set; }
+
     public float RollSpring { get; set; }
+
     public float PitchSpring { get; set; }
+
     public float FieldOfView { get; set; }
+
     public float BoostFieldOfView { get; set; }
+
     public float BodyRollScale { get; set; }
+
     public float BodyPitchScale { get; set; }
+
     public float AccelerationResponse { get; set; }
+
     public float AccelerationDampening { get; set; }
+
     public Camerabumperbehaviour(SizeAndPositionInformation chunk, AttributeHeader dataChunk)
     {
         header = dataChunk;
         info = chunk;
     }
 
-    public int getDataSize()
+    public int GetDataSize()
     {
         List<byte[]> bytes =
         [
@@ -43,16 +55,17 @@ public class Camerabumperbehaviour : IAttribute
             BitConverter.GetBytes(AccelerationResponse),
             BitConverter.GetBytes(AccelerationDampening)
         ];
+
         //To-Do: again here we have not padding, but usually we should have it 
         return bytes.SelectMany(i => i).Count();
     }
 
-    public AttributeHeader getHeader()
+    public AttributeHeader GetHeader()
     {
         return header;
     }
 
-    public SizeAndPositionInformation getInfo()
+    public SizeAndPositionInformation GetInfo()
     {
         return info;
     }

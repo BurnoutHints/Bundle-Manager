@@ -16,21 +16,26 @@ public partial class ImportResourceForm : Form
     private const string PrimaryFileFilter = "Binary Files|*.dat;*.bin|" + GameImage.FileFilter + "|All files (*.*)|*.*";
 
     // These resources are named without a type suffix, so their IDs hash the bare name
-    private static readonly EntryType[] BareNameTypes = [EntryType.AptData, EntryType.PolygonSoupList];
+    private static readonly EntryType[] bareNameTypes = [EntryType.AptData, EntryType.PolygonSoupList];
 
-    private readonly BundleArchive _workingArchive;
+    private readonly BundleArchive workingArchive;
 
-    private string _primaryPath;
-    private PrimaryResource _primary;
+    private string primaryPath;
+    private PrimaryResource primary;
 
-    private EntryType SelectedType => resourceTypeComboBox.SelectedItem is EntryType type ? type : EntryType.Invalid;
-    private string FullName => BareNameTypes.Contains(SelectedType) ? resourceNameTextBox.Text : $"{resourceNameTextBox.Text}.{SelectedType}";
+    private EntryType SelectedType => resourceTypeComboBox.SelectedItem is EntryType currentType
+        ? currentType
+        : EntryType.Invalid;
+
+    private string FullName => bareNameTypes.Contains(SelectedType)
+        ? resourceNameTextBox.Text
+        : $"{resourceNameTextBox.Text}.{SelectedType}";
 
     public ImportResourceForm(BundleArchive destination, string primaryDataPath)
     {
         InitializeComponent();
 
-        _workingArchive = destination;
+        workingArchive = destination;
 
         resourceTypeComboBox.DataSource = Enum.GetValues(typeof(EntryType));
         resourceTypeComboBox.SelectedIndexChanged += (_, _) => OnTypeChanged();
@@ -47,6 +52,7 @@ public partial class ImportResourceForm : Form
             return false;
 
         ImportResourceForm form;
+
         try
         {
             form = new(destination, path);
@@ -84,7 +90,7 @@ public partial class ImportResourceForm : Form
     // Validating instead of Validated so a bad path also cancels the click that moved focus away
     private void primaryResourcePathTextBox_Validating(object sender, System.ComponentModel.CancelEventArgs e)
     {
-        if (primaryResourcePathTextBox.Text != _primaryPath)
+        if (primaryResourcePathTextBox.Text != primaryPath)
             e.Cancel = !TryLoadPrimary(primaryResourcePathTextBox.Text);
     }
 
@@ -111,39 +117,43 @@ public partial class ImportResourceForm : Form
             Warn("Failed to import the resource: " + ex.Message);
         }
     }
-#endregion
+    #endregion
 
     void LoadPrimary(string path)
     {
-        _primary = ResourceImport.LoadPrimary(path, _workingArchive, AskPCTexturePlatform, (p, platform) => ImageImportDialog.AskCompression(null, p, platform));
-        _primaryPath = path;
+        primary = ResourceImport.LoadPrimary(path, workingArchive, AskPCTexturePlatform, (p, platform) => ImageImportDialog.AskCompression(null, p, platform));
+        primaryPath = path;
 
         primaryResourcePathTextBox.Text = path;
         secondaryResourcePathTextBox.Text = string.Empty; // Belonged to the previous primary
         resourceNameTextBox.Text = ResourceNamePrefix + ResourceImport.GetResourceBaseName(path);
         resourceNameTextBox.SelectionStart = resourceNameTextBox.TextLength;
 
-        resourceTypeComboBox.SelectedItem = _primary.Type;
-        resourceTypeComboBox.Enabled = _primary.ImageBody == null;
+        resourceTypeComboBox.SelectedItem = primary.Type;
+        resourceTypeComboBox.Enabled = primary.ImageBody == null;
         OnTypeChanged();
 
-        selectTypeLabel.Text = _primary.Type == EntryType.Invalid
+        selectTypeLabel.Text = primary.Type == EntryType.Invalid
             ? "Unable to auto detect resource type, please select it from the box below:"
             : "Select the resource type to import as:";
 
-        int importCount = _primary.Imports.Count;
+        int importCount = primary.Imports.Count;
         importCountUpDown.Value = 0;
         importCountUpDown.Maximum = importCount;
         importCountUpDown.Value = importCount;
-        importCountUpDown.Enabled = _primary.ImportsSource == null && importCount > 0;
-        importsLabel.Text = _primary.ImageBody != null ? "Imports: none (texture built from the image)"
-            : _primary.ImportsSource != null ? $"Imports from {_primary.ImportsSource}:"
-            : importCount > 0 ? "Imports detected at the end of the primary data. Lower the count if the first rows are really resource data:"
-            : "Imports: none detected in the primary data";
+        importCountUpDown.Enabled = primary.ImportsSource == null && importCount > 0;
+        importsLabel.Text = primary.ImageBody != null
+            ? "Imports: none (texture built from the image)"
+            : primary.ImportsSource != null
+                ? $"Imports from {primary.ImportsSource}:"
+                : importCount > 0
+                    ? "Imports detected at the end of the primary data. Lower the count if the first rows are really resource data:"
+                    : "Imports: none detected in the primary data";
         RefreshImportsList();
 
         uint? fileID = ResourceImport.GetIDFromFileName(path);
         autoUpdateIDCheckBox.Checked = fileID == null;
+
         if (fileID is uint id)
             resourceIDTextBox.Text = id.ToString("X8");
     }
@@ -159,17 +169,18 @@ public partial class ImportResourceForm : Form
         {
             if (ex is not OperationCanceledException)
                 Warn($"Unable to use {path}: {ex.Message}");
-            primaryResourcePathTextBox.Text = _primaryPath; // Put the old path back in the text box
+
+            primaryResourcePathTextBox.Text = primaryPath; // Put the old path back in the text box
             return false;
         }
     }
 
     private void OnTypeChanged()
     {
-        bool needsSecondary = _primary.ImageBody == null && BundleEntry.GetMemoryChunkCount(SelectedType) > 1;
+        bool needsSecondary = primary.ImageBody == null && BundleEntry.GetMemoryChunkCount(SelectedType) > 1;
         secondaryDataPathSelectorButton.Visible = secondaryResourcePathTextBox.Visible = secondaryImportPathLabel.Visible = needsSecondary;
 
-        if (needsSecondary && secondaryResourcePathTextBox.Text.Length == 0 && ResourceImport.FindSecondary(_primaryPath) is string secondary)
+        if (needsSecondary && secondaryResourcePathTextBox.Text.Length == 0 && ResourceImport.FindSecondary(primaryPath) is string secondary)
             secondaryResourcePathTextBox.Text = secondary;
 
         if (autoUpdateIDCheckBox.Checked)
@@ -178,7 +189,7 @@ public partial class ImportResourceForm : Form
 
     private static PlatformType AskPCTexturePlatform()
     {
-        TaskDialogButton original = new ("PC (2009, The Ultimate Box)");
+        TaskDialogButton original = new("PC (2009, The Ultimate Box)");
         TaskDialogButton remastered = new("Remastered");
 
         TaskDialogPage page = new()
@@ -186,15 +197,21 @@ public partial class ImportResourceForm : Form
             Caption = "Import Resource into Bundle",
             Heading = "Which version of Burnout Paradise is this bundle for?",
             Text = "Bundle Manager was unable to infer the platform for this bundle. Please select the version of Burnout Paradise that this bundle is for. This will determine how this texture and others are imported.",
-            Buttons = { original, remastered }
+            Buttons =
+            {
+                original,
+                remastered
+            }
         };
 
-        return TaskDialog.ShowDialog(page) == remastered ? PlatformType.Remastered : PlatformType.PC;
+        return TaskDialog.ShowDialog(page) == remastered
+            ? PlatformType.Remastered
+            : PlatformType.PC;
     }
 
     private void RecalculateResourceIDTextBox()
     {
-        resourceIDTextBox.Text = Crc32.HashEntryID(FullName).ToString("X8");
+        resourceIDTextBox.Text = CRC32.HashEntryID(FullName).ToString("X8");
     }
 
     private void RefreshImportsList()
@@ -203,12 +220,16 @@ public partial class ImportResourceForm : Form
 
         importsListBox.BeginUpdate();
         importsListBox.Items.Clear();
-        foreach (Dependency dep in _primary.Imports.Skip(_primary.Imports.Count - count))
+
+        foreach (Dependency dep in primary.Imports.Skip(primary.Imports.Count - count))
         {
-            BundleEntry target = _workingArchive.GetEntryByID(dep.ID);
+            BundleEntry target = workingArchive.GetEntryByID(dep.ID);
             importsListBox.Items.Add($"0x{dep.EntryPointerOffset:X8} -> {dep.ID:X8}"
-                + (target == null ? string.Empty : $"  ({target.Type} in this bundle)"));
+                + (target == null
+                    ? string.Empty
+                    : $"  ({target.Type} in this bundle)"));
         }
+
         importsListBox.EndUpdate();
     }
 
@@ -220,13 +241,16 @@ public partial class ImportResourceForm : Form
             Filter = filter
         };
 
-        return ofd.ShowDialog(owner) == DialogResult.OK ? ofd.FileName : null;
+        return ofd.ShowDialog(owner) == DialogResult.OK
+            ? ofd.FileName
+            : null;
     }
 
     private void RunImportOperation()
     {
-        EntryType type = SelectedType;
+        EntryType currentType = SelectedType;
         string name = resourceNameTextBox.Text;
+
         if (name.StartsWith(ResourceNamePrefix, StringComparison.OrdinalIgnoreCase))
             name = name[ResourceNamePrefix.Length..];
 
@@ -236,7 +260,7 @@ public partial class ImportResourceForm : Form
             return;
         }
 
-        if (type == EntryType.Invalid)
+        if (currentType == EntryType.Invalid)
         {
             Warn("Please select the resource type to import as.");
             return;
@@ -248,10 +272,11 @@ public partial class ImportResourceForm : Form
             return;
         }
 
-        byte[] secondary = _primary.ImageBody;
+        byte[] secondary = primary.ImageBody;
+
         if (secondary == null)
         {
-            if (BundleEntry.GetMemoryChunkCount(type) > 1)
+            if (BundleEntry.GetMemoryChunkCount(currentType) > 1)
             {
                 if (!File.Exists(secondaryResourcePathTextBox.Text))
                 {
@@ -262,17 +287,18 @@ public partial class ImportResourceForm : Form
                 secondary = File.ReadAllBytes(secondaryResourcePathTextBox.Text);
             }
 
-            if (type == EntryType.Texture
-                && !ResourceImport.TextureMatchesBundle(_primary.Data, _workingArchive.Platform)
-                && !Confirm($"This texture header doesn't look like a {_workingArchive.Platform} texture.", "Import anyway"))
+            if (currentType == EntryType.Texture
+                && !ResourceImport.TextureMatchesBundle(primary.Data, workingArchive.Platform)
+                && !Confirm($"This texture header doesn't look like a {workingArchive.Platform} texture.", "Import anyway"))
                 return;
         }
 
-        BundleEntry existing = _workingArchive.GetEntryByID(id);
+        BundleEntry existing = workingArchive.GetEntryByID(id);
+
         if (existing != null && !Confirm($"This bundle already has a resource with ID {id:X8} ({existing.Type}). Replace it?", "Replace"))
             return;
 
-        _workingArchive.AddEntry(_workingArchive.CreateEntry(id, type, FullName, _primary.Data, (int)importCountUpDown.Value, secondary));
+        workingArchive.AddEntry(workingArchive.CreateEntry(id, currentType, FullName, primary.Data, (int)importCountUpDown.Value, secondary));
 
         DialogResult = DialogResult.OK;
         Close();
@@ -292,7 +318,11 @@ public partial class ImportResourceForm : Form
             Caption = Text,
             Text = message,
             Icon = TaskDialogIcon.Warning,
-            Buttons = { confirm, TaskDialogButton.Cancel },
+            Buttons =
+            {
+                confirm,
+                TaskDialogButton.Cancel
+            },
             AllowCancel = true
         };
 

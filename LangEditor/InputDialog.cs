@@ -6,6 +6,7 @@ namespace LangEditor;
 public partial class InputDialog : Form
 {
     public delegate void OnAccepted(string value);
+
     public event OnAccepted Accepted;
 
     public InputDialog()

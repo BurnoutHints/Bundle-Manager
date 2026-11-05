@@ -7,37 +7,33 @@ namespace ModelViewer;
 
 public class Shader
 {
-    private readonly string _vertex;
-    private readonly string _fragment;
+    private readonly string vertex;
+    private readonly string fragment;
 
-    public int ShaderID
-    {
-        get;
-        private set;
-    }
+    public int ShaderID { get; private set; }
 
-    public Shader(string vertex, string fragment)
+    public Shader(string initialVertex, string initialFragment)
     {
         ShaderID = -1;
-        _vertex = vertex;
-        _fragment = fragment;
+        vertex = initialVertex;
+        fragment = initialFragment;
     }
 
     public Shader(string name)
     {
         ShaderID = -1;
-        _vertex = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Shaders/" + name + "V.glsl"));
-        _fragment = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Shaders/" + name + "P.glsl"));
+        vertex = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Shaders/" + name + "V.glsl"));
+        fragment = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Shaders/" + name + "P.glsl"));
     }
 
     public int Compile()
     {
         int vertexShader = GL.CreateShader(ShaderType.VertexShader);
-        GL.ShaderSource(vertexShader, _vertex);
+        GL.ShaderSource(vertexShader, vertex);
         GL.CompileShader(vertexShader);
 
         int fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
-        GL.ShaderSource(fragmentShader, _fragment);
+        GL.ShaderSource(fragmentShader, fragment);
         GL.CompileShader(fragmentShader);
 
         ShaderID = GL.CreateProgram();
@@ -45,6 +41,7 @@ public class Shader
         GL.AttachShader(ShaderID, fragmentShader);
         GL.LinkProgram(ShaderID);
         string info = GL.GetProgramInfoLog(ShaderID);
+
         if (!string.IsNullOrEmpty(info))
             Debug.WriteLine($"GL.LinkProgram had info log: {info}");
 

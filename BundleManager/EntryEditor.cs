@@ -28,21 +28,21 @@ public partial class EntryEditor : Form
         get;
         set
         {
-            field = value;
+            original = value;
+            field = EntryDraft.Copy(value);
+            loaded = hasApplied = false;
+            tabList.SelectedTab = tabInfo;
             UpdateDisplay();
         }
     }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-    public bool ForceHex
-    {
-        get;
-        set;
-    }
+    public bool ForceHex { get; set; }
 
     public EntryEditor()
     {
         InitializeComponent();
+        InitializeEditing();
         Disposed += (_, _) => pboImage.Image?.Dispose(); // A PictureBox doesn't dispose its image
 
         ImageMenuVisible = false;
@@ -56,8 +56,6 @@ public partial class EntryEditor : Form
         valuesData.Source = hexData;
         valuesExtraData.Source = hexExtraData;
         importsView.OpenEntry += OpenEntry;
-        mnuBar.MenuActivate += (_, _) => Commit();
-        FormClosing += (_, _) => Commit();
 
         //txtData.MaxLength = int.MaxValue;
         //txtExtraData.MaxLength = int.MaxValue;
@@ -65,6 +63,12 @@ public partial class EntryEditor : Form
 
     private void FocusTab()
     {
+        if (ActiveHex is HexView hex)
+        {
+            hex.Focus();
+            return;
+        }
+
         if (tabList.SelectedTab != null)
         {
             if (tabList.SelectedTab.Controls.Count > 0)
@@ -94,16 +98,42 @@ public partial class EntryEditor : Form
         {
             Image old = pboImage.Image;
             pboImage.Image = value;
+
             if (old != value)
                 old?.Dispose();
         }
     }
 
-    private bool ImageVisible { set => pboImage.Visible = value; }
-    private bool TabsVisible { set => tabList.Visible = value; }
-    private bool ImageMenuVisible { set => imageToolStripMenuItem.Visible = value; }
-    private bool BinaryMenuVisible { set => binaryToolStripMenuItem.Visible = value; }
-    private bool MenuVisible { set => mnuBar.Visible = value; }
+    private bool showingImage;
+
+    private bool ImageVisible
+    {
+        set
+        {
+            showingImage = value;
+            pboImage.Visible = value;
+        }
+    }
+
+    private bool TabsVisible
+    {
+        set => tabList.Visible = value;
+    }
+
+    private bool ImageMenuVisible
+    {
+        set => imageToolStripMenuItem.Visible = value;
+    }
+
+    private bool BinaryMenuVisible
+    {
+        set => binaryToolStripMenuItem.Visible = value;
+    }
+
+    private bool MenuVisible
+    {
+        set => mnuBar.Visible = value;
+    }
 
     private static string GetInfo(BundleEntry entry)
     {
@@ -119,22 +149,25 @@ public partial class EntryEditor : Form
     }
 
     // Counts calls, so an older display that finishes decoding late doesn't replace a newer one
-    private int _displayVersion;
+    private int displayVersion;
 
     // A texture decodes off the UI thread
     private async void UpdateDisplay()
     {
-        int version = ++_displayVersion;
+        int version = ++displayVersion;
         BundleEntry entry = Entry;
         bool texture = !ForceHex && entry.Type == EntryType.Texture;
-        Text = "Edit Entry: " + entry.Index.ToString("d3");
+        UpdateDraftStatus();
 
-        (Image image, ImageHeader header, string info) = await Task.Run(() =>
-        {
-            Image decoded = texture ? GameImage.GetImage(entry.EntryBlocks[0].Data, entry.EntryBlocks[1].Data, entry.Platform) : null;
-            return (decoded, decoded != null ? GameImage.GetImageHeader(entry.EntryBlocks[0].Data, entry.Platform) : null, GetInfo(entry));
-        });
-        if (IsDisposed || version != _displayVersion)
+        Image image = texture
+            ? await Task.Run(() => GameImage.GetImage(entry.EntryBlocks[0].Data, entry.EntryBlocks[1].Data, entry.Platform))
+            : null;
+        ImageHeader header = image != null
+            ? GameImage.GetImageHeader(entry.EntryBlocks[0].Data, entry.Platform)
+            : null;
+        string info = GetInfo(entry);
+
+        if (IsDisposed || version != displayVersion)
         {
             image?.Dispose();
             return;
@@ -146,7 +179,7 @@ public partial class EntryEditor : Form
         TabsVisible = !showImage;
         ImageMenuVisible = showImage;
         BinaryMenuVisible = !showImage;
-        editModeToolStripMenuItem.Visible = goToOffsetToolStripMenuItem.Visible = editSeparator.Visible = !showImage;
+        lblLoading.Visible = false;
 
         if (showImage)
         {
@@ -167,19 +200,24 @@ public partial class EntryEditor : Form
         }
 
         MenuVisible = true;
-
         txtInfo.Text = info;
+        loaded = true;
+        UpdateHexStatus();
+        UpdateDraftStatus();
     }
 
     private void exportToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        SaveFileDialog sfd = new();
-        sfd.Filter = "PNG Images|*.png|DDS Images (original data)|*.dds";
-        sfd.FileOk += Sfd_FileOk;
+        SaveFileDialog sfd = new()
+        {
+            Filter = "PNG Images|*.png|DDS Images (original data)|*.dds"
+        };
+
+        sfd.FileOk += sfd_FileOk;
         sfd.ShowDialog(this);
     }
 
-    private void Sfd_FileOk(object sender, CancelEventArgs e)
+    private void sfd_FileOk(object sender, CancelEventArgs e)
     {
         SaveFileDialog sfd = (SaveFileDialog)sender;
 
@@ -203,19 +241,25 @@ public partial class EntryEditor : Form
 
     private async void importToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        using OpenFileDialog ofd = new() { Filter = GameImage.FileFilter + "|All files (*.*)|*.*" };
+        using OpenFileDialog ofd = new()
+        {
+            Filter = GameImage.FileFilter + "|All files (*.*)|*.*"
+        };
+
         if (ofd.ShowDialog(this) != DialogResult.OK)
             return;
 
         string path = ofd.FileName;
         byte[] oldHeader = Entry.EntryBlocks[0].Data;
         ImageInfo info;
+
         try
         {
             ImageHeader header = GameImage.GetImageHeader(oldHeader, Entry.Platform);
             CompressionType? compression = null; // DDS files keep their own format
+
             if (!string.Equals(Path.GetExtension(path), ".dds", StringComparison.OrdinalIgnoreCase)
-                && (compression = ImageImportDialog.AskCompression(this, path, header.Platform)) == null)
+                            && (compression = ImageImportDialog.AskCompression(this, path, header.Platform)) == null)
                 return;
 
             info = await Task.Run(() => GameImage.SetImage(path, compression ?? header.CompressionType, header.Platform, oldHeader));
@@ -252,11 +296,16 @@ public partial class EntryEditor : Form
 
     private void ImportPrimary(string path)
     {
+        if (!FinishCellEdit())
+            return;
+
+        FlushHexToDraft();
         byte[] data = ResourceImport.ReadPrimary(path, Entry.Console, out List<Dependency> imports);
 
         if (imports == null)
         {
             List<Dependency> current = Entry.GetImports();
+
             if (current.Count > 0 && Dependency.EndsWithTable(data, current, Entry.Console))
             {
                 imports = current;
@@ -264,7 +313,10 @@ public partial class EntryEditor : Form
             else
             {
                 List<Dependency> found = ResourceImport.ScanImports(data, Entry.Platform);
-                imports = found.Count == 0 && current.Count == 0 ? [] : AskImports(found, current);
+                imports = found.Count == 0 && current.Count == 0
+                    ? []
+                    : AskImports(found, current);
+
                 if (imports == null)
                     return;
             }
@@ -276,7 +328,9 @@ public partial class EntryEditor : Form
 
     private List<Dependency> AskImports(List<Dependency> found, List<Dependency> current)
     {
-        static string Imports(int count) => count == 1 ? "1 import" : $"{count} imports";
+        static string Imports(int count) => count == 1
+            ? "1 import"
+            : $"{count} imports";
 
         TaskDialogCommandLinkButton useFound = new($"Use the {Imports(found.Count)} at the end of the file", "The file ends with its own import table.");
         TaskDialogCommandLinkButton keep = new($"Keep the resource's {Imports(current.Count)}", "The file is the resource without its import table.");
@@ -296,29 +350,44 @@ public partial class EntryEditor : Form
         if (found.Count > 0)
         {
             page.Buttons.Add(useFound);
-            page.Expander = new TaskDialogExpander(string.Join("\n", found.Select(d =>
-                $"0x{d.EntryPointerOffset:X8} -> {d.ID:X8}" + (Entry.Archive.GetEntryByID(d.ID) is BundleEntry target ? $" ({target.Type} in this bundle)" : ""))))
+            page.Expander = new(string.Join("\n", found.Select(d =>
+                $"0x{d.EntryPointerOffset:X8} -> {d.ID:X8}" + (Entry.Archive.GetEntryByID(d.ID) is BundleEntry target
+                    ? $" ({target.Type} in this bundle)"
+                    : ""))))
             {
                 CollapsedButtonText = "Show imports",
                 ExpandedButtonText = "Hide imports"
             };
         }
+
         if (current.Count > 0)
             page.Buttons.Add(keep);
+
         page.Buttons.Add(none);
         page.Buttons.Add(TaskDialogButton.Cancel);
 
         TaskDialogButton result = TaskDialog.ShowDialog(this, page);
-        return result == useFound ? found : result == keep ? current : result == none ? [] : null;
+        return result == useFound
+            ? found
+            : result == keep
+                ? current
+                : result == none
+                    ? []
+                    : null;
     }
 
     private void exportDataToolStripMenuItem_Click(object sender, EventArgs e)
     {
+        if (!FinishCellEdit())
+            return;
+
+        FlushHexToDraft();
         string[] names = ExportNames(secondary: false);
 
         // The native dialog so the name can follow the type
         string path = NativeSaveDialog.Show(this, names[0], "dat", DataFileFilter,
             (type, name) => NameForType(type, name, names), out int typeIndex);
+
         if (path == null)
             return;
 
@@ -332,8 +401,10 @@ public partial class EntryEditor : Form
     {
         string id = Entry.ID.ToString("X8");
         byte[] bytes = BitConverter.GetBytes((uint)Entry.ID);
+
         if (Entry.Console)
             Array.Reverse(bytes);
+
         string dgi = string.Join("_", bytes.Select(b => b.ToString("X2")));
 
         if (secondary)
@@ -348,29 +419,43 @@ public partial class EntryEditor : Form
         }
 
         bool hasSecondary = Entry.HasSection(1) || Entry.HasSection(2);
-        return [hasSecondary ? $"{id}_primary" : id, id, dgi];
+        return [hasSecondary
+            ? $"{id}_primary"
+            : id, id, dgi];
     }
 
     // Swaps only the default names, keeping any extension in the box
     private static string NameForType(int type, string name, string[] names)
     {
-        string extension = Path.GetExtension(name);
-        string stem = name[..^extension.Length];
-        return (names.Contains(stem) ? names[type - 1] : stem) + extension;
+        string currentExtension = Path.GetExtension(name);
+        string stem = name[..^currentExtension.Length];
+        return (names.Contains(stem)
+            ? names[type - 1]
+            : stem) + currentExtension;
     }
 
     private void importExtraToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        OpenFileDialog ofd = new();
-        ofd.FileName = $"{Entry.ID.ToString("X8")}_secondary";
-        ofd.DefaultExt = "dat";
-        ofd.Filter = DataFileFilter;
+        OpenFileDialog ofd = new()
+        {
+            FileName = $"{Entry.ID:X8}_secondary",
+            DefaultExt = "dat",
+            Filter = DataFileFilter
+        };
+
         ofd.FileOk += Ofd_FileOk2;
         ofd.ShowDialog(this);
     }
 
     private void Ofd_FileOk2(object sender, CancelEventArgs e)
     {
+        if (!FinishCellEdit())
+        {
+            e.Cancel = true;
+            return;
+        }
+
+        FlushHexToDraft();
         OpenFileDialog ofd = (OpenFileDialog)sender;
 
         if (ofd.FileName == null || ofd.FileName.Length <= 0 || !File.Exists(ofd.FileName))
@@ -391,10 +476,15 @@ public partial class EntryEditor : Form
 
     private void exportExtraToolStripMenuItem_Click(object sender, EventArgs e)
     {
+        if (!FinishCellEdit())
+            return;
+
+        FlushHexToDraft();
         string[] names = ExportNames(secondary: true);
 
         string path = NativeSaveDialog.Show(this, names[0], "dat", DataFileFilter,
             (type, name) => NameForType(type, name, names), out _);
+
         if (path != null)
             File.WriteAllBytes(path, Entry.EntryBlocks[Entry.SecondaryBlock].Data);
     }
@@ -402,59 +492,62 @@ public partial class EntryEditor : Form
     private void editId_Click(object sender, EventArgs e)
     {
         string value = InputDialog.ShowInput(this, "Please enter the value to hash.");
+
         if (value == null)
             return;
-        ulong result = Crc32.HashCrc32B(value.ToLower());
+
+        ulong result = CRC32.HashCRC32B(value.ToLower());
         Entry.Dirty = true;
         Entry.ID = result;
-        UpdateDisplay();
+        txtInfo.Text = GetInfo(Entry);
+        UpdateDraftStatus();
         MessageBox.Show(this, "The new hashed value is: " + result.ToString("X8"), "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     private void calcLookup8_Click(object sender, EventArgs e)
     {
         string value = InputDialog.ShowInput(this, "Please enter the value to get the lookup 8.");
+
         if (value == null)
             return;
+
         ulong result = Utilities.CalcLookup8(value);
-        UpdateDisplay();
         MessageBox.Show(this, "The lookup 8 hashed value is: " + result.ToString("X16"), "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     protected override void OnMouseWheel(MouseEventArgs e)
     {
         base.OnMouseWheel(e);
-        FocusTab();
     }
 
     private void tabList_SelectedIndexChanged(object sender, EventArgs e)
     {
-        Commit();
-        if (tabList.SelectedTab == tabImports && Entry != null)
+        if (tabList.SelectedTab == tabImports && Entry != null && loaded)
+        {
+            FlushHexToDraft();
             importsView.Entry = Entry; // For primary data edited on its tab
+        }
+
         UpdateHexStatus();
         FocusTab();
     }
 
-    private HexView ActiveHex => tabList.SelectedTab == tabPrimary ? hexData : tabList.SelectedTab == tabSecondary ? hexExtraData : null;
-
-    // Hex edits stay in the views until edit mode ends, the tab changes, the menu opens or the window closes
-    private void Commit()
-    {
-        if (hexData.Modified)
-            Entry.SetPrimary(hexData.HexData, Entry.GetImports());
-        if (hexExtraData.Modified)
-        {
-            Entry.EntryBlocks[Entry.SecondaryBlock].Data = hexExtraData.HexData;
-            Entry.Dirty = true;
-        }
-        hexData.Modified = hexExtraData.Modified = false;
-    }
+    private HexView ActiveHex => !loaded || showingImage
+        ? null
+        : tabList.SelectedTab == tabPrimary
+            ? hexData
+            : tabList.SelectedTab == tabSecondary
+                ? hexExtraData
+                : null;
 
     // Secondary data can only be edited if there is some
     private void ApplyEditMode()
     {
+        if (Entry == null)
+            return;
+
         bool editing = editModeToolStripMenuItem.Checked;
+        editButton.Checked = editing;
         hexData.ReadOnly = !editing;
         hexExtraData.ReadOnly = !editing || !Entry.HasSection(Entry.SecondaryBlock);
         UpdateHexStatus();
@@ -462,7 +555,12 @@ public partial class EntryEditor : Form
 
     private void editModeToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
     {
-        Commit();
+        if (!FinishCellEdit())
+        {
+            editModeToolStripMenuItem.Checked = true;
+            return;
+        }
+
         ApplyEditMode();
     }
 
@@ -470,15 +568,13 @@ public partial class EntryEditor : Form
     {
         if (ActiveHex is not HexView hex)
             return;
-        string value = InputDialog.ShowInput(this, "Please enter the offset to go to, in hexadecimal.");
-        if (value == null)
+
+        using HexNavigationDialog dialog = new(false, hex.HexData.Length, $"{hex.SelectionStart:X}");
+
+        if (dialog.ShowDialog(this) != DialogResult.OK)
             return;
-        if (!ResourceImport.TryParseHex(value.Trim(), out uint offset))
-        {
-            MessageBox.Show(this, $"\"{value}\" isn't a hexadecimal offset.", "Go to Offset", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
-        }
-        hex.Select((int)Math.Min(offset, (uint)hex.HexData.Length), 0);
+
+        hex.Select(dialog.Offset, 0);
         hex.Focus();
     }
 
@@ -486,14 +582,46 @@ public partial class EntryEditor : Form
     {
         HexView hex = ActiveHex;
         goToOffsetToolStripMenuItem.Enabled = hex != null;
-        if (pboImage.Visible)
+
+        if (undoCommand == null)
+            return;
+
+        bool showHex = hex != null;
+        hexTools.Visible = showHex;
+        hexViewMenu.Visible = hexViewMenu.Enabled = showHex;
+
+        foreach (ToolStripItem command in hexEditCommands)
+            command.Visible = showHex;
+
+        editModeToolStripMenuItem.Enabled = showHex;
+        stsMain.Visible = showHex || showingImage;
+        undoCommand.Enabled = hex?.CanUndo == true;
+        redoCommand.Enabled = hex?.CanRedo == true;
+        findCommand.Enabled = nextCommand.Enabled = previousCommand.Enabled = hex != null;
+        byteMode.Enabled = hex is { ReadOnly: false };
+        byteMode.SelectedIndex = hex?.InsertMode == true
+            ? 1
+            : 0;
+        UpdateDraftStatus();
+
+        if (showingImage)
             return; // The status is the image's
 
         statusLabel.Visible = hex != null;
+
         if (hex == null)
             return;
-        string mode = hex.ReadOnly ? (editModeToolStripMenuItem.Checked ? "Read only, there's no secondary data" : "Read only") : hex.InsertMode ? "Insert" : "Overwrite";
-        statusLabel.Text = $"Offset: 0x{hex.SelectionStart:X}    Selected: 0x{hex.SelectionLength:X} bytes    Size: 0x{hex.HexData.Length:X}    {mode}";
+
+        string mode = hex.ReadOnly
+            ? (editModeToolStripMenuItem.Checked
+                ? "Read only, there's no secondary data"
+                : "Read only")
+            : hex.InsertMode
+                ? "Insert"
+                : "Overwrite";
+        statusLabel.Text = $"{tabList.SelectedTab.Text} · Offset 0x{hex.SelectionStart:X} · {hex.SelectionLength:N0} selected · {hex.HexData.Length:N0} bytes · {mode} · {(hex.TextColumnActive
+            ? "Text"
+            : "Hex")}";
     }
 
     // Opens an imported resource in its own editor
@@ -518,13 +646,13 @@ public partial class EntryEditor : Form
         if (Entry.Type != EntryType.Renderable)
             return;
 
-        string modelInfo = "";
-
         byte[] header = Entry.EntryBlocks[0].Data;
 
         MemoryStream ms = new(header);
-        BinaryReader2 br = new(ms);
-        br.BigEndian = Entry.Console;
+        BinaryReader2 br = new(ms)
+        {
+            BigEndian = Entry.Console
+        };
 
         br.BaseStream.Position = 0x24;
         int offset = br.ReadInt32();
@@ -548,7 +676,7 @@ public partial class EntryEditor : Form
         br.Close();
         ms.Close();
 
-        modelInfo = "Model Info:\n";
+        string modelInfo = "Model Info:\n";
         modelInfo += "Vertex Block Offset: " + vertexBlockOff.ToString("X8") + "\n";
         modelInfo += "Vertex Block Size: " + vertexBlockSize.ToString("X8") + "\n";
         modelInfo += "Vertex Count: " + vertexCount.ToString() + "\n";

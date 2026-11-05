@@ -16,12 +16,14 @@ internal class RangeFit : ColourFit
 
         // initialize the metric
         bool perceptual = colourMetricPerceptual;
+
         if (perceptual)
         {
-            Metric = new Vec3(0.2126f, 0.7152f, 0.0722f);
-        } else
+            Metric = new(0.2126f, 0.7152f, 0.0722f);
+        }
+        else
         {
-            Metric = new Vec3(0);
+            Metric = new(0);
         }
 
         // initialize the best error

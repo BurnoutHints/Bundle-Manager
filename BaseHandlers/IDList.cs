@@ -17,7 +17,7 @@ public class IDList : IEntryData
 
     public IDList()
     {
-        
+
     }
 
     public IEntryEditor GetEditor(BundleEntry entry)
@@ -46,8 +46,10 @@ public class IDList : IEntryData
         Clear();
 
         MemoryStream ms = entry.MakeStream();
-        BinaryReader2 br = new(ms);
-        br.BigEndian = entry.Console;
+        BinaryReader2 br = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         ReferenceEntryIDOffset = br.ReadInt32();
         Unknown2 = br.ReadInt32();
@@ -66,8 +68,10 @@ public class IDList : IEntryData
     public bool Write(BundleEntry entry)
     {
         MemoryStream ms = new();
-        BinaryWriter2 bw = new(ms);
-        bw.BigEndian = entry.Console;
+        BinaryWriter2 bw = new(ms)
+        {
+            BigEndian = entry.Console
+        };
 
         bw.Write(ReferenceEntryIDOffset);
         bw.Write(Unknown2);

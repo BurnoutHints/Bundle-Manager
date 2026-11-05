@@ -6,23 +6,24 @@ namespace ModelViewer;
 public class ThirdPersonCamera : ICamera
 {
     public Matrix4 LookAtMatrix { get; private set; }
-    private readonly SceneObject _target;
-    private readonly Vector3 _offset;
+
+    private readonly SceneObject target;
+    private readonly Vector3 offset;
 
     public ThirdPersonCamera(SceneObject target) : this(target, Vector3.Zero)
     {
-        
+
     }
 
-    public ThirdPersonCamera(SceneObject target, Vector3 offset)
+    public ThirdPersonCamera(SceneObject initialTarget, Vector3 initialOffset)
     {
-        _target = target;
-        _offset = offset;
+        target = initialTarget;
+        offset = initialOffset;
     }
 
     public void Update()
     {
-        LookAtMatrix = Matrix4.LookAt(_target.Position + (_offset * _target.Direction), _target.Position,
+        LookAtMatrix = Matrix4.LookAt(target.Position + (offset * target.Direction), target.Position,
             Vector3.UnitY);
     }
 }

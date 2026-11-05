@@ -11,9 +11,10 @@ namespace PVSFormat;
 public partial class PVSEditor : Form, IEntryEditor
 {
     public delegate void OnEdit();
+
     public event OnEdit Edit;
 
-    private PVS _currentPVS;
+    private PVS currentPVS;
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public Image GameMap
@@ -30,7 +31,7 @@ public partial class PVSEditor : Form, IEntryEditor
     public void UpdateDisplay()
     {
         //dbgMain.SelectedObject = _currentPVS;
-        pvsMain.PVS = _currentPVS;
+        pvsMain.PVS = currentPVS;
 
         foreach (Zone zone in pvsMain.PVS.data.Zones)
             zonesListBox.Items.Add(zone.ZoneId.ToString("000"));
@@ -38,7 +39,7 @@ public partial class PVSEditor : Form, IEntryEditor
 
     public void Open(PVS pvs)
     {
-        _currentPVS = pvs;
+        currentPVS = pvs;
 
         UpdateDisplay();
     }
@@ -58,16 +59,16 @@ public partial class PVSEditor : Form, IEntryEditor
         return pvsMain.PVS.data.Zones[pvsMain.GetZoneIndex(ulong.Parse(zonesListBox.SelectedItem.ToString()))].UnsafeNeighbours;
     }
 
-    private void SelectZone(ulong zoneId)
+    private void SelectZone(ulong zoneID)
     {
         neighboursListBox.Items.Clear();
         renderCheckBox.Checked = false;
         immediateCheckBox.Checked = false;
 
-        pvsMain.PVS.selectedZoneId = zoneId;
+        pvsMain.PVS.selectedZoneId = zoneID;
 
-        List<Vector2> points = pvsMain.GetZonePoints(zoneId);
-        List<Neighbour> neighbours = pvsMain.GetZoneNeighbours(zoneId);
+        List<Vector2> points = pvsMain.GetZonePoints(zoneID);
+        List<Neighbour> neighbours = pvsMain.GetZoneNeighbours(zoneID);
 
         point1XNumericUpDown.Value = (decimal)points[0].X;
         point1YNumericUpDown.Value = (decimal)points[0].Y;
@@ -104,11 +105,12 @@ public partial class PVSEditor : Form, IEntryEditor
 
     private void pvsMain_DoubleClick(object sender, EventArgs e)
     {
-        ulong zoneId = pvsMain.GetZoneId();
-        if (zoneId == ulong.MaxValue)
+        ulong zoneID = pvsMain.GetZoneID();
+
+        if (zoneID == ulong.MaxValue)
             return;
 
-        zonesListBox.SelectedIndex = zonesListBox.FindStringExact(zoneId.ToString("000"));
+        zonesListBox.SelectedIndex = zonesListBox.FindStringExact(zoneID.ToString("000"));
     }
 
     private void pvsMain_Click(object sender, EventArgs e)
@@ -121,8 +123,10 @@ public partial class PVSEditor : Form, IEntryEditor
     private void OpenContextMenu()
     {
         ContextMenuStrip menu = new();
+
         for (int i = 0; i < 4; ++i)
             menu.Items.Add("Use as point " + (i + 1).ToString());
+
         menu.Items[0].Click += (s, e) =>
         {
             Vector2 pos = pvsMain.MousePosOnMap.ToVector2();
@@ -154,36 +158,45 @@ public partial class PVSEditor : Form, IEntryEditor
     {
         if (zonesListBox.SelectedIndex == -1)
             return;
-        ulong zoneId = ulong.Parse(zonesListBox.SelectedItem.ToString());
-        SelectZone(zoneId);
+
+        ulong zoneID = ulong.Parse(zonesListBox.SelectedItem.ToString());
+        SelectZone(zoneID);
 
         deleteZoneButton.Enabled = true;
     }
 
     private void addZoneButton_Click(object sender, EventArgs e)
     {
-        var zones = GetZones();
-        ulong newZoneId;
+        List<Zone> zones = GetZones();
+        ulong newZoneID;
+
         while (true)
         {
-            newZoneId = new AddZone().GetNewZoneId();
-            if (zones.FindIndex(z => z.ZoneId == newZoneId) != -1)
+            newZoneID = new AddZone().GetNewZoneID();
+
+            if (zones.FindIndex(z => z.ZoneId == newZoneID) != -1)
             {
-                MessageBox.Show("A zone with ID " + newZoneId + " already exists.");
+                MessageBox.Show("A zone with ID " + newZoneID + " already exists.");
                 continue;
             }
+
             break;
         }
-        if (newZoneId == ulong.MaxValue)
+
+        if (newZoneID == ulong.MaxValue)
             return;
 
-        Zone newZone = new();
-        newZone.ZoneId = newZoneId;
+        Zone newZone = new()
+        {
+            ZoneId = newZoneID
+        };
+
         zones.Add(newZone);
         pvsMain.PVS.data.TotalZones++;
 
-        zonesListBox.Items.Add(newZoneId.ToString("000"));
-        zonesListBox.SelectedIndex = zonesListBox.FindStringExact(newZoneId.ToString("000"));
+        zonesListBox.Items.Add(newZoneID.ToString("000"));
+        zonesListBox.SelectedIndex = zonesListBox.FindStringExact(newZoneID.ToString("000"));
+
         if (zonesListBox.Items.Count == 1)
             deleteZoneButton.Enabled = true;
     }
@@ -191,16 +204,18 @@ public partial class PVSEditor : Form, IEntryEditor
     private void deleteZoneButton_Click(object sender, EventArgs e)
     {
         int index = zonesListBox.SelectedIndex;
-        ulong zoneId = ulong.Parse(zonesListBox.Items[index].ToString());
-        GetZones().Remove(GetZones().Find(z => z.ZoneId == zoneId));
+        ulong zoneID = ulong.Parse(zonesListBox.Items[index].ToString());
+        GetZones().Remove(GetZones().Find(z => z.ZoneId == zoneID));
         pvsMain.PVS.data.TotalZones--;
 
         zonesListBox.Items.RemoveAt(index);
+
         if (zonesListBox.Items.Count == 0)
         {
             deleteZoneButton.Enabled = false;
             return;
         }
+
         if (index == zonesListBox.Items.Count)
             zonesListBox.SelectedIndex = zonesListBox.Items.Count - 1;
         else
@@ -275,6 +290,7 @@ public partial class PVSEditor : Form, IEntryEditor
     {
         if (neighboursListBox.SelectedIndex == -1)
             return;
+
         int neighbourIndex = GetUnsafeNeighbours().FindIndex(n => n.ZoneId == ulong.Parse(neighboursListBox.SelectedItem.ToString()));
         Neighbour neighbour = GetUnsafeNeighbours()[neighbourIndex];
         renderCheckBox.Checked = neighbour.Flags.HasFlag(NeighbourFlags.E_NEIGHBOURFLAG_RENDER);
@@ -282,27 +298,34 @@ public partial class PVSEditor : Form, IEntryEditor
 
         if (neighboursListBox.Items.Count != 0)
             deleteNeighbourButton.Enabled = true;
+
         renderCheckBox.Enabled = true;
         immediateCheckBox.Enabled = true;
     }
 
     private void addNeighbourButton_Click(object sender, EventArgs e)
     {
-        ulong newZoneId = new AddZone().GetNewZoneId();
-        if (newZoneId == ulong.MaxValue)
+        ulong newZoneID = new AddZone().GetNewZoneID();
+
+        if (newZoneID == ulong.MaxValue)
             return;
-        var neighbours = GetUnsafeNeighbours();
-        Neighbour newNeighbour = new();
-        newNeighbour.ZoneId = newZoneId;
+
+        List<Neighbour> neighbours = GetUnsafeNeighbours();
+        Neighbour newNeighbour = new()
+        {
+            ZoneId = newZoneID
+        };
+
         neighbours.Add(newNeighbour);
         int parentIndex = GetZones().FindIndex(z => z.ZoneId == ulong.Parse(zonesListBox.SelectedItem.ToString()));
         Zone parent = GetZones()[parentIndex];
         parent.NumUnsafeNeighbours++;
         GetZones()[parentIndex] = parent;
 
-        neighboursListBox.Items.Add(newZoneId.ToString("000"));
-        neighboursListBox.SelectedIndex = neighboursListBox.FindStringExact(newZoneId.ToString("000"));
+        neighboursListBox.Items.Add(newZoneID.ToString("000"));
+        neighboursListBox.SelectedIndex = neighboursListBox.FindStringExact(newZoneID.ToString("000"));
         pvsMain.Invalidate();
+
         if (neighboursListBox.Items.Count == 1)
             deleteNeighbourButton.Enabled = true;
     }
@@ -310,8 +333,8 @@ public partial class PVSEditor : Form, IEntryEditor
     private void deleteNeighbourButton_Click(object sender, EventArgs e)
     {
         int index = neighboursListBox.SelectedIndex;
-        ulong zoneId = ulong.Parse(neighboursListBox.Items[index].ToString());
-        GetUnsafeNeighbours().Remove(GetUnsafeNeighbours().Find(n => n.ZoneId == zoneId));
+        ulong zoneID = ulong.Parse(neighboursListBox.Items[index].ToString());
+        GetUnsafeNeighbours().Remove(GetUnsafeNeighbours().Find(n => n.ZoneId == zoneID));
         int parentIndex = GetZones().FindIndex(z => z.ZoneId == ulong.Parse(zonesListBox.SelectedItem.ToString()));
         Zone parent = GetZones()[parentIndex];
         parent.NumUnsafeNeighbours--;
@@ -319,6 +342,7 @@ public partial class PVSEditor : Form, IEntryEditor
 
         neighboursListBox.Items.RemoveAt(index);
         pvsMain.Invalidate();
+
         if (neighboursListBox.Items.Count == 0)
         {
             deleteNeighbourButton.Enabled = false;
@@ -328,6 +352,7 @@ public partial class PVSEditor : Form, IEntryEditor
             immediateCheckBox.Checked = false;
             return;
         }
+
         if (index == neighboursListBox.Items.Count)
             neighboursListBox.SelectedIndex = neighboursListBox.Items.Count - 1;
         else
@@ -338,12 +363,15 @@ public partial class PVSEditor : Form, IEntryEditor
     {
         if (neighboursListBox.SelectedIndex == -1)
             return;
+
         int neighbourIndex = GetUnsafeNeighbours().FindIndex(n => n.ZoneId == ulong.Parse(neighboursListBox.SelectedItem.ToString()));
         Neighbour neighbour = GetUnsafeNeighbours()[neighbourIndex];
+
         if (renderCheckBox.Checked)
             neighbour.Flags |= NeighbourFlags.E_NEIGHBOURFLAG_RENDER;
         else
             neighbour.Flags &= ~NeighbourFlags.E_NEIGHBOURFLAG_RENDER;
+
         GetUnsafeNeighbours()[neighbourIndex] = neighbour;
     }
 
@@ -351,12 +379,15 @@ public partial class PVSEditor : Form, IEntryEditor
     {
         if (neighboursListBox.SelectedIndex == -1)
             return;
+
         int neighbourIndex = GetUnsafeNeighbours().FindIndex(n => n.ZoneId == ulong.Parse(neighboursListBox.SelectedItem.ToString()));
         Neighbour neighbour = GetUnsafeNeighbours()[neighbourIndex];
+
         if (immediateCheckBox.Checked)
             neighbour.Flags |= NeighbourFlags.E_NEIGHBOURFLAG_IMMEDIATE;
         else
             neighbour.Flags &= ~NeighbourFlags.E_NEIGHBOURFLAG_IMMEDIATE;
+
         GetUnsafeNeighbours()[neighbourIndex] = neighbour;
     }
 }

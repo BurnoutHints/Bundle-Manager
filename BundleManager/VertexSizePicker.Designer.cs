@@ -1,4 +1,4 @@
-﻿namespace BundleManager
+namespace BundleManager
 {
     partial class VertexSizePicker
     {

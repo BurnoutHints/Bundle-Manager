@@ -9,7 +9,6 @@ namespace BaseHandlers.EnvironmentSettings;
 
 // BrnWorld::EnvironmentSettings::TimeLine, see https://burnout.wiki/wiki/Environment_Timeline
 // A location's mpfKeyframeTimes and mppKeyframes share a count, so each pair is kept as one TimeLineKeyframe.
-
 public class TimeLineKeyframe
 {
     public const float SecondsPerDay = 24 * 60 * 60;
@@ -30,6 +29,7 @@ public class TimeLineLocation
 public class EnvironmentTimeLine : IEntryData
 {
     public uint muVersion { get; set; } = 1;
+
     public List<TimeLineLocation> mpLocationDatii { get; set; } = [];
 
     public bool Read(BundleEntry entry, ILoader loader = null)
@@ -40,18 +40,24 @@ public class EnvironmentTimeLine : IEntryData
 
         // Decomp has 8-byte pointers, aligned to 8 bytes
         bool x64 = entry.Platform == BundlePlatform.PCx64;
-        int ptrSize = x64 ? 8 : 4;
+        int ptrSize = x64
+            ? 8
+            : 4;
+
         long ReadPtr()
         {
             if (!x64)
                 return br.ReadUInt32();
+
             br.Align(8);
             return (long)br.ReadUInt64();
         }
 
         muVersion = br.ReadUInt32();
+
         if (muVersion != 1)
             throw new ReadFailedError($"Unsupported environment time line version {muVersion}, expected 1.");
+
         int numLocations = br.ReadInt32();
         long locations = ReadPtr();
 
@@ -59,19 +65,28 @@ public class EnvironmentTimeLine : IEntryData
         Dictionary<long, ulong> imports = entry.GetDependencies().ToDictionary(d => (long)d.EntryPointerOffset, d => d.EntryID);
 
         mpLocationDatii = [];
+
         for (int i = 0; i < numLocations; i++)
         {
-            br.BaseStream.Position = locations + i * (x64 ? 0x18 : 0xC);
+            br.BaseStream.Position = locations + i * (x64
+                ? 0x18
+                : 0xC);
             int numKeyframes = br.ReadInt32();
             long times = ReadPtr();
             long keyframes = ReadPtr();
 
             TimeLineLocation location = new();
+
             for (int k = 0; k < numKeyframes; k++)
             {
                 br.BaseStream.Position = times + k * 4;
-                location.Keyframes.Add(new TimeLineKeyframe { mfTime = br.ReadSingle(), mpKeyframe = imports.GetValueOrDefault(keyframes + k * ptrSize) });
+                location.Keyframes.Add(new()
+                {
+                    mfTime = br.ReadSingle(),
+                    mpKeyframe = imports.GetValueOrDefault(keyframes + k * ptrSize)
+                });
             }
+
             mpLocationDatii.Add(location);
         }
 
@@ -84,10 +99,13 @@ public class EnvironmentTimeLine : IEntryData
         for (int i = 0; i < mpLocationDatii.Count; i++)
         {
             List<TimeLineKeyframe> keyframes = mpLocationDatii[i].Keyframes;
+
             if (keyframes.Count == 0)
                 throw new InvalidDataException($"Location {i} has no keyframes, it needs at least one.");
+
             if (keyframes.FirstOrDefault(k => k.mfTime < 0 || k.mfTime > TimeLineKeyframe.SecondsPerDay) is TimeLineKeyframe late)
                 throw new InvalidDataException($"Location {i} has a keyframe at {late.mfTime} seconds, times go from 0 to {TimeLineKeyframe.SecondsPerDay}.");
+
             if (keyframes.Any(k => k.mpKeyframe == 0))
                 throw new InvalidDataException($"Location {i} has a time without a keyframe.");
         }
@@ -97,11 +115,13 @@ public class EnvironmentTimeLine : IEntryData
         bw.BigEndian = entry.Console;
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
+
         void Align(int alignment)
         {
             while (ms.Position % alignment != 0)
                 bw.Write((byte)0);
         }
+
         void Ptr(long value)
         {
             if (!x64)
@@ -109,9 +129,11 @@ public class EnvironmentTimeLine : IEntryData
                 bw.Write((uint)value);
                 return;
             }
+
             Align(8);
             bw.Write((ulong)value);
         }
+
         void Patch(long pos, long value)
         {
             long end = ms.Position;
@@ -126,36 +148,47 @@ public class EnvironmentTimeLine : IEntryData
 
         Align(16);
         List<(long Times, long Keyframes)> pointers = [];
+
         foreach (TimeLineLocation location in mpLocationDatii)
         {
             bw.Write(location.Keyframes.Count);
-            Align(x64 ? 8 : 4);
+            Align(x64
+                ? 8
+                : 4);
             long times = ms.Position;
             Ptr(0);
             long keyframes = ms.Position;
             Ptr(0);
-            pointers.Add((times, keyframes));
+            pointers.Add((times: times, keyframes: keyframes));
         }
 
         // Each location's keyframe pointers, which the imports fill, then its times
         List<Dependency> imports = [];
+
         for (int i = 0; i < mpLocationDatii.Count; i++)
         {
             TimeLineKeyframe[] keyframes = [.. mpLocationDatii[i].Keyframes.OrderBy(k => k.mfTime)];
 
             Align(16);
             Patch(pointers[i].Keyframes, ms.Position);
+
             foreach (TimeLineKeyframe keyframe in keyframes)
             {
-                imports.Add(new Dependency { ID = keyframe.mpKeyframe, EntryPointerOffset = (uint)ms.Position });
+                imports.Add(new()
+                {
+                    ID = keyframe.mpKeyframe,
+                    EntryPointerOffset = (uint)ms.Position
+                });
                 Ptr(0);
             }
 
             Align(16);
             Patch(pointers[i].Times, ms.Position);
+
             foreach (TimeLineKeyframe keyframe in keyframes)
                 bw.Write(keyframe.mfTime);
         }
+
         Align(16);
         bw.Flush();
 
@@ -170,7 +203,9 @@ public class EnvironmentTimeLine : IEntryData
         entry.EntryBlocks[0].Data = data;
         entry.Dependencies.Clear(); // A BND1 import list would hide the table
         entry.DependencyCount = (short)importCount;
-        entry.DependenciesListOffset = importCount > 0 ? data.Length - importCount * Dependency.Size : 0;
+        entry.DependenciesListOffset = importCount > 0
+            ? data.Length - importCount * Dependency.Size
+            : 0;
         entry.Dirty = true;
 
         return true;

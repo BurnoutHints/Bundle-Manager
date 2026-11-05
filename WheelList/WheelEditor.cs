@@ -8,7 +8,9 @@ namespace WheelList;
 public partial class WheelEditor : Form
 {
     public delegate void Done(Wheel wheel);
+
     public event Done OnDone;
+
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public Wheel Wheel
     {
@@ -26,6 +28,7 @@ public partial class WheelEditor : Form
     }
 
     private int maxIndex;
+
     public WheelEditor(int max)
     {
         InitializeComponent();
@@ -61,16 +64,18 @@ public partial class WheelEditor : Form
             MessageBox.Show(this, "Index is invalid.\nEnsure the value is a decimal integer.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return null;
         }
+
         // Wheel ID
         if (txtID.Text.Trim().Length == 0)
         {
             MessageBox.Show(this, "ID cannot be left blank.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return null;
         }
+
         try
         {
-            EncryptedString ID = new(txtID.Text);
-            result.ID = ID;
+            EncryptedString id = new(txtID.Text);
+            result.ID = id;
         }
         catch (ArgumentException e)
         {
@@ -80,6 +85,7 @@ public partial class WheelEditor : Form
 
         // Vehicle name
         result.Name = txtName.Text;
+
         if (result.Name.Trim().Length == 0)
         {
             MessageBox.Show(this, "Car name cannot be left blank.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -97,6 +103,7 @@ public partial class WheelEditor : Form
     private void btnOk_Click(object sender, EventArgs e)
     {
         Wheel retWheel = GetModifiedWheel();
+
         if (retWheel == null)
         {
             return;

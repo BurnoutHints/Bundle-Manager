@@ -1,4 +1,3 @@
-using System;
 using BCnEncoder.Shared;
 
 namespace BurnoutImage;
@@ -15,7 +14,7 @@ internal static class ImageUtil
         return CompressionTools.CompressTexture(path, compression);
     }
 
-    public static CompressionType DetectDdsFormat(
+    public static CompressionType DetectDDSFormat(
         uint pfFlags,
         uint pfFourCC,
         uint pfRGBBitCount,
@@ -24,11 +23,11 @@ internal static class ImageUtil
         uint pfBBitMask,
         uint pfABitMask)
     {
-        const uint DDPF_ALPHAPIXELS = 0x00000001;
-        const uint DDPF_FOURCC = 0x00000004;
-        const uint DDPF_RGB = 0x00000040;
+        const uint ddpfalphapixels = 0x00000001;
+        const uint ddpffourcc = 0x00000004;
+        const uint ddpfrgb = 0x00000040;
 
-        if ((pfFlags & DDPF_FOURCC) != 0)
+        if ((pfFlags & ddpffourcc) != 0)
         {
             switch (pfFourCC)
             {
@@ -47,7 +46,7 @@ internal static class ImageUtil
             return CompressionType.UNKNOWN;
         }
 
-        if ((pfFlags & DDPF_RGB) != 0 && pfRGBBitCount == 32)
+        if ((pfFlags & ddpfrgb) != 0 && pfRGBBitCount == 32)
         {
             if (pfRBitMask == 0x00FF0000u &&
                 pfGBitMask == 0x0000FF00u &&
@@ -55,7 +54,8 @@ internal static class ImageUtil
             {
                 if (pfABitMask == 0xFF000000u)
                     return CompressionType.BGRA;
-                if ((pfFlags & DDPF_ALPHAPIXELS) == 0 && pfABitMask == 0)
+
+                if ((pfFlags & ddpfalphapixels) == 0 && pfABitMask == 0)
                     return CompressionType.BGRA;
             }
 
@@ -65,7 +65,8 @@ internal static class ImageUtil
             {
                 if (pfABitMask == 0xFF000000u)
                     return CompressionType.RGBA;
-                if ((pfFlags & DDPF_ALPHAPIXELS) == 0 && pfABitMask == 0)
+
+                if ((pfFlags & ddpfalphapixels) == 0 && pfABitMask == 0)
                     return CompressionType.RGBA;
             }
         }
