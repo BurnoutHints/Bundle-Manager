@@ -563,7 +563,7 @@ public partial class MainForm : Form
 
         bool finished = false;
 
-        void Finish(bool keep, bool enter = false)
+        void finish(bool keep, bool enter = false)
         {
             if (finished)
                 return;
@@ -596,9 +596,9 @@ public partial class MainForm : Form
 
             e.SuppressKeyPress = true;
             bool currentEnter = e.KeyCode == Keys.Enter;
-            Finish(currentEnter, currentEnter);
+            finish(currentEnter, currentEnter);
         };
-        box.LostFocus += (_, _) => Finish(true);
+        box.LostFocus += (_, _) => finish(true);
 
         lstEntries.Controls.Add(box);
         box.Focus();

@@ -224,22 +224,22 @@ public class LoopModelData : IEntryData
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
 
-        long ReadPtr() => x64
+        long readPtr() => x64
             ? br.ReadInt64()
             : br.ReadUInt32();
 
         uint entityCount = br.ReadUInt32();
         uint entityCapacity = br.ReadUInt32();
-        long entityDataSize = ReadPtr();
-        long entityDataEnd = ReadPtr();
-        long stringTableSize = ReadPtr();
-        long stringTableEnd = ReadPtr();
-        long nameHashMask = ReadPtr();
+        long entityDataSize = readPtr();
+        long entityDataEnd = readPtr();
+        long stringTableSize = readPtr();
+        long stringTableEnd = readPtr();
+        long nameHashMask = readPtr();
         List<long> entityPointers = new((int)entityCount);
 
         for (int i = 0; i < entityCapacity; ++i)
         {
-            long ptr = ReadPtr();
+            long ptr = readPtr();
 
             if (ptr != 0)
                 entityPointers.Add(ptr);
@@ -254,7 +254,7 @@ public class LoopModelData : IEntryData
             if (typeNameHash != 0x511A448B) // ~ContentSpec~
                 continue;
 
-            long contentTypeHash = ReadPtr();
+            long contentTypeHash = readPtr();
 
             if (contentTypeHash != 0x7CCDA2E7) // ~GenericRwacWaveContent::SK_WAVE_DATA_CONTENT_TYPE~
                 continue;

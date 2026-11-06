@@ -1,25 +1,26 @@
 namespace VehicleList
 {
-    
+
     partial class VehicleListForm
     {
         /// <summary>
         /// Required designer variable.
         /// </summary>
-        
+
         private System.ComponentModel.IContainer components = null;
-        
+
         /// <summary>
         /// Clean up any resources being used.
         /// </summary>
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        
+
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -88,53 +89,103 @@ namespace VehicleList
             stsMain.SuspendLayout();
             toolStrip1.SuspendLayout();
             SuspendLayout();
-            // 
+
+            //
             // mnuMain
-            // 
-            mnuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { itemsToolStripMenuItem });
+            //
+            mnuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                itemsToolStripMenuItem
+            });
             mnuMain.Location = new System.Drawing.Point(0, 0);
             mnuMain.Name = "mnuMain";
             mnuMain.Padding = new System.Windows.Forms.Padding(8, 3, 0, 3);
             mnuMain.Size = new System.Drawing.Size(1439, 30);
             mnuMain.TabIndex = 0;
             mnuMain.Text = "menuStrip1";
-            // 
+
+            //
             // itemsToolStripMenuItem
-            // 
-            itemsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { addItemToolStripMenuItem, copyItemToolStripMenuItem, deleteItemToolStripMenuItem });
+            //
+            itemsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                addItemToolStripMenuItem,
+                copyItemToolStripMenuItem,
+                deleteItemToolStripMenuItem
+            });
             itemsToolStripMenuItem.Name = "itemsToolStripMenuItem";
             itemsToolStripMenuItem.Size = new System.Drawing.Size(57, 24);
             itemsToolStripMenuItem.Text = "Items";
-            // 
+
+            //
             // addItemToolStripMenuItem
-            // 
+            //
             addItemToolStripMenuItem.Image = Properties.Resources.AddTableHS;
             addItemToolStripMenuItem.Name = "addItemToolStripMenuItem";
             addItemToolStripMenuItem.Size = new System.Drawing.Size(156, 24);
             addItemToolStripMenuItem.Text = "Add Item";
             addItemToolStripMenuItem.Click += addItemToolStripMenuItem_Click;
-            // 
+
+            //
             // copyItemToolStripMenuItem
-            // 
+            //
             copyItemToolStripMenuItem.Enabled = false;
             copyItemToolStripMenuItem.Image = Properties.Resources.CopyHS;
             copyItemToolStripMenuItem.Name = "copyItemToolStripMenuItem";
             copyItemToolStripMenuItem.Size = new System.Drawing.Size(156, 24);
             copyItemToolStripMenuItem.Text = "Copy Item";
             copyItemToolStripMenuItem.Click += copyItemToolStripMenuItem_Click;
-            // 
+
+            //
             // deleteItemToolStripMenuItem
-            // 
+            //
             deleteItemToolStripMenuItem.Enabled = false;
             deleteItemToolStripMenuItem.Image = Properties.Resources.remove_xform;
             deleteItemToolStripMenuItem.Name = "deleteItemToolStripMenuItem";
             deleteItemToolStripMenuItem.Size = new System.Drawing.Size(156, 24);
             deleteItemToolStripMenuItem.Text = "Delete Item";
             deleteItemToolStripMenuItem.Click += deleteItemToolStripMenuItem_Click;
-            // 
+
+            //
             // lstVehicles
-            // 
-            lstVehicles.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] { colIndex, colVehicleID, colParentID, colWheel, colVehicleName, colMfrName, colDamageLimit, colFlags, colBoostLength, colVehicleRank, colBoostCapacity, colStrengthStat, colAttribKey, colExhaustName, colExhaustID, colEngineID, colEngineName, colClassUnlockStr, colCarWonStrID, colCarReleasedStrID, colAIMusicHash, colAIExStr1, colAIExStr2, colAIExStr3, colCategory, colVehicleType, colBoostType, colFinishType, colTopSpeed, colTopSpeedBoost, colTopSpeedStat, colTopSpeedBoostStat, colColor, colColorPalette });
+            //
+            lstVehicles.Columns.AddRange(new System.Windows.Forms.ColumnHeader[]
+            {
+                colIndex,
+                colVehicleID,
+                colParentID,
+                colWheel,
+                colVehicleName,
+                colMfrName,
+                colDamageLimit,
+                colFlags,
+                colBoostLength,
+                colVehicleRank,
+                colBoostCapacity,
+                colStrengthStat,
+                colAttribKey,
+                colExhaustName,
+                colExhaustID,
+                colEngineID,
+                colEngineName,
+                colClassUnlockStr,
+                colCarWonStrID,
+                colCarReleasedStrID,
+                colAIMusicHash,
+                colAIExStr1,
+                colAIExStr2,
+                colAIExStr3,
+                colCategory,
+                colVehicleType,
+                colBoostType,
+                colFinishType,
+                colTopSpeed,
+                colTopSpeedBoost,
+                colTopSpeedStat,
+                colTopSpeedBoostStat,
+                colColor,
+                colColorPalette
+            });
             lstVehicles.Dock = System.Windows.Forms.DockStyle.Fill;
             lstVehicles.FullRowSelect = true;
             lstVehicles.GridLines = true;
@@ -148,180 +199,229 @@ namespace VehicleList
             lstVehicles.ColumnClick += lstVehicles_ColumnClick;
             lstVehicles.SelectedIndexChanged += lstVehicles_SelectedIndexChanged;
             lstVehicles.MouseDoubleClick += lstVehicles_MouseDoubleClick;
-            // 
+
+            //
             // colIndex
-            // 
+            //
             colIndex.Text = "Index";
-            // 
+
+            //
             // colVehicleID
-            // 
+            //
             colVehicleID.Text = "ID";
             colVehicleID.Width = 80;
-            // 
+
+            //
             // colParentID
-            // 
+            //
             colParentID.Text = "Parent ID";
-            // 
+
+            //
             // colWheel
-            // 
+            //
             colWheel.Text = "Wheel";
-            // 
+
+            //
             // colVehicleName
-            // 
+            //
             colVehicleName.Text = "Vehicle";
             colVehicleName.Width = 180;
-            // 
+
+            //
             // colMfrName
-            // 
+            //
             colMfrName.Text = "Manufacturer";
             colMfrName.Width = 100;
-            // 
+
+            //
             // colDamageLimit
-            // 
+            //
             colDamageLimit.Text = "Damage Limit";
-            // 
+
+            //
             // colFlags
-            // 
+            //
             colFlags.Text = "Flags";
             colFlags.Width = 80;
-            // 
+
+            //
             // colBoostLength
-            // 
+            //
             colBoostLength.Text = "Boost Length";
-            // 
+
+            //
             // colVehicleRank
-            // 
+            //
             colVehicleRank.Text = "Rank";
-            // 
+
+            //
             // colBoostCapacity
-            // 
+            //
             colBoostCapacity.Text = "Boost Capacity";
-            // 
+
+            //
             // colStrengthStat
-            // 
+            //
             colStrengthStat.Text = "Strength Stat";
-            // 
+
+            //
             // colAttribKey
-            // 
+            //
             colAttribKey.Text = "AttribSys ID";
-            // 
+
+            //
             // colExhaustName
-            // 
+            //
             colExhaustName.Text = "Exhaust Name";
             colExhaustName.Width = 120;
-            // 
+
+            //
             // colExhaustID
-            // 
+            //
             colExhaustID.Text = "Exhaust ID";
             colExhaustID.Width = 80;
-            // 
+
+            //
             // colEngineID
-            // 
+            //
             colEngineID.Text = "Engine ID";
             colEngineID.Width = 80;
-            // 
+
+            //
             // colEngineName
-            // 
+            //
             colEngineName.Text = "Engine Name";
             colEngineName.Width = 120;
-            // 
+
+            //
             // colClassUnlockStr
-            // 
+            //
             colClassUnlockStr.Text = "Class Unlock Stream ID";
-            // 
+
+            //
             // colCarWonStrID
-            // 
+            //
             colCarWonStrID.Text = "Car Won Stream ID";
-            // 
+
+            //
             // colCarReleasedStrID
-            // 
+            //
             colCarReleasedStrID.Text = "Car Released Stream ID";
-            // 
+
+            //
             // colAIMusicHash
-            // 
+            //
             colAIMusicHash.Text = "AI Music";
-            // 
+
+            //
             // colAIExStr1
-            // 
+            //
             colAIExStr1.Text = "AI Exhaust 1";
-            // 
+
+            //
             // colAIExStr2
-            // 
+            //
             colAIExStr2.Text = "AI Exhaust 2";
-            // 
+
+            //
             // colAIExStr3
-            // 
+            //
             colAIExStr3.Text = "AI Exhaust 3";
-            // 
+
+            //
             // colCategory
-            // 
+            //
             colCategory.Text = "Category";
             colCategory.Width = 80;
-            // 
+
+            //
             // colVehicleType
-            // 
+            //
             colVehicleType.Text = "Vehicle Type";
-            // 
+
+            //
             // colBoostType
-            // 
+            //
             colBoostType.Text = "Boost Type";
             colBoostType.Width = 90;
-            // 
+
+            //
             // colFinishType
-            // 
+            //
             colFinishType.Text = "Finish Type";
             colFinishType.Width = 80;
-            // 
+
+            //
             // colTopSpeed
-            // 
+            //
             colTopSpeed.Text = "Top Speed";
-            // 
+
+            //
             // colTopSpeedBoost
-            // 
+            //
             colTopSpeedBoost.Text = "Top Boost Speed";
-            // 
+
+            //
             // colTopSpeedStat
-            // 
+            //
             colTopSpeedStat.Text = "Speed Stat";
-            // 
+
+            //
             // colTopSpeedBoostStat
-            // 
+            //
             colTopSpeedBoostStat.Text = "Boost Stat";
-            // 
+
+            //
             // colColor
-            // 
+            //
             colColor.Text = "Default Color";
-            // 
+
+            //
             // colColorPalette
-            // 
+            //
             colColorPalette.Text = "Default Color Type";
-            // 
+
+            //
             // stsMain
-            // 
-            stsMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { stlStatusLabel });
+            //
+            stsMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                stlStatusLabel
+            });
             stsMain.Location = new System.Drawing.Point(0, 727);
             stsMain.Name = "stsMain";
             stsMain.Padding = new System.Windows.Forms.Padding(1, 0, 18, 0);
             stsMain.Size = new System.Drawing.Size(1439, 22);
             stsMain.TabIndex = 2;
             stsMain.Text = "statusStrip1";
-            // 
+
+            //
             // stlStatusLabel
-            // 
+            //
             stlStatusLabel.Name = "stlStatusLabel";
             stlStatusLabel.Size = new System.Drawing.Size(0, 17);
-            // 
+
+            //
             // toolStrip1
-            // 
-            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsbAddItem, tsbCopyItem, tsbDeleteItem, tstbSearchItem, tsbSearchItem, tsbClearSearch });
+            //
+            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                tsbAddItem,
+                tsbCopyItem,
+                tsbDeleteItem,
+                tstbSearchItem,
+                tsbSearchItem,
+                tsbClearSearch
+            });
             toolStrip1.Location = new System.Drawing.Point(0, 30);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new System.Drawing.Size(1439, 27);
             toolStrip1.TabIndex = 3;
             toolStrip1.Text = "toolStrip1";
-            // 
+
+            //
             // tsbAddItem
-            // 
+            //
             tsbAddItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             tsbAddItem.Image = Properties.Resources.AddTableHS;
             tsbAddItem.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -329,9 +429,10 @@ namespace VehicleList
             tsbAddItem.Size = new System.Drawing.Size(23, 24);
             tsbAddItem.Text = "Add Item";
             tsbAddItem.Click += tsbAddItem_Click;
-            // 
+
+            //
             // tsbCopyItem
-            // 
+            //
             tsbCopyItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             tsbCopyItem.Enabled = false;
             tsbCopyItem.Image = Properties.Resources.CopyHS;
@@ -340,9 +441,10 @@ namespace VehicleList
             tsbCopyItem.Size = new System.Drawing.Size(23, 24);
             tsbCopyItem.Text = "Copy Item";
             tsbCopyItem.Click += tsbCopyItem_Click;
-            // 
+
+            //
             // tsbDeleteItem
-            // 
+            //
             tsbDeleteItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             tsbDeleteItem.Enabled = false;
             tsbDeleteItem.Image = Properties.Resources.remove_xform;
@@ -351,18 +453,20 @@ namespace VehicleList
             tsbDeleteItem.Size = new System.Drawing.Size(23, 24);
             tsbDeleteItem.Text = "Delete Item";
             tsbDeleteItem.Click += tsbDeleteItem_Click;
-            // 
+
+            //
             // tstbSearchItem
-            // 
+            //
             tstbSearchItem.Name = "tstbSearchItem";
             tstbSearchItem.Size = new System.Drawing.Size(350, 27);
             tstbSearchItem.Enter += tstbSearchItem_Enter;
             tstbSearchItem.Leave += tstbSearchItem_Leave;
             tstbSearchItem.KeyPress += tstbSearchItem_KeyPress;
             tstbSearchItem.TextChanged += tstbSearchItem_TextChanged;
-            // 
+
+            //
             // tsbSearchItem
-            // 
+            //
             tsbSearchItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             tsbSearchItem.Image = (System.Drawing.Image)resources.GetObject("tsbSearchItem.Image");
             tsbSearchItem.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -370,9 +474,10 @@ namespace VehicleList
             tsbSearchItem.Size = new System.Drawing.Size(23, 24);
             tsbSearchItem.Text = "toolStripButton1";
             tsbSearchItem.Click += tsbSearchItem_Click;
-            // 
+
+            //
             // tsbClearSearch
-            // 
+            //
             tsbClearSearch.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             tsbClearSearch.Image = (System.Drawing.Image)resources.GetObject("tsbClearSearch.Image");
             tsbClearSearch.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -380,9 +485,10 @@ namespace VehicleList
             tsbClearSearch.Size = new System.Drawing.Size(23, 24);
             tsbClearSearch.Text = "toolStripButton1";
             tsbClearSearch.Click += tsbClearSearch_Click;
-            // 
+
+            //
             // VehicleListForm
-            // 
+            //
             AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1439, 749);
@@ -458,4 +564,3 @@ namespace VehicleList
         private System.Windows.Forms.ToolStripButton tsbClearSearch;
     }
 }
-

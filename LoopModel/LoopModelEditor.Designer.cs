@@ -17,6 +17,7 @@ namespace LoopModel
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -54,44 +55,50 @@ namespace LoopModel
             ((System.ComponentModel.ISupportInitialize)graphsGrid).BeginInit();
             ((System.ComponentModel.ISupportInitialize)partialsGrid).BeginInit();
             SuspendLayout();
-            // 
+
+            //
             // rpmPitchPlot
-            // 
+            //
             rpmPitchPlot.DisplayScale = 1F;
             rpmPitchPlot.Dock = System.Windows.Forms.DockStyle.Fill;
             rpmPitchPlot.Location = new System.Drawing.Point(3, 3);
             rpmPitchPlot.Name = "rpmPitchPlot";
             rpmPitchPlot.Size = new System.Drawing.Size(1296, 273);
             rpmPitchPlot.TabIndex = 0;
-            // 
+
+            //
             // editorStatus
-            // 
+            //
             editorStatus.Location = new System.Drawing.Point(0, 839);
             editorStatus.Name = "editorStatus";
             editorStatus.Size = new System.Drawing.Size(1584, 22);
             editorStatus.TabIndex = 1;
             editorStatus.Text = "loopModelStatus";
-            // 
+
+            //
             // mainContainer
-            // 
+            //
             mainContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             mainContainer.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
             mainContainer.Location = new System.Drawing.Point(0, 0);
             mainContainer.Name = "mainContainer";
-            // 
+
+            //
             // mainContainer.Panel1
-            // 
+            //
             mainContainer.Panel1.Controls.Add(plotsTable);
-            // 
+
+            //
             // mainContainer.Panel2
-            // 
+            //
             mainContainer.Panel2.Controls.Add(sidebarTable);
             mainContainer.Size = new System.Drawing.Size(1584, 839);
             mainContainer.SplitterDistance = 1302;
             mainContainer.TabIndex = 2;
-            // 
+
+            //
             // plotsTable
-            // 
+            //
             plotsTable.ColumnCount = 1;
             plotsTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             plotsTable.Controls.Add(rpmPitchPlot, 0, 0);
@@ -106,27 +113,30 @@ namespace LoopModel
             plotsTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.3333359F));
             plotsTable.Size = new System.Drawing.Size(1302, 839);
             plotsTable.TabIndex = 1;
-            // 
+
+            //
             // rpmGainPlot
-            // 
+            //
             rpmGainPlot.DisplayScale = 1F;
             rpmGainPlot.Dock = System.Windows.Forms.DockStyle.Fill;
             rpmGainPlot.Location = new System.Drawing.Point(3, 282);
             rpmGainPlot.Name = "rpmGainPlot";
             rpmGainPlot.Size = new System.Drawing.Size(1296, 273);
             rpmGainPlot.TabIndex = 1;
-            // 
+
+            //
             // accelGainPlot
-            // 
+            //
             accelGainPlot.DisplayScale = 1F;
             accelGainPlot.Dock = System.Windows.Forms.DockStyle.Fill;
             accelGainPlot.Location = new System.Drawing.Point(3, 561);
             accelGainPlot.Name = "accelGainPlot";
             accelGainPlot.Size = new System.Drawing.Size(1296, 275);
             accelGainPlot.TabIndex = 2;
-            // 
+
+            //
             // sidebarTable
-            // 
+            //
             sidebarTable.ColumnCount = 1;
             sidebarTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             sidebarTable.Controls.Add(pointsGrid, 0, 2);
@@ -141,15 +151,20 @@ namespace LoopModel
             sidebarTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.3333359F));
             sidebarTable.Size = new System.Drawing.Size(278, 839);
             sidebarTable.TabIndex = 3;
-            // 
+
+            //
             // pointsGrid
-            // 
+            //
             pointsGrid.AllowUserToAddRows = false;
             pointsGrid.AllowUserToDeleteRows = false;
             pointsGrid.AllowUserToResizeRows = false;
             pointsGrid.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             pointsGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            pointsGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { pointsGridXPos, pointsGridYPos });
+            pointsGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[]
+            {
+                pointsGridXPos,
+                pointsGridYPos
+            });
             pointsGrid.Dock = System.Windows.Forms.DockStyle.Fill;
             pointsGrid.Location = new System.Drawing.Point(3, 561);
             pointsGrid.MultiSelect = false;
@@ -159,27 +174,33 @@ namespace LoopModel
             pointsGrid.Size = new System.Drawing.Size(272, 275);
             pointsGrid.TabIndex = 1;
             pointsGrid.CellEndEdit += pointsGrid_CellEndEdit;
-            // 
+
+            //
             // pointsGridXPos
-            // 
+            //
             pointsGridXPos.HeaderText = "X";
             pointsGridXPos.Name = "pointsGridXPos";
             pointsGridXPos.Width = 90;
-            // 
+
+            //
             // pointsGridYPos
-            // 
+            //
             pointsGridYPos.HeaderText = "Y";
             pointsGridYPos.Name = "pointsGridYPos";
             pointsGridYPos.Width = 90;
-            // 
+
+            //
             // graphsGrid
-            // 
+            //
             graphsGrid.AllowUserToAddRows = false;
             graphsGrid.AllowUserToDeleteRows = false;
             graphsGrid.AllowUserToResizeRows = false;
             graphsGrid.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             graphsGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            graphsGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { graphName });
+            graphsGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[]
+            {
+                graphName
+            });
             graphsGrid.Dock = System.Windows.Forms.DockStyle.Fill;
             graphsGrid.Location = new System.Drawing.Point(3, 282);
             graphsGrid.MultiSelect = false;
@@ -190,23 +211,30 @@ namespace LoopModel
             graphsGrid.Size = new System.Drawing.Size(272, 273);
             graphsGrid.TabIndex = 1;
             graphsGrid.RowEnter += graphsGrid_RowEnter;
-            // 
+
+            //
             // graphName
-            // 
+            //
             graphName.HeaderText = "Graph";
             graphName.Name = "graphName";
             graphName.ReadOnly = true;
             graphName.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             graphName.Width = 180;
-            // 
+
+            //
             // partialsGrid
-            // 
+            //
             partialsGrid.AllowUserToAddRows = false;
             partialsGrid.AllowUserToDeleteRows = false;
             partialsGrid.AllowUserToResizeRows = false;
             partialsGrid.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             partialsGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            partialsGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { showPartial, waveNameString, waveNameHash });
+            partialsGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[]
+            {
+                showPartial,
+                waveNameString,
+                waveNameHash
+            });
             partialsGrid.Dock = System.Windows.Forms.DockStyle.Fill;
             partialsGrid.Location = new System.Drawing.Point(3, 3);
             partialsGrid.MultiSelect = false;
@@ -218,29 +246,33 @@ namespace LoopModel
             partialsGrid.CellValueChanged += partialsGrid_CellValueChanged;
             partialsGrid.CurrentCellDirtyStateChanged += partialsGrid_CurrentCellDirtyStateChanged;
             partialsGrid.RowEnter += partialsGrid_RowEnter;
-            // 
+
+            //
             // showPartial
-            // 
+            //
             showPartial.HeaderText = "Show";
             showPartial.Name = "showPartial";
             showPartial.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             showPartial.Width = 50;
-            // 
+
+            //
             // waveNameString
-            // 
+            //
             waveNameString.HeaderText = "Wave Name";
             waveNameString.Name = "waveNameString";
             waveNameString.ReadOnly = true;
             waveNameString.Width = 200;
-            // 
+
+            //
             // waveNameHash
-            // 
+            //
             waveNameHash.HeaderText = "Hash";
             waveNameHash.Name = "waveNameHash";
             waveNameHash.ReadOnly = true;
-            // 
+
+            //
             // LoopModelEditor
-            // 
+            //
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1584, 861);

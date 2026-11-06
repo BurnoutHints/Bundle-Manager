@@ -520,7 +520,7 @@ public class ObjectTreeEditor : UserControl
             while (item?.Parent != null)
                 item = item.Parent;
 
-            GridItem Find(GridItem parent)
+            GridItem find(GridItem parent)
             {
                 if (parent == null)
                     return null;
@@ -529,13 +529,13 @@ public class ObjectTreeEditor : UserControl
                     return parent;
 
                 foreach (GridItem child in parent.GridItems)
-                    if (Find(child) is GridItem found)
+                    if (find(child) is GridItem found)
                         return found;
 
                 return null;
             }
 
-            if (Find(item) is GridItem match)
+            if (find(item) is GridItem match)
                 grid.SelectedGridItem = match;
 
             grid.Focus();
@@ -547,19 +547,19 @@ public class ObjectTreeEditor : UserControl
         object selected = SelectedObject;
         HashSet<object> expanded = new(ReferenceEqualityComparer.Instance);
 
-        void Remember(TreeNode node)
+        void remember(TreeNode node)
         {
             if (node.IsExpanded && node.Tag != null)
                 expanded.Add(node.Tag);
 
             foreach (TreeNode child in node.Nodes)
-                Remember(child);
+                remember(child);
         }
 
-        Remember(tree.Nodes[0]);
+        remember(tree.Nodes[0]);
         Fill(tree.Nodes[0]);
 
-        void Expand(TreeNode node)
+        void expand(TreeNode node)
         {
             if (node.Tag == null || !expanded.Contains(node.Tag))
                 return;
@@ -567,10 +567,10 @@ public class ObjectTreeEditor : UserControl
             node.Expand();
 
             foreach (TreeNode child in node.Nodes)
-                Expand(child);
+                expand(child);
         }
 
-        Expand(tree.Nodes[0]);
+        expand(tree.Nodes[0]);
         SelectObject(selected);
         tree.SelectedNode ??= tree.Nodes[0];
         grid.Refresh();

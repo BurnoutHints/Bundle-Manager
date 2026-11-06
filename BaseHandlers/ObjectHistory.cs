@@ -138,7 +138,7 @@ public static class ObjectGraph
         List<Node> nodes = [];
         HashSet<object> visited = new(ReferenceEqualityComparer.Instance);
 
-        void Visit(object value, object[] path, string label)
+        void visit(object value, object[] path, string label)
         {
             if (value == null || value is string || value.GetType().IsValueType || value is Array || !visited.Add(value))
                 return;
@@ -148,14 +148,14 @@ public static class ObjectGraph
             if (value is IList list)
             {
                 for (int i = 0; i < list.Count; i++)
-                    Visit(list[i], [.. path, list[i]], $"{label} / {i}: {TrafficReferences.Describe(list[i])}");
+                    visit(list[i], [.. path, list[i]], $"{label} / {i}: {TrafficReferences.Describe(list[i])}");
             }
             else
                 foreach (PropertyInfo currentProperty in Properties(value).Where(Owned))
-                    Visit(currentProperty.GetValue(value), [.. path, currentProperty.GetValue(value)], label + " / " + TrafficLabels.Name(currentProperty.Name));
+                    visit(currentProperty.GetValue(value), [.. path, currentProperty.GetValue(value)], label + " / " + TrafficLabels.Name(currentProperty.Name));
         }
 
-        Visit(root, [], "Traffic");
+        visit(root, [], "Traffic");
         return nodes;
     }
 

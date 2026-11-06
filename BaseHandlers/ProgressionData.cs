@@ -1,6 +1,8 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using BundleFormat;
 using BundleUtilities;
 using PluginAPI;
@@ -14,632 +16,535 @@ namespace BaseHandlers;
 // - Traffic Density Road Rage
 // - Traffic Density Burning Route
 // - Traffic Density Survival (Marked Man)
-public struct LicenceData
+public struct ProgressionRankData
 {
-    public float Unknown00;
-    public float Unknown04;
-    public float Unknown08; // 1
-    public float Unknown0C;
-    public float Unknown10;
-    public float Unknown14;
-    public float Unknown18; // 1
-    public float Unknown1C; // 1
-    public float Unknown20; // 1
-    public float Unknown24;
-    public int GameDBID; // for what?
-    public float Unknown2C;
-    public float Unknown30;
-    public float Unknown34;
-    public float Unknown38;
-    public float Unknown3C;
-    public float Unknown40;
-    public float Unknown44;
-    public float Unknown48;
-    public short NumEventWinsRequired;
-    public short Unknown4E; // 0
-    public short Unknown50;
-    public short Unknown52; // default SR time limits?
-    public short Unknown54; // 5
-    public short Unknown56; // 10 (previously 5 pre-1.6)
-    public short Unknown58; // 5
-    public short Unknown5A; // 5
-    public byte Unknown5C; // 7
-    public byte Unknown5D; // 0
-    public byte Unknown5E; // 7
-    public byte Unknown5F; // 0
-    public byte Unknown60;
-    public byte Unknown61;
-    public byte Unknown62;
-    public byte Unknown63;
+    public float mfTrafficDensityRace;
+    public float mfBurningRouteTimeScale;
+    public float mfTrafficDensityBurningRoute;
+    public float mfTrafficDensityRoadRage;
+    public float mfTrafficDensitySurvival;
+    public float mfTrafficDensityPursuit;
+    public float mfShuntStrengthRace;
+    public float mfShuntStrengthRoadRage;
+    public float mfShuntStrengthMarkedMan;
+    public float mfLargeVehicleProbability;
+    public uint muId; // 0x28
+    public float[] maOvertakingDifficulty; // 0x2C, 8 entries
+    public ushort mu16MedalThresholdToNextRank; // 0x4C
+    public ushort mu16EventThresholdToNextRank;
+    public ushort muRoadRageTakedownTarget;
+    public ushort muRoadRageTime;
+    public ushort muRoadRageTimeExtensions;
+    public ushort muRoadRageExtensionTime;
+    public ushort muRoadRageDamageLimit;
+    public ushort muRoadRageTriggerExtension;
+    public byte muRaceRivalsNumber; // 0x5C
+    public byte muGauntletRivalsNumber;
+    public byte muRoadRageRivalsNumber;
+    public byte muNumGiftCars;
+    public byte muNumWinsToRankUpRace;
+    public byte muNumWinsToRankUpStunt;
+    public byte muNumWinsToRankUpRoadRage;
+    public byte muNumWinsToRankUpMarkedMan;
+    public uint Padding64;
+    public EncryptedString mFreeCarForRankUpID; // 0x68
 
-    // 4 bytes padding
-    public EncryptedString VehicleUnlocked;
+    public override string ToString() => $"Rank {muId}";
 }
 
 public struct EventJunction
 {
-    public int GameDBID; // to identify the event (used in save files)
-    public uint CarEventDataOffset;
-    public EventData CarEventData;
-    public uint BTTEventDataOffset;
-    public EventData BTTEventData;
-    public uint BikeEventDataOffset;
-    public EventData BikeEventData;
-    public int UnknownGameDBID;
+    public uint muID;
+    public uint Padding04; // 64-bit resources only.
+    public ulong OfflineEventOffset;
+    public RaceEventData mpOfflineEvent;
+    public ulong OnlineEventOffset;
+    public RaceEventData mpOnlineEvent;
 
-    public override string ToString() => $"ID: {GameDBID}";
+    // Guessing the name here
+    public ulong BikeEventOffset;
+    public RaceEventData BikeEvent;
+    public int miShotGroup;
+    public uint Padding24; // 64-bit resources only
+
+    public override string ToString() => $"ID: {muID}";
 }
 
-public struct EventData
+public struct RaceEventData
 {
-    public int GameDBID; // not used in save
-    public int AppearsWhen; // 0 = cars/daytime bikes, 3 = midnight bights, 4 = island
-    public float TrafficDensityMultiplier;
-    public float Unknown0C; // 1
-    public EncryptedString LockVehicleID; // for Burning Routes but can apply to other events
-    public uint EventLandmarkDataOffset;
-    public EventLandmarkData[] EventLandmarkData;
-    public int EventLandmarkCount;
-    public float TargetTimeUnused; // 20 for marked man but never read
-    public float TargetTime; // 40 for marked man but never read
-    public int StuntRunTargetScoreTier1;
-    public int StuntRunTargetScoreTier2;
-    public int StuntRunTargetScoreTier3;
-    public int StuntRunTargetScoreTier4;
-    public int StuntRunTargetScoreTier5;
-    public int StuntRunTargetScoreTier6;
-    public float StuntRunTimeLimitTier1;
-    public float StuntRunTimeLimitTier2;
-    public float StuntRunTimeLimitTier3;
-    public float StuntRunTimeLimitTier4;
-    public float StuntRunTimeLimitTier5;
-    public float StuntRunTimeLimitTier6;
-    public int Unknown58; // 0
-    public EventRivalData[] RivalData;
-    public int RivalDataCount; // 7 for non-races, despite not really being necessary?
-    public byte Type; // 0 = Race, 1 = Road Rage, 2 = Stunt Run, 3 = Marked Man, 4 = Burning Route (and bike events and island tour), 5 = Race but with the Marked Man map icon
-    public byte UnknownED; // 0, 2 (0 for non-races)
-    public byte NumberOfAIRivalsToUse; // 0 for non-races
-    public byte UnknownEF; // 0
-    public int UnknownF0; // 0
-    public byte UnknownF4; // 0
-    public byte UnknownF5; // 0, 1, 2 (0 for RR & SR)
+    public uint muId;
+    public uint muFlags;
+    public float mfTrafficDensity;
+    public float mfBoostEarning;
+    public EncryptedString mSpecialEventCarId;
+    public ulong CheckpointsOffset;
+    public CheckpointData[] mpaCheckpoints;
+    public int miCheckpointCount;
+    public float mfTimeLimitFast;
+    public float mfTimeLimitSlow;
+    public int[] miRankScore; // 6 entries
+    public float[] mfRankTime; // 6 entries
+    public float mfExtensionTime;
+    public EventStartGridSlot[] maStartGridSlots; // All 7 stored slots
+    public uint muStartGridCount;
+    public byte mu8Mode;
+    public byte mu8OnlineMode;
+    public byte mu8StartRivalCount;
+    public byte mu8AddRivalCount;
+    public byte mu8TakeDownBronze;
+    public byte mu8TakeDownSilver;
+    public byte mu8TakeDownGold;
+    public byte mu8DamageLimit;
+    public byte mu8ExtensionTimeCount;
+    public byte mu8AStarType;
+    public sbyte mi8UnlockRank;
+    public byte[] Padding; // 1 byte in 32-bit resources, 5 bytes in 64-bit resources
 
-    // 2 byte padding
-    public override string ToString() => $"ID: {GameDBID}";
+    public override string ToString() => $"ID: {muId}";
 }
 
-public struct EventRivalData
+public struct EventStartGridSlot
 {
-    public int Unknown00;
-    public int Unknown04;
-    public int Unknown08;
-    public int Unknown0C;
-    public byte Unknown10;
-    public byte Unknown11;
-    public byte Unknown12; // garbage
-    public byte Unknown13; // garbage
+    public uint muOpponentIndex;
+    public uint muPersonalityIndex;
+    public int miFastAIBalanceGraphIndex;
+    public int miSlowAIBalanceGraphIndex;
+    public byte muColourIndex;
+    public byte muFlags;
+    public ushort Padding12;
 }
 
-public struct EventLandmarkData
+public struct CheckpointData
 {
-    public int TriggerID;
-    public int NumAIGameDBIDs;
-    public int[] AIGameDBIDs;
+    public uint muLandmarkId;
+    public int miBlockSectionCount;
+    public uint[] mauBlockSectionIds; // All 8 stored IDs
 
-    public override string ToString() => $"Trigger {TriggerID} ({NumAIGameDBIDs} AI IDs)";
+    public override string ToString() => $"Landmark {muLandmarkId} ({miBlockSectionCount} block sections)";
 }
 
 public struct Rival
 {
-    public long RivalID;
-    public EncryptedString VehicleID;
-    public short Unknown10;
-    public short Unknown12; // 1
-    public byte Unknown14;
-    public byte Unknown15; // 7F
-    public byte WinsUntilRoam;
-    public bool DoesNotRoam; // Alternatively: unlocked via licence upgrade
-    public string Name;
+    public EncryptedString mId;
+    public EncryptedString mCarId;
+    public short miPersonalityIndex;
+    public short miPursuitTarget;
+    public sbyte miDistrictIndex;
+    public sbyte miUnlockRank;
+    public byte mu8NumMedalsToUnlock;
+    public bool mbIsUsedForRankUpGiftCar;
+    public string macName;
 
-    public override string ToString() => $"ID {RivalID}: {Name} ({VehicleID})";
+    public override string ToString() => $"ID {mId}: {macName} ({mCarId})";
 }
 
-public struct ProgressionSection6Entry
+public struct OpponentBalanceData
 {
-    public float Unknown00;
-    public float Unknown04;
-    public float Unknown08;
-    public float Unknown0C;
-    public float Unknown10;
-    public float Unknown14;
-    public float Unknown18;
-    public float Unknown1C;
-    public float Unknown20;
-    public float Unknown24;
-    public float Unknown28;
-    public float Unknown2C;
-    public float Unknown30;
-    public float Unknown34;
-    public float Unknown38;
-    public float Unknown3C;
-    public byte Unknown40; // CD
-    public byte Unknown41; // CC
-    public byte Unknown42; // 4C
-    public byte Unknown43; // 3F
+    public float[] mafAheadGraphPoints; // 8 entries
+    public float[] mafBehindGraphPoints; // 8 entries
+    public float mfCatchUpCutOffRatio;
 }
 
-public struct ProgressionSection7Entry
+public struct EventRacerPersonality
 {
-    public float Unknown00;
-    public float Unknown04;
-    public float Unknown08;
-    public float Unknown0C;
+    public float mfMinAggression;
+    public float mfMaxAggression;
+    public float mfSkill;
+    public float mfSpeed;
 }
 
-public struct CarbonCarUnlockData
+public struct TrophyUnlockData
 {
-    public int Unknown00; // 0
-    public short Unknown04;
-    public byte Unknown06; // 0 in remaster, prob garbage
-    public byte Unknown07; // 0 in remaster, prob garbage
-    public EncryptedString VehicleID;
+    public uint muNumberTrophyUnlock;
+    public ushort mu16UnlockType;
+    public ushort Padding06;
+    public EncryptedString mCarUnlockId;
 
-    public override string ToString() => $"Vehicle {VehicleID}";
+    public override string ToString() => $"Vehicle {mCarUnlockId}";
 }
 
-public struct PlayerOpponentsData
+public struct CarOpponent
 {
-    public EncryptedString PlayerVehicleID;
-    public int Unknown08;
-    public int Unknown0C; // 0
-    public EncryptedString Opponent1VehicleID;
-    public int Unknown18;
-    public int Unknown1C; // 0
-    public EncryptedString Opponent2VehicleID;
-    public int Unknown28;
-    public int Unknown2C; // 0
-    public EncryptedString Opponent3VehicleID;
-    public int Unknown38;
-    public int Unknown3C; // 0
-    public EncryptedString Opponent4VehicleID;
-    public int Unknown48;
-    public int Unknown4C; // 0
-    public EncryptedString Opponent5VehicleID;
-    public int Unknown58;
-    public int Unknown5C; // 0
-    public EncryptedString Opponent6VehicleID;
-    public int Unknown68;
-    public int Unknown6C; // 0
-    public EncryptedString Opponent7VehicleID;
-    public int Unknown78;
-    public int Unknown7C; // 0
-    public EncryptedString Opponent8VehicleID;
-    public int Unknown88; // 0, 2, 4
-    public int NumOpponents;
+    public EncryptedString mCarId;
+    public int miPersonalityIndex;
+    public uint Padding0C;
+}
 
-    public override string ToString() => $"Player Vehicle ID {PlayerVehicleID}";
+public struct CarOpponentSet
+{
+    public CarOpponent[] maCarOpponents; // All 8 slots precede the player car ID
+    public EncryptedString mPlayerCarId; // 0x80
+    public int miRank; // 0x88
+    public int miOpponentCount; // 0x8C
+
+    public override string ToString() => $"Player vehicle {mPlayerCarId}";
 }
 
 public class ProgressionData : IEntryData
 {
-    public int FormatRevision;
-    public uint FileSize;
-    public uint InitialCarIDListOffset;
-    public int InitialCarIDCount;
-    public uint LicenceDataOffset;
-    public int LicenceDataCount;
-    public uint EventJunctionOffset;
-    public int EventJunctionCount;
-    public uint EventDataOffset;
-    public int EventDataCount;
-    public uint RivalOffset;
-    public int RivalCount;
-    public uint Section6Offset;
-    public int Section6Count;
-    public uint Section7Offset;
-    public int Section7Count;
-    public uint CarbonCarUnlockDataOffset;
-    public int CarbonCarUnlockDataCount;
-    public uint PlayerOpponentsDataOffset;
-    public int PlayerOpponentsDataCount;
+    public uint muVersionNumber;
+    public uint muSize;
+    public ulong PlayerCarIDsOffset;
+    public uint muPlayerCarIdCount;
+    public ulong ProgressionRanksOffset;
+    public uint muProgressionRankCount;
+    public ulong EventJunctionsOffset;
+    public uint muEventJunctionCount;
+    public ulong EventsOffset;
+    public uint muEventCount;
+    public ulong RivalsOffset;
+    public int miRivalCount;
+    public ulong AIBalancesOffset;
+    public uint muAIBalanceCount;
+    public ulong PersonalitiesOffset;
+    public uint muPersonalityCount;
+    public ulong TrophyUnlocksOffset;
+    public uint muTrophyUnlockCount;
+    public ulong CarOpponentSetOffset;
+    public uint muCarOpponentsCount;
 
-    public List<EncryptedString> InitialCarIDEntries;
-    public List<LicenceData> LicenceDataEntries;
-    public List<EventJunction> EventJunctionEntries;
-    public SortedDictionary<uint, EventData> EventDataEntries;
-    public List<Rival> RivalEntries;
-    public List<ProgressionSection6Entry> Section6Entries;
-    public List<ProgressionSection7Entry> Section7Entries;
-    public List<CarbonCarUnlockData> CarbonCarUnlockDataEntries;
-    public List<PlayerOpponentsData> PlayerOpponentsDataEntries;
+    // Guessing the name here
+    public uint? BaseEventJunctionCount;
+    public List<uint> PointerPadding = [];
+    public List<EncryptedString> mpaPlayerCarIds = [];
+    public List<ProgressionRankData> mpaProgressionRanks = [];
+    public List<EventJunction> mpaEventJunctions = [];
+    public SortedDictionary<ulong, RaceEventData> mpaEvents = [];
+    public List<Rival> mpaRivals = [];
+    public List<OpponentBalanceData> mpaAIBalances = [];
+    public List<EventRacerPersonality> mpaPersonalities = [];
+    public List<TrophyUnlockData> mpaTrophyUnlocks = [];
+    public List<CarOpponentSet> mpaCarOpponentSet = [];
 
-    public ProgressionData()
-    {
-        InitialCarIDEntries = [];
-        LicenceDataEntries = [];
-        EventJunctionEntries = [];
-        EventDataEntries = [];
-        RivalEntries = [];
-        Section6Entries = [];
-        Section7Entries = [];
-        CarbonCarUnlockDataEntries = [];
-        PlayerOpponentsDataEntries = [];
-    }
+    public IEntryEditor GetEditor(BundleEntry entry) => null;
 
-    public IEntryEditor GetEditor(BundleEntry entry)
-    {
-        return null;
-    }
-
-    public EntryType GetEntryType(BundleEntry entry)
-    {
-        return EntryType.ProgressionData;
-    }
+    public EntryType GetEntryType(BundleEntry entry) => EntryType.ProgressionData;
 
     private void Clear()
     {
-
+        BaseEventJunctionCount = null;
+        PointerPadding.Clear();
+        mpaPlayerCarIds.Clear();
+        mpaProgressionRanks.Clear();
+        mpaEventJunctions.Clear();
+        mpaEvents.Clear();
+        mpaRivals.Clear();
+        mpaAIBalances.Clear();
+        mpaPersonalities.Clear();
+        mpaTrophyUnlocks.Clear();
+        mpaCarOpponentSet.Clear();
     }
 
     public bool Read(BundleEntry entry, ILoader loader = null)
     {
         Clear();
+        using BinaryReader2 reader = new(entry.MakeStream(), entry.Console);
+        muVersionNumber = reader.ReadUInt32();
+        muSize = reader.ReadUInt32();
 
-        MemoryStream ms = entry.MakeStream();
-        BinaryReader2 br = new(ms)
+        // The decomp's version retains the original 32-bit offsets
+        bool wide = entry.Platform == BundlePlatform.PCx64 && muVersionNumber >= 44;
+        PlayerCarIDsOffset = ReadPointer(reader, wide);
+        muPlayerCarIdCount = ReadCount(reader, wide);
+        ProgressionRanksOffset = ReadPointer(reader, wide);
+        muProgressionRankCount = ReadCount(reader, wide);
+        EventJunctionsOffset = ReadPointer(reader, wide);
+        muEventJunctionCount = ReadCount(reader, wide);
+        EventsOffset = ReadPointer(reader, wide);
+        muEventCount = ReadCount(reader, wide);
+        RivalsOffset = ReadPointer(reader, wide);
+        miRivalCount = reader.ReadInt32();
+
+        if (wide)
+            PointerPadding.Add(reader.ReadUInt32());
+
+        AIBalancesOffset = ReadPointer(reader, wide);
+        muAIBalanceCount = ReadCount(reader, wide);
+        PersonalitiesOffset = ReadPointer(reader, wide);
+        muPersonalityCount = ReadCount(reader, wide);
+        TrophyUnlocksOffset = ReadPointer(reader, wide);
+        muTrophyUnlockCount = ReadCount(reader, wide);
+        CarOpponentSetOffset = ReadPointer(reader, wide);
+        muCarOpponentsCount = reader.ReadUInt32();
+
+        ulong[] tableOffsets =
+        [
+            PlayerCarIDsOffset,
+            ProgressionRanksOffset,
+            EventJunctionsOffset,
+            EventsOffset,
+            RivalsOffset,
+            AIBalancesOffset,
+            PersonalitiesOffset,
+            TrophyUnlocksOffset,
+            CarOpponentSetOffset
+        ];
+        ulong firstAllocation = tableOffsets.Where(offset => offset != 0).DefaultIfEmpty(ulong.MaxValue).Min();
+
+        if (muVersionNumber >= 44 && (ulong)reader.BaseStream.Position + 4 <= firstAllocation && reader.BaseStream.Position + 4 <= reader.BaseStream.Length)
+            BaseEventJunctionCount = reader.ReadUInt32();
+
+        ReadTable(reader, PlayerCarIDsOffset, muPlayerCarIdCount, 8, () => mpaPlayerCarIds.Add(new(reader.ReadUInt64())));
+        ReadTable(reader, ProgressionRanksOffset, muProgressionRankCount, 0x70, () => mpaProgressionRanks.Add(ReadRank(reader)));
+        ReadTable(reader, EventJunctionsOffset, muEventJunctionCount, wide
+            ? 0x28
+            : muVersionNumber >= 44
+                ? 0x14
+                : 0x10, () => mpaEventJunctions.Add(ReadJunction(reader, wide, muVersionNumber >= 44)));
+        ReadTable(reader, EventsOffset, muEventCount, wide
+            ? 0x100
+            : 0xF8, () =>
         {
-            BigEndian = entry.Console
-        };
+            ulong offset = (ulong)reader.BaseStream.Position;
+            mpaEvents.Add(offset, ReadEvent(reader, wide));
+        });
 
-        FormatRevision = br.ReadInt32();
-        FileSize = br.ReadUInt32();
-        InitialCarIDListOffset = br.ReadUInt32();
-        InitialCarIDCount = br.ReadInt32();
-        LicenceDataOffset = br.ReadUInt32();
-        LicenceDataCount = br.ReadInt32();
-        EventJunctionOffset = br.ReadUInt32();
-        EventJunctionCount = br.ReadInt32();
-        EventDataOffset = br.ReadUInt32();
-        EventDataCount = br.ReadInt32();
-        RivalOffset = br.ReadUInt32();
-        RivalCount = br.ReadInt32();
-        Section6Offset = br.ReadUInt32();
-        Section6Count = br.ReadInt32();
-        Section7Offset = br.ReadUInt32();
-        Section7Count = br.ReadInt32();
-        CarbonCarUnlockDataOffset = br.ReadUInt32();
-        CarbonCarUnlockDataCount = br.ReadInt32();
-        PlayerOpponentsDataOffset = br.ReadUInt32();
-        PlayerOpponentsDataCount = br.ReadInt32();
-
-        br.BaseStream.Position = InitialCarIDListOffset;
-
-        for (int i = 0; i < InitialCarIDCount; i++)
+        foreach (ulong offset in mpaEvents.Keys.ToArray())
         {
-            InitialCarIDEntries.Add(new(br.ReadUInt64()));
+            RaceEventData current = mpaEvents[offset];
+            List<CheckpointData> checkpoints = [];
+            ReadTable(reader, current.CheckpointsOffset, current.miCheckpointCount, 0x28, () => checkpoints.Add(ReadCheckpoint(reader)));
+            current.mpaCheckpoints = [.. checkpoints];
+            mpaEvents[offset] = current;
         }
 
-        br.BaseStream.Position = LicenceDataOffset;
-
-        for (int i = 0; i < LicenceDataCount; i++)
+        for (int index = 0; index < mpaEventJunctions.Count; index++)
         {
-            LicenceData licenceData = new()
-            {
-                Unknown00 = br.ReadSingle(),
-                Unknown04 = br.ReadSingle(),
-                Unknown08 = br.ReadSingle(),
-                Unknown0C = br.ReadSingle(),
-                Unknown10 = br.ReadSingle(),
-                Unknown14 = br.ReadSingle(),
-                Unknown18 = br.ReadSingle(),
-                Unknown1C = br.ReadSingle(),
-                Unknown20 = br.ReadSingle(),
-                Unknown24 = br.ReadSingle(),
-                GameDBID = br.ReadInt32(),
-                Unknown2C = br.ReadSingle(),
-                Unknown30 = br.ReadSingle(),
-                Unknown34 = br.ReadSingle(),
-                Unknown38 = br.ReadSingle(),
-                Unknown3C = br.ReadSingle(),
-                Unknown40 = br.ReadSingle(),
-                Unknown44 = br.ReadSingle(),
-                Unknown48 = br.ReadSingle(),
-                NumEventWinsRequired = br.ReadInt16(),
-                Unknown4E = br.ReadInt16(),
-                Unknown50 = br.ReadInt16(),
-                Unknown52 = br.ReadInt16(),
-                Unknown54 = br.ReadInt16(),
-                Unknown56 = br.ReadInt16(),
-                Unknown58 = br.ReadInt16(),
-                Unknown5A = br.ReadInt16(),
-                Unknown5C = br.ReadByte(),
-                Unknown5D = br.ReadByte(),
-                Unknown5E = br.ReadByte(),
-                Unknown5F = br.ReadByte(),
-                Unknown60 = br.ReadByte(),
-                Unknown61 = br.ReadByte(),
-                Unknown62 = br.ReadByte(),
-                Unknown63 = br.ReadByte()
-            };
-
-            br.BaseStream.Position += 4; // padding
-            licenceData.VehicleUnlocked = new(br.ReadUInt64());
-
-            LicenceDataEntries.Add(licenceData);
+            EventJunction junction = mpaEventJunctions[index];
+            junction.mpOfflineEvent = ResolveEvent(junction.OfflineEventOffset);
+            junction.mpOnlineEvent = ResolveEvent(junction.OnlineEventOffset);
+            junction.BikeEvent = ResolveEvent(junction.BikeEventOffset);
+            mpaEventJunctions[index] = junction;
         }
 
-        br.BaseStream.Position = EventJunctionOffset;
-
-        for (int i = 0; i < EventJunctionCount; i++)
+        ReadTable(reader, RivalsOffset, miRivalCount, 0x38, () => mpaRivals.Add(ReadRival(reader)));
+        ReadTable(reader, AIBalancesOffset, muAIBalanceCount, 0x44, () => mpaAIBalances.Add(ReadBalance(reader)));
+        ReadTable(reader, PersonalitiesOffset, muPersonalityCount, 0x10, () => mpaPersonalities.Add(new()
         {
-            EventJunction eventJunction = new()
-            {
-                GameDBID = br.ReadInt32(),
-                CarEventDataOffset = br.ReadUInt32(),
-                BTTEventDataOffset = br.ReadUInt32()
-            };
-
-            if (FormatRevision >= 44)
-                eventJunction.BikeEventDataOffset = br.ReadUInt32();
-
-            eventJunction.UnknownGameDBID = br.ReadInt32();
-
-            EventJunctionEntries.Add(eventJunction);
-        }
-
-        br.BaseStream.Position = EventDataOffset;
-
-        for (int i = 0; i < EventDataCount; i++)
+            mfMinAggression = reader.ReadSingle(),
+            mfMaxAggression = reader.ReadSingle(),
+            mfSkill = reader.ReadSingle(),
+            mfSpeed = reader.ReadSingle()
+        }));
+        ReadTable(reader, TrophyUnlocksOffset, muTrophyUnlockCount, 0x10, () => mpaTrophyUnlocks.Add(new()
         {
-            long origPosition = br.BaseStream.Position;
-
-            EventData eventData = new()
-            {
-                GameDBID = br.ReadInt32(),
-                AppearsWhen = br.ReadInt32(),
-                TrafficDensityMultiplier = br.ReadSingle(),
-                Unknown0C = br.ReadSingle(),
-                LockVehicleID = new(br.ReadUInt64()),
-                EventLandmarkDataOffset = br.ReadUInt32(),
-                EventLandmarkCount = br.ReadInt32(),
-                TargetTimeUnused = br.ReadSingle(),
-                TargetTime = br.ReadSingle(),
-                StuntRunTargetScoreTier1 = br.ReadInt32(),
-                StuntRunTargetScoreTier2 = br.ReadInt32(),
-                StuntRunTargetScoreTier3 = br.ReadInt32(),
-                StuntRunTargetScoreTier4 = br.ReadInt32(),
-                StuntRunTargetScoreTier5 = br.ReadInt32(),
-                StuntRunTargetScoreTier6 = br.ReadInt32(),
-                StuntRunTimeLimitTier1 = br.ReadSingle(),
-                StuntRunTimeLimitTier2 = br.ReadSingle(),
-                StuntRunTimeLimitTier3 = br.ReadSingle(),
-                StuntRunTimeLimitTier4 = br.ReadSingle(),
-                StuntRunTimeLimitTier5 = br.ReadSingle(),
-                StuntRunTimeLimitTier6 = br.ReadSingle(),
-                Unknown58 = br.ReadInt32(),
-
-                RivalData = new EventRivalData[7]
-            };
-
-            for (int j = 0; j < 7; j++)
-            {
-                EventRivalData rivalData = new()
-                {
-                    Unknown00 = br.ReadInt32(),
-                    Unknown04 = br.ReadInt32(),
-                    Unknown08 = br.ReadInt32(),
-                    Unknown0C = br.ReadInt32(),
-                    Unknown10 = br.ReadByte(),
-                    Unknown11 = br.ReadByte(),
-                    Unknown12 = br.ReadByte(),
-                    Unknown13 = br.ReadByte()
-                };
-
-                eventData.RivalData[j] = rivalData;
-            }
-
-            eventData.RivalDataCount = br.ReadInt32();
-            Array.Resize(ref eventData.RivalData, eventData.RivalDataCount);
-
-            eventData.Type = br.ReadByte();
-            eventData.UnknownED = br.ReadByte();
-            eventData.NumberOfAIRivalsToUse = br.ReadByte();
-            eventData.UnknownEF = br.ReadByte();
-            eventData.UnknownF0 = br.ReadInt32();
-            eventData.UnknownF4 = br.ReadByte();
-            eventData.UnknownF5 = br.ReadByte();
-            br.BaseStream.Position += 2; // padding
-
-            long oldPos = br.BaseStream.Position;
-            eventData.EventLandmarkData = new EventLandmarkData[eventData.EventLandmarkCount];
-            br.BaseStream.Position = eventData.EventLandmarkDataOffset;
-
-            for (int j = 0; j < eventData.EventLandmarkCount; j++)
-            {
-                EventLandmarkData landmarkData = new()
-                {
-                    TriggerID = br.ReadInt32(),
-                    NumAIGameDBIDs = br.ReadInt32()
-                };
-
-                landmarkData.AIGameDBIDs = new int[landmarkData.NumAIGameDBIDs];
-
-                for (int k = 0; k < 8; k++)
-                {
-                    int gameDBID = br.ReadInt32();
-
-                    if (k < landmarkData.NumAIGameDBIDs)
-                        landmarkData.AIGameDBIDs[k] = gameDBID;
-                }
-
-                eventData.EventLandmarkData[j] = landmarkData;
-            }
-
-            br.BaseStream.Position = oldPos;
-
-            EventDataEntries.Add((uint)origPosition, eventData);
-        }
-
-        for (int i = 0; i < EventJunctionCount; i++)
+            muNumberTrophyUnlock = reader.ReadUInt32(),
+            mu16UnlockType = reader.ReadUInt16(),
+            Padding06 = reader.ReadUInt16(),
+            mCarUnlockId = new(reader.ReadUInt64())
+        }));
+        ReadTable(reader, CarOpponentSetOffset, muCarOpponentsCount, 0x90, () => mpaCarOpponentSet.Add(new()
         {
-            EventJunction junction = EventJunctionEntries[i];
-
-            if (junction.CarEventDataOffset != 0)
-                junction.CarEventData = EventDataEntries[junction.CarEventDataOffset];
-
-            if (junction.BTTEventDataOffset != 0)
-                junction.BTTEventData = EventDataEntries[junction.BTTEventDataOffset];
-
-            if (junction.BikeEventDataOffset != 0)
-                junction.BikeEventData = EventDataEntries[junction.BikeEventDataOffset];
-
-            EventJunctionEntries[i] = junction;
-        }
-
-        br.BaseStream.Position = RivalOffset;
-
-        for (int i = 0; i < RivalCount; i++)
-        {
-            Rival rival = new()
+            maCarOpponents = ReadValues(8, () => new CarOpponent()
             {
-                RivalID = br.ReadInt64(),
-                VehicleID = new(br.ReadUInt64()),
-                Unknown10 = br.ReadInt16(),
-                Unknown12 = br.ReadInt16(),
-                Unknown14 = br.ReadByte(),
-                Unknown15 = br.ReadByte(),
-                WinsUntilRoam = br.ReadByte(),
-                DoesNotRoam = br.ReadBoolean(),
-                Name = br.ReadLenString(0x20)
-            };
-
-            RivalEntries.Add(rival);
-        }
-
-        br.BaseStream.Position = Section6Offset;
-
-        for (int i = 0; i < Section6Count; i++)
-        {
-            ProgressionSection6Entry section6Entry = new()
-            {
-                Unknown00 = br.ReadSingle(),
-                Unknown04 = br.ReadSingle(),
-                Unknown08 = br.ReadSingle(),
-                Unknown0C = br.ReadSingle(),
-                Unknown10 = br.ReadSingle(),
-                Unknown14 = br.ReadSingle(),
-                Unknown18 = br.ReadSingle(),
-                Unknown1C = br.ReadSingle(),
-                Unknown20 = br.ReadSingle(),
-                Unknown24 = br.ReadSingle(),
-                Unknown28 = br.ReadSingle(),
-                Unknown2C = br.ReadSingle(),
-                Unknown30 = br.ReadSingle(),
-                Unknown34 = br.ReadSingle(),
-                Unknown38 = br.ReadSingle(),
-                Unknown3C = br.ReadSingle(),
-                Unknown40 = br.ReadByte(),
-                Unknown41 = br.ReadByte(),
-                Unknown42 = br.ReadByte(),
-                Unknown43 = br.ReadByte()
-            };
-
-            Section6Entries.Add(section6Entry);
-        }
-
-        br.BaseStream.Position = Section7Offset;
-
-        for (int i = 0; i < Section7Count; i++)
-        {
-            ProgressionSection7Entry section7Entry = new()
-            {
-                Unknown00 = br.ReadSingle(),
-                Unknown04 = br.ReadSingle(),
-                Unknown08 = br.ReadSingle(),
-                Unknown0C = br.ReadSingle()
-            };
-
-            Section7Entries.Add(section7Entry);
-        }
-
-        br.BaseStream.Position = CarbonCarUnlockDataOffset;
-
-        for (int i = 0; i < CarbonCarUnlockDataCount; i++)
-        {
-            CarbonCarUnlockData unlockData = new()
-            {
-                Unknown00 = br.ReadInt32(),
-                Unknown04 = br.ReadInt16(),
-                Unknown06 = br.ReadByte(),
-                Unknown07 = br.ReadByte(),
-                VehicleID = new(br.ReadUInt64())
-            };
-
-            CarbonCarUnlockDataEntries.Add(unlockData);
-        }
-
-        br.BaseStream.Position = PlayerOpponentsDataOffset;
-
-        for (int i = 0; i < PlayerOpponentsDataCount; i++)
-        {
-            PlayerOpponentsData opponentsData = new()
-            {
-                PlayerVehicleID = new(br.ReadUInt64()),
-                Unknown08 = br.ReadInt32(),
-                Unknown0C = br.ReadInt32(),
-                Opponent1VehicleID = new(br.ReadUInt64()),
-                Unknown18 = br.ReadInt32(),
-                Unknown1C = br.ReadInt32(),
-                Opponent2VehicleID = new(br.ReadUInt64()),
-                Unknown28 = br.ReadInt32(),
-                Unknown2C = br.ReadInt32(),
-                Opponent3VehicleID = new(br.ReadUInt64()),
-                Unknown38 = br.ReadInt32(),
-                Unknown3C = br.ReadInt32(),
-                Opponent4VehicleID = new(br.ReadUInt64()),
-                Unknown48 = br.ReadInt32(),
-                Unknown4C = br.ReadInt32(),
-                Opponent5VehicleID = new(br.ReadUInt64()),
-                Unknown58 = br.ReadInt32(),
-                Unknown5C = br.ReadInt32(),
-                Opponent6VehicleID = new(br.ReadUInt64()),
-                Unknown68 = br.ReadInt32(),
-                Unknown6C = br.ReadInt32(),
-                Opponent7VehicleID = new(br.ReadUInt64()),
-                Unknown78 = br.ReadInt32(),
-                Unknown7C = br.ReadInt32(),
-                Opponent8VehicleID = new(br.ReadUInt64()),
-                Unknown88 = br.ReadInt32(),
-                NumOpponents = br.ReadInt32()
-            };
-
-            PlayerOpponentsDataEntries.Add(opponentsData);
-        }
-
-        br.Close();
-        ms.Close();
-
+                mCarId = new(reader.ReadUInt64()),
+                miPersonalityIndex = reader.ReadInt32(),
+                Padding0C = reader.ReadUInt32()
+            }),
+            mPlayerCarId = new(reader.ReadUInt64()),
+            miRank = reader.ReadInt32(),
+            miOpponentCount = reader.ReadInt32()
+        }));
         return true;
     }
 
-    public bool Write(BundleEntry entry)
+    private uint ReadCount(BinaryReader2 reader, bool wide)
     {
-        MemoryStream ms = new();
-        BinaryWriter2 bw = new(ms)
+        uint count = reader.ReadUInt32();
+
+        if (wide)
+            PointerPadding.Add(reader.ReadUInt32());
+
+        return count;
+    }
+
+    private static ulong ReadPointer(BinaryReader2 reader, bool wide) => wide
+        ? reader.ReadUInt64()
+        : reader.ReadUInt32();
+
+    private static void ReadTable(BinaryReader2 reader, ulong offset, long count, int stride, Action read)
+    {
+        if (count == 0)
+            return;
+
+        if (count < 0 || count > int.MaxValue || offset > (ulong)reader.BaseStream.Length ||
+            (ulong)count > ((ulong)reader.BaseStream.Length - offset) / (uint)stride)
+            throw new InvalidDataException("A progression table lies outside the resource.");
+
+        reader.BaseStream.Position = (long)offset;
+
+        for (int index = 0; index < count; index++)
+            read();
+    }
+
+    private static T[] ReadValues<T>(int count, Func<T> read)
+    {
+        T[] values = new T[count];
+
+        for (int index = 0; index < count; index++)
+            values[index] = read();
+
+        return values;
+    }
+
+    private static ProgressionRankData ReadRank(BinaryReader2 reader) => new()
+    {
+        mfTrafficDensityRace = reader.ReadSingle(),
+        mfBurningRouteTimeScale = reader.ReadSingle(),
+        mfTrafficDensityBurningRoute = reader.ReadSingle(),
+        mfTrafficDensityRoadRage = reader.ReadSingle(),
+        mfTrafficDensitySurvival = reader.ReadSingle(),
+        mfTrafficDensityPursuit = reader.ReadSingle(),
+        mfShuntStrengthRace = reader.ReadSingle(),
+        mfShuntStrengthRoadRage = reader.ReadSingle(),
+        mfShuntStrengthMarkedMan = reader.ReadSingle(),
+        mfLargeVehicleProbability = reader.ReadSingle(),
+        muId = reader.ReadUInt32(),
+        maOvertakingDifficulty = ReadValues(8, reader.ReadSingle),
+        mu16MedalThresholdToNextRank = reader.ReadUInt16(),
+        mu16EventThresholdToNextRank = reader.ReadUInt16(),
+        muRoadRageTakedownTarget = reader.ReadUInt16(),
+        muRoadRageTime = reader.ReadUInt16(),
+        muRoadRageTimeExtensions = reader.ReadUInt16(),
+        muRoadRageExtensionTime = reader.ReadUInt16(),
+        muRoadRageDamageLimit = reader.ReadUInt16(),
+        muRoadRageTriggerExtension = reader.ReadUInt16(),
+        muRaceRivalsNumber = reader.ReadByte(),
+        muGauntletRivalsNumber = reader.ReadByte(),
+        muRoadRageRivalsNumber = reader.ReadByte(),
+        muNumGiftCars = reader.ReadByte(),
+        muNumWinsToRankUpRace = reader.ReadByte(),
+        muNumWinsToRankUpStunt = reader.ReadByte(),
+        muNumWinsToRankUpRoadRage = reader.ReadByte(),
+        muNumWinsToRankUpMarkedMan = reader.ReadByte(),
+        Padding64 = reader.ReadUInt32(),
+        mFreeCarForRankUpID = new(reader.ReadUInt64())
+    };
+
+    private static EventJunction ReadJunction(BinaryReader2 reader, bool wide, bool bikes)
+    {
+        EventJunction junction = new()
         {
-            BigEndian = entry.Console
+            muID = reader.ReadUInt32()
         };
 
-        // TODO: Write
-        bw.Flush();
-        byte[] data = ms.ToArray();
-        bw.Close();
-        ms.Close();
+        if (wide)
+            junction.Padding04 = reader.ReadUInt32();
 
-        entry.EntryBlocks[0].Data = data;
-        entry.Dirty = true;
+        junction.OfflineEventOffset = ReadPointer(reader, wide);
+        junction.OnlineEventOffset = ReadPointer(reader, wide);
+        junction.BikeEventOffset = bikes
+            ? ReadPointer(reader, wide)
+            : 0;
+        junction.miShotGroup = reader.ReadInt32();
 
-        return true;
+        if (wide)
+            junction.Padding24 = reader.ReadUInt32();
+
+        return junction;
     }
+
+    private static RaceEventData ReadEvent(BinaryReader2 reader, bool wide)
+    {
+        RaceEventData current = new()
+        {
+            muId = reader.ReadUInt32(),
+            muFlags = reader.ReadUInt32(),
+            mfTrafficDensity = reader.ReadSingle(),
+            mfBoostEarning = reader.ReadSingle(),
+            mSpecialEventCarId = new(reader.ReadUInt64()),
+            CheckpointsOffset = ReadPointer(reader, wide),
+            miCheckpointCount = reader.ReadInt32(),
+            mfTimeLimitFast = reader.ReadSingle(),
+            mfTimeLimitSlow = reader.ReadSingle(),
+            miRankScore = ReadValues(6, reader.ReadInt32),
+            mfRankTime = ReadValues(6, reader.ReadSingle),
+            mfExtensionTime = reader.ReadSingle(),
+            maStartGridSlots = ReadValues(7, () => new EventStartGridSlot()
+            {
+                muOpponentIndex = reader.ReadUInt32(),
+                muPersonalityIndex = reader.ReadUInt32(),
+                miFastAIBalanceGraphIndex = reader.ReadInt32(),
+                miSlowAIBalanceGraphIndex = reader.ReadInt32(),
+                muColourIndex = reader.ReadByte(),
+                muFlags = reader.ReadByte(),
+                Padding12 = reader.ReadUInt16()
+            }),
+            muStartGridCount = reader.ReadUInt32(),
+            mu8Mode = reader.ReadByte(),
+            mu8OnlineMode = reader.ReadByte(),
+            mu8StartRivalCount = reader.ReadByte(),
+            mu8AddRivalCount = reader.ReadByte(),
+            mu8TakeDownBronze = reader.ReadByte(),
+            mu8TakeDownSilver = reader.ReadByte(),
+            mu8TakeDownGold = reader.ReadByte(),
+            mu8DamageLimit = reader.ReadByte(),
+            mu8ExtensionTimeCount = reader.ReadByte(),
+            mu8AStarType = reader.ReadByte(),
+            mi8UnlockRank = reader.ReadSByte(),
+            Padding = reader.ReadBytes(wide
+                ? 5
+                : 1)
+        };
+
+        if (current.muStartGridCount > 7)
+            throw new InvalidDataException("A progression event has more than 7 start-grid slots.");
+
+        return current;
+    }
+
+    private static CheckpointData ReadCheckpoint(BinaryReader2 reader)
+    {
+        CheckpointData checkpoint = new()
+        {
+            muLandmarkId = reader.ReadUInt32(),
+            miBlockSectionCount = reader.ReadInt32(),
+            mauBlockSectionIds = ReadValues(8, reader.ReadUInt32)
+        };
+
+        if (checkpoint.miBlockSectionCount is < 0 or > 8)
+            throw new InvalidDataException("A progression checkpoint has an invalid block-section count.");
+
+        return checkpoint;
+    }
+
+    private RaceEventData ResolveEvent(ulong offset)
+    {
+        if (offset == 0)
+            return default;
+
+        return mpaEvents.TryGetValue(offset, out RaceEventData current)
+            ? current
+            : throw new InvalidDataException("A progression junction refers to an event outside the event table.");
+    }
+
+    private static Rival ReadRival(BinaryReader2 reader) => new()
+    {
+        mId = new(reader.ReadUInt64()),
+        mCarId = new(reader.ReadUInt64()),
+        miPersonalityIndex = reader.ReadInt16(),
+        miPursuitTarget = reader.ReadInt16(),
+        miDistrictIndex = reader.ReadSByte(),
+        miUnlockRank = reader.ReadSByte(),
+        mu8NumMedalsToUnlock = reader.ReadByte(),
+        mbIsUsedForRankUpGiftCar = reader.ReadBoolean(),
+        macName = reader.ReadLenString(0x20)
+    };
+
+    private static OpponentBalanceData ReadBalance(BinaryReader2 reader)
+    {
+        OpponentBalanceData balance = new()
+        {
+            mafAheadGraphPoints = ReadValues(8, reader.ReadSingle),
+            mafBehindGraphPoints = ReadValues(8, reader.ReadSingle)
+        };
+
+        // The original resource builder left this float little-endian on consoles
+        byte[] cutoff = new byte[4];
+        reader.BaseStream.ReadExactly(cutoff);
+        balance.mfCatchUpCutOffRatio = BinaryPrimitives.ReadSingleLittleEndian(cutoff);
+        return balance;
+    }
+
+    public bool Write(BundleEntry entry) => false;
 }

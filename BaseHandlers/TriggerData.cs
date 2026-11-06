@@ -789,7 +789,7 @@ public class TriggerData : IEntryData
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
 
-        int ReadCount()
+        int readCount()
         {
             int count = reader.ReadInt32();
 
@@ -811,25 +811,25 @@ public class TriggerData : IEntryData
         miOnlineLandmarkCount = reader.ReadInt32();
 
         long signatureStuntsOffset = ReadPtr(reader, x64);
-        int miSignatureStuntCount = ReadCount();
+        int miSignatureStuntCount = readCount();
 
         long genericRegionsOffset = ReadPtr(reader, x64);
-        int miGenericRegionCount = ReadCount();
+        int miGenericRegionCount = readCount();
 
         long killzoneOffset = ReadPtr(reader, x64);
-        int miKillzoneCount = ReadCount();
+        int miKillzoneCount = readCount();
 
         long blackspotOffset = ReadPtr(reader, x64);
-        int miBlackspotCount = ReadCount();
+        int miBlackspotCount = readCount();
 
         long vfxBoxRegionOffset = ReadPtr(reader, x64);
-        int miVFXBoxRegionCount = ReadCount();
+        int miVFXBoxRegionCount = readCount();
 
         long roamingLocationOffset = ReadPtr(reader, x64);
-        int miRoamingLocationCount = ReadCount();
+        int miRoamingLocationCount = readCount();
 
         long spawnLocationOffset = ReadPtr(reader, x64);
-        int miSpawnLocationCount = ReadCount();
+        int miSpawnLocationCount = readCount();
 
         long triggerRegionOffset = ReadPtr(reader, x64);
         int miRegionCount = reader.ReadInt32();
@@ -972,7 +972,7 @@ public class TriggerData : IEntryData
             ? 8
             : 4;
 
-        void WriteCount(int count)
+        void writeCount(int count)
         {
             bw.Write(count);
 
@@ -1039,25 +1039,25 @@ public class TriggerData : IEntryData
         bw.Write(miOnlineLandmarkCount);
         long signatureStuntskOffsetPosition = bw.BaseStream.Position;
         bw.WriteUniquePadding(ptrSize);
-        WriteCount(mpSignatureStunts.Count);
+        writeCount(mpSignatureStunts.Count);
         long genericRegionsOffsetPosition = bw.BaseStream.Position;
         bw.WriteUniquePadding(ptrSize);
-        WriteCount(mpGenericRegions.Count);
+        writeCount(mpGenericRegions.Count);
         long killzoneOffsetPosition = bw.BaseStream.Position;
         bw.WriteUniquePadding(ptrSize);
-        WriteCount(mpKillzones.Count);
+        writeCount(mpKillzones.Count);
         long blackspotOffsetPosition = bw.BaseStream.Position;
         bw.WriteUniquePadding(ptrSize);
-        WriteCount(mpBlackspots.Count);
+        writeCount(mpBlackspots.Count);
         long vfxBoxRegionsOffsetPosition = bw.BaseStream.Position;
         bw.WriteUniquePadding(ptrSize);
-        WriteCount(mpVFXBoxRegions.Count);
+        writeCount(mpVFXBoxRegions.Count);
         long roamingLocationsOffsetPosition = bw.BaseStream.Position;
         bw.WriteUniquePadding(ptrSize);
-        WriteCount(mpRoamingLocations.Count);
+        writeCount(mpRoamingLocations.Count);
         long spawnLocationsOffsetPosition = bw.BaseStream.Position;
         bw.WriteUniquePadding(ptrSize);
-        WriteCount(mpSpawnLocations.Count);
+        writeCount(mpSpawnLocations.Count);
         long triggerOffsetPosition = bw.BaseStream.Position;
         bw.WriteUniquePadding(ptrSize);
         bw.Write(mpLandmarks.Count + mpGenericRegions.Count + mpBlackspots.Count + mpVFXBoxRegions.Count);

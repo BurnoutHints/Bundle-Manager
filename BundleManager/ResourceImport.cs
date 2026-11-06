@@ -163,12 +163,12 @@ public static partial class ResourceImport
 
     private static EntryType InferEntryType(byte[] data, int importCount, bool bigEndian)
     {
-        bool Has(ReadOnlySpan<byte> magic) => data.AsSpan().IndexOf(magic) >= 0;
+        bool has(ReadOnlySpan<byte> magic) => data.AsSpan().IndexOf(magic) >= 0;
 
         // AttribSysVault
         if (bigEndian
-            ? Has("StrN"u8) && Has("Vers"u8)
-            : Has("NrtS"u8) && Has("sreV"u8))
+            ? has("StrN"u8) && has("Vers"u8)
+            : has("NrtS"u8) && has("sreV"u8))
         {
             return EntryType.AttribSysVault;
         }

@@ -258,9 +258,9 @@ public sealed class TrafficPlacementDialog : Form
             ColumnCount = 6
         };
 
-        AddOffset("&X:", x, 0);
-        AddOffset("&Y:", y, 2);
-        AddOffset("&Z:", z, 4);
+        addOffset("&X:", x, 0);
+        addOffset("&Y:", y, 2);
+        addOffset("&Z:", z, 4);
         layout.Controls.Add(offsets, 0, 2);
         connections.Visible = copy != null;
         layout.Controls.Add(connections, 0, 3);
@@ -379,7 +379,7 @@ public sealed class TrafficPlacementDialog : Form
 
         Shown += (_, _) => Preview();
 
-        void AddOffset(string label, NumericUpDown number, int column)
+        void addOffset(string label, NumericUpDown number, int column)
         {
             offsets.ColumnStyles.Add(new(SizeType.AutoSize));
             offsets.ColumnStyles.Add(new(SizeType.Percent, 33));

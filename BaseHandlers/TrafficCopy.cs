@@ -52,7 +52,7 @@ public sealed class TrafficCopy
         if (!areaSelection)
         {
             foreach (object item in items)
-                Add(item);
+                add(item);
 
             Dictionary<StopLine, Section> stopOwners = [];
 
@@ -62,18 +62,18 @@ public sealed class TrafficCopy
 
             foreach (JunctionLogicBox junction in package.maJunctions)
             {
-                Add(junction.mOfflineStartData);
-                Add(junction.mOnlineStartData);
-                Add(junction.mBikeStartData);
+                add(junction.mOfflineStartData);
+                add(junction.mOnlineStartData);
+                add(junction.mBikeStartData);
 
                 foreach (TrafficLightController controller in junction.maTrafficLightControllers)
                 {
                     foreach (TrafficLight light in controller.maTrafficLights)
-                        Add(light);
+                        add(light);
 
                     foreach (StopLine stop in controller.maStopLines)
                         if (stopOwners.TryGetValue(stop, out Section owner))
-                            Add(owner);
+                            add(owner);
                 }
             }
 
@@ -84,9 +84,9 @@ public sealed class TrafficCopy
             HashSet<FlowType> visited = [];
 
             foreach (FlowType flow in package.maSections.Select(section => section.mFlowType).Concat(package.maStaticTrafficVehicles.Select(vehicle => vehicle.mFlowType)))
-                AddAssets(flow);
+                addAssets(flow);
 
-            void AddAssets(FlowType flow)
+            void addAssets(FlowType flow)
             {
                 if (flow == null || !visited.Add(flow))
                     return;
@@ -98,7 +98,7 @@ public sealed class TrafficCopy
                     if (vehicle?.mAsset != null && !package.maVehicleAssets.Contains(vehicle.mAsset))
                         package.maVehicleAssets.Add(vehicle.mAsset);
 
-                    AddAssets(vehicle?.mTrailerFlowType);
+                    addAssets(vehicle?.mTrailerFlowType);
                 }
             }
         }
@@ -117,7 +117,7 @@ public sealed class TrafficCopy
         };
         Translation = new(Contents);
 
-        void Add(object item)
+        void add(object item)
         {
             switch (item)
             {
@@ -129,7 +129,7 @@ public sealed class TrafficCopy
                     break;
                 case LightTrigger trigger when !package.maLightTriggers.Contains(trigger):
                     package.maLightTriggers.Add(trigger);
-                    Add(trigger.mJunction);
+                    add(trigger.mJunction);
                     break;
                 case LightTriggerStartData start when !package.maLightTriggerStartData.Contains(start):
                     package.maLightTriggerStartData.Add(start);

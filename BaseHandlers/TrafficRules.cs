@@ -64,7 +64,7 @@ public static class TrafficRules
             }
         }
 
-        bool ValidReference(object owner, string property, object target)
+        bool validReference(object owner, string property, object target)
         {
             if (target == null || !owned.Contains(target))
                 return false;
@@ -115,7 +115,7 @@ public static class TrafficRules
                 foreach (object currentTarget in value is IList references
                     ? references.Cast<object>()
                     : [value])
-                    if (!ValidReference(currentOwner, currentProperty.Name, currentTarget))
+                    if (!validReference(currentOwner, currentProperty.Name, currentTarget))
                         issues.Add(new(currentOwner, currentProperty.Name, node.Label + " / " + TrafficLabels.Name(currentProperty.Name) + ": choose a valid reference."));
             }
 

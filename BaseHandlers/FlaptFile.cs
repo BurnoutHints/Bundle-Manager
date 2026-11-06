@@ -343,7 +343,7 @@ public class FlaptFile : IEntryData
         // Decomp has 8-byte pointers, aligned to 8 bytes
         bool x64 = entry.Platform == BundlePlatform.PCx64;
 
-        long ReadPtr()
+        long readPtr()
         {
             if (!x64)
                 return br.ReadUInt32();
@@ -361,13 +361,13 @@ public class FlaptFile : IEntryData
         muSizeInBytes = br.ReadUInt32();
 
         // Empty arrays and missing strings have pointers of 0 or junk past the end
-        bool Valid(long ptr) => ptr != 0 && ptr < muSizeInBytes;
+        bool valid(long ptr) => ptr != 0 && ptr < muSizeInBytes;
 
-        List<T> ReadArray<T>(long ptr, int count, Func<T> read)
+        List<T> readArray<T>(long ptr, int count, Func<T> read)
         {
             List<T> list = new(count);
 
-            if (count == 0 || !Valid(ptr))
+            if (count == 0 || !valid(ptr))
                 return list;
 
             long pos = br.BaseStream.Position;
@@ -380,11 +380,11 @@ public class FlaptFile : IEntryData
             return list;
         }
 
-        string ReadString()
+        string readString()
         {
-            long currentPtr = ReadPtr();
+            long currentPtr = readPtr();
 
-            if (!Valid(currentPtr))
+            if (!valid(currentPtr))
                 return null;
 
             long pos = br.BaseStream.Position;
@@ -394,19 +394,19 @@ public class FlaptFile : IEntryData
             return result;
         }
 
-        Color ReadRGBA8()
+        Color readRGBA8()
         {
             byte r = br.ReadByte(), g = br.ReadByte(), b = br.ReadByte(), a = br.ReadByte();
             return Color.FromArgb(a, r, g, b);
         }
 
-        Vector2 ReadVector2() => new(br.ReadSingle(), br.ReadSingle());
+        Vector2 readVector2() => new(br.ReadSingle(), br.ReadSingle());
 
-        Vector4 ReadVector4() => new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+        Vector4 readVector4() => new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
 
-        HashedString ReadHashedString() => new(br.ReadUInt32(), ReadString());
+        HashedString readHashedString() => new(br.ReadUInt32(), readString());
 
-        KeyFrameAnims ReadKeyFrameAnims()
+        KeyFrameAnims readKeyFrameAnims()
         {
             KeyFrameAnims anims = new()
             {
@@ -417,26 +417,26 @@ public class FlaptFile : IEntryData
 
             byte numTransforms = br.ReadByte();
             byte numColourTransforms = br.ReadByte();
-            anims.mpauTransformObjects = ReadArray(ReadPtr(), numTransforms, br.ReadByte);
-            anims.mpaTransforms = ReadArray(ReadPtr(), numTransforms, () => new Transform()
+            anims.mpauTransformObjects = readArray(readPtr(), numTransforms, br.ReadByte);
+            anims.mpaTransforms = readArray(readPtr(), numTransforms, () => new Transform()
             {
-                mRightUp = ReadVector4(),
-                mOriginXYZ = ReadVector4()
+                mRightUp = readVector4(),
+                mOriginXYZ = readVector4()
             });
-            anims.mpauColourTransformObjects = ReadArray(ReadPtr(), numColourTransforms, br.ReadByte);
-            anims.mpaColourTransforms = ReadArray(ReadPtr(), numColourTransforms, () => new ColourTransform()
+            anims.mpauColourTransformObjects = readArray(readPtr(), numColourTransforms, br.ReadByte);
+            anims.mpaColourTransforms = readArray(readPtr(), numColourTransforms, () => new ColourTransform()
             {
-                mScale = ReadVector4(),
-                mTranslate = ReadVector4()
+                mScale = readVector4(),
+                mTranslate = readVector4()
             });
             return anims;
         }
 
-        TextField ReadTextField()
+        TextField readTextField()
         {
             TextField textField = new()
             {
-                mName = ReadHashedString(),
+                mName = readHashedString(),
                 muInitialStringId = br.ReadUInt16(),
                 muFontStyleIndex = br.ReadByte(),
                 mxFlags = br.ReadByte(),
@@ -444,12 +444,12 @@ public class FlaptFile : IEntryData
             };
 
             br.ReadBytes(3); // Padding
-            textField.mTopLeft = ReadVector2();
-            textField.mBottomRight = ReadVector2();
+            textField.mTopLeft = readVector2();
+            textField.mBottomRight = readVector2();
             return textField;
         }
 
-        MovieClip ReadMovieClip()
+        MovieClip readMovieClip()
         {
             MovieClip clip = new()
             {
@@ -465,10 +465,10 @@ public class FlaptFile : IEntryData
             br.ReadByte(); // Padding
             ushort numFramesInTimeline = br.ReadUInt16();
             ushort numKeyFrames = br.ReadUInt16();
-            ReadPtr(); // mpFile, set at load
+            readPtr(); // mpFile, set at load
 
-            clip.mpauFrameToKeyFrameMap = ReadArray(ReadPtr(), numFramesInTimeline, br.ReadUInt16);
-            clip.mpaRenderLayers = ReadArray(ReadPtr(), numRenderLayers, () => new RenderLayer()
+            clip.mpauFrameToKeyFrameMap = readArray(readPtr(), numFramesInTimeline, br.ReadUInt16);
+            clip.mpaRenderLayers = readArray(readPtr(), numRenderLayers, () => new RenderLayer()
             {
                 mxFlags = br.ReadByte(),
                 muMovieClipOffset = br.ReadByte(),
@@ -478,75 +478,75 @@ public class FlaptFile : IEntryData
                 muTextFieldOffset = br.ReadByte(),
                 muTextFieldCount = br.ReadByte()
             });
-            clip.mpaKeyFrames = ReadArray(ReadPtr(), numKeyFrames * numRenderLayers, () => new RenderLayerKeyFrame()
+            clip.mpaKeyFrames = readArray(readPtr(), numKeyFrames * numRenderLayers, () => new RenderLayerKeyFrame()
             {
                 mxEnabledMovieClips = br.ReadUInt32(),
                 mxEnabledMeshes = br.ReadUInt32(),
                 mxEnabledTextFields = br.ReadUInt32()
             });
-            clip.mpaKeyFrameAnims = ReadArray(ReadPtr(), numKeyFrames, ReadKeyFrameAnims);
-            clip.mpaFScriptStream = ReadArray(ReadPtr(), numFScriptCommands, () => new FScriptCommand()
+            clip.mpaKeyFrameAnims = readArray(readPtr(), numKeyFrames, readKeyFrameAnims);
+            clip.mpaFScriptStream = readArray(readPtr(), numFScriptCommands, () => new FScriptCommand()
             {
                 muCommand = br.ReadByte(),
                 muParam8 = br.ReadByte(),
                 muParam16 = br.ReadUInt16()
             });
-            clip.mpauChildMovieClips = ReadArray(ReadPtr(), numChildren, br.ReadUInt16);
-            clip.mpaChildNames = ReadArray(ReadPtr(), numChildren, ReadHashedString);
-            clip.mpaMeshes = ReadArray(ReadPtr(), numMeshes, () => new Mesh()
+            clip.mpauChildMovieClips = readArray(readPtr(), numChildren, br.ReadUInt16);
+            clip.mpaChildNames = readArray(readPtr(), numChildren, readHashedString);
+            clip.mpaMeshes = readArray(readPtr(), numMeshes, () => new Mesh()
             {
                 miTextureId = br.ReadSByte(),
                 muNumVerts = br.ReadByte(),
                 muVertOffset = br.ReadUInt16()
             });
-            clip.mpaTextFields = ReadArray(ReadPtr(), numTextFields, ReadTextField);
-            clip.mpaTextFieldNames = ReadArray(ReadPtr(), numTextFields, ReadHashedString);
-            clip.mpaFrameLabels = ReadArray(ReadPtr(), numLabelledFrames, ReadHashedString);
-            clip.mpauLabelledFrameIds = ReadArray(ReadPtr(), numLabelledFrames, br.ReadUInt16);
-            clip.mpcComponentName = ReadString();
+            clip.mpaTextFields = readArray(readPtr(), numTextFields, readTextField);
+            clip.mpaTextFieldNames = readArray(readPtr(), numTextFields, readHashedString);
+            clip.mpaFrameLabels = readArray(readPtr(), numLabelledFrames, readHashedString);
+            clip.mpauLabelledFrameIds = readArray(readPtr(), numLabelledFrames, br.ReadUInt16);
+            clip.mpcComponentName = readString();
             return clip;
         }
 
         mfTimePerFrame = br.ReadSingle();
         int numMovieClips = br.ReadInt32();
-        mpaMovieClips = ReadArray(ReadPtr(), numMovieClips, ReadMovieClip);
+        mpaMovieClips = readArray(readPtr(), numMovieClips, readMovieClip);
 
         int numTextures = br.ReadInt32();
-        long texturesPtr = ReadPtr();
+        long texturesPtr = readPtr();
         int numVerts = br.ReadInt32();
-        mpaVerts = ReadArray(ReadPtr(), numVerts, () => new GUIVertex()
+        mpaVerts = readArray(readPtr(), numVerts, () => new GUIVertex()
         {
-            mv2Pos = ReadVector2(),
-            mv4Colour = ReadRGBA8(),
-            mv2Tex0UV = ReadVector2()
+            mv2Pos = readVector2(),
+            mv4Colour = readRGBA8(),
+            mv2Tex0UV = readVector2()
         });
         int numFontStyles = br.ReadInt32();
-        mpaFontStyles = ReadArray(ReadPtr(), numFontStyles, () => new FontStyle()
+        mpaFontStyles = readArray(readPtr(), numFontStyles, () => new FontStyle()
         {
-            mpacFontName = ReadString(),
+            mpacFontName = readString(),
             muColour = Color.FromArgb(br.ReadInt32()),
             mfFontHeight = br.ReadSingle()
         });
         int numComponents = br.ReadInt32();
-        mpaComponentNames = ReadArray(ReadPtr(), numComponents, ReadHashedString);
-        mpaComponentPaths = ReadArray(ReadPtr(), numComponents, () => new IndexPath()
+        mpaComponentNames = readArray(readPtr(), numComponents, readHashedString);
+        mpaComponentPaths = readArray(readPtr(), numComponents, () => new IndexPath()
         {
             muDepth = br.ReadByte(),
             mauIndices = br.ReadBytes(32)
         });
         int numTriggerParameters = br.ReadInt32();
-        mpaTriggerParameters = ReadArray(ReadPtr(), numTriggerParameters, () => new TriggerParameters()
+        mpaTriggerParameters = readArray(readPtr(), numTriggerParameters, () => new TriggerParameters()
         {
-            mapcParameters = [ReadString(), ReadString(), ReadString(), ReadString()]
+            mapcParameters = [readString(), readString(), readString(), readString()]
         });
         int numStrings = br.ReadInt32();
-        mpapStrings = ReadArray(ReadPtr(), numStrings, ReadString);
+        mpapStrings = readArray(readPtr(), numStrings, readString);
         int numSpecialTextures = br.ReadInt32();
-        mpapSpecialTextureNames = ReadArray(ReadPtr(), numSpecialTextures, ReadString);
+        mpapSpecialTextureNames = readArray(readPtr(), numSpecialTextures, readString);
         int numDebugStrings = br.ReadInt32();
         mDEBUGData = new()
         {
-            mpapStrings = ReadArray(ReadPtr(), numDebugStrings, ReadString)
+            mpapStrings = readArray(readPtr(), numDebugStrings, readString)
         };
 
         // The bundle's imports fill the texture slots, the special textures come last and are set at runtime
@@ -698,13 +698,13 @@ public class FlaptFile : IEntryData
         LayoutWriter w = new(bw, entry.Platform == BundlePlatform.PCx64);
         List<Dependency> imports = [];
 
-        void WriteVector2(Vector2 v)
+        void writeVector2(Vector2 v)
         {
             bw.Write(v.X);
             bw.Write(v.Y);
         }
 
-        void WriteVector4(Vector4 v)
+        void writeVector4(Vector4 v)
         {
             bw.Write(v.X);
             bw.Write(v.Y);
@@ -712,13 +712,13 @@ public class FlaptFile : IEntryData
             bw.Write(v.W);
         }
 
-        void WriteHashedString(HashedString hashedString)
+        void writeHashedString(HashedString hashedString)
         {
             bw.Write(hashedString.muHash);
             w.String(hashedString.mpacDEBUGString);
         }
 
-        void WriteKeyFrameAnims(KeyFrameAnims anims, string clip)
+        void writeKeyFrameAnims(KeyFrameAnims anims, string clip)
         {
             if (anims.maxPlacedChildren.Length > 3)
                 throw new InvalidDataException($"A keyframe of movie clip {clip} has {anims.maxPlacedChildren.Length} placed children masks, it needs 3.");
@@ -737,18 +737,18 @@ public class FlaptFile : IEntryData
             w.Array(anims.mpauTransformObjects, bw.Write, 1);
             w.Array(anims.mpaTransforms, t =>
             {
-                WriteVector4(t.mRightUp);
-                WriteVector4(t.mOriginXYZ);
+                writeVector4(t.mRightUp);
+                writeVector4(t.mOriginXYZ);
             }, 16);
             w.Array(anims.mpauColourTransformObjects, bw.Write, 1);
             w.Array(anims.mpaColourTransforms, t =>
             {
-                WriteVector4(t.mScale);
-                WriteVector4(t.mTranslate);
+                writeVector4(t.mScale);
+                writeVector4(t.mTranslate);
             }, 16);
         }
 
-        void WriteMovieClip(MovieClip clip)
+        void writeMovieClip(MovieClip clip)
         {
             string name = clip.ToString();
             CheckCount(clip.mpaChildNames.Count, clip.mpauChildMovieClips.Count, $"Movie clip {name}'s child names");
@@ -788,7 +788,7 @@ public class FlaptFile : IEntryData
                 bw.Write(keyFrame.mxEnabledMeshes);
                 bw.Write(keyFrame.mxEnabledTextFields);
             }, 4);
-            w.Array(clip.mpaKeyFrameAnims, anims => WriteKeyFrameAnims(anims, name));
+            w.Array(clip.mpaKeyFrameAnims, anims => writeKeyFrameAnims(anims, name));
             w.Array(clip.mpaFScriptStream, command =>
             {
                 bw.Write(command.muCommand);
@@ -796,7 +796,7 @@ public class FlaptFile : IEntryData
                 bw.Write(command.muParam16);
             }, 2);
             w.Array(clip.mpauChildMovieClips, bw.Write, 2);
-            w.Array(clip.mpaChildNames, WriteHashedString);
+            w.Array(clip.mpaChildNames, writeHashedString);
             w.Array(clip.mpaMeshes, mesh =>
             {
                 bw.Write(mesh.miTextureId);
@@ -805,17 +805,17 @@ public class FlaptFile : IEntryData
             }, 2);
             w.Array(clip.mpaTextFields, textField =>
             {
-                WriteHashedString(textField.mName);
+                writeHashedString(textField.mName);
                 bw.Write(textField.muInitialStringId);
                 bw.Write(textField.muFontStyleIndex);
                 bw.Write(textField.mxFlags);
                 bw.Write(textField.muAlignment);
                 bw.WriteUniquePadding(3);
-                WriteVector2(textField.mTopLeft);
-                WriteVector2(textField.mBottomRight);
+                writeVector2(textField.mTopLeft);
+                writeVector2(textField.mBottomRight);
             });
-            w.Array(clip.mpaTextFieldNames, WriteHashedString);
-            w.Array(clip.mpaFrameLabels, WriteHashedString);
+            w.Array(clip.mpaTextFieldNames, writeHashedString);
+            w.Array(clip.mpaFrameLabels, writeHashedString);
             w.Array(clip.mpauLabelledFrameIds, bw.Write, 2);
             w.String(clip.mpcComponentName);
         }
@@ -828,7 +828,7 @@ public class FlaptFile : IEntryData
         bw.Write(0u); // Size, set at the end
         bw.Write(mfTimePerFrame);
         bw.Write(mpaMovieClips.Count);
-        w.Array(mpaMovieClips, WriteMovieClip);
+        w.Array(mpaMovieClips, writeMovieClip);
 
         // The bundle's imports point the texture slots at the textures
         List<ulong> textureSlots = [.. mpapTextures.Select(t => t.ResourceId), .. mpapSpecialTextureNames.Select(_ => 0ul)];
@@ -848,12 +848,12 @@ public class FlaptFile : IEntryData
         bw.Write(mpaVerts.Count);
         w.Array(mpaVerts, vertex =>
         {
-            WriteVector2(vertex.mv2Pos);
+            writeVector2(vertex.mv2Pos);
             bw.Write(vertex.mv4Colour.R);
             bw.Write(vertex.mv4Colour.G);
             bw.Write(vertex.mv4Colour.B);
             bw.Write(vertex.mv4Colour.A);
-            WriteVector2(vertex.mv2Tex0UV);
+            writeVector2(vertex.mv2Tex0UV);
         }, 4);
 
         bw.Write(mpaFontStyles.Count);
@@ -865,7 +865,7 @@ public class FlaptFile : IEntryData
         });
 
         bw.Write(mpaComponentNames.Count);
-        w.Array(mpaComponentNames, WriteHashedString);
+        w.Array(mpaComponentNames, writeHashedString);
         w.Array(mpaComponentPaths, path =>
         {
             if (path.mauIndices.Length > 32)

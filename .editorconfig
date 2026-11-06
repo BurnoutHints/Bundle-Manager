@@ -54,6 +54,17 @@ csharp_style_prefer_index_operator = true
 csharp_style_prefer_range_operator = true
 dotnet_style_predefined_type_for_locals_parameters_members = true
 dotnet_style_predefined_type_for_member_access = true
+# Additional layout and naming checks used by tools/CodeStyle.
+codestyle_inline_auto_properties = true
+codestyle_expand_nonempty_blocks = true
+codestyle_expand_initializers = true
+codestyle_ternary_new_lines = true
+codestyle_blank_line_before_comments = true
+codestyle_separate_logical_steps = true
+codestyle_check_naming = true
+codestyle_acronyms = RGB, HSV, CRC, PVS, ID
+codestyle_preserved_words = CgsID
+codestyle_preserve_winforms_handlers = true
 # unnecessary using
 dotnet_diagnostic.IDE0005.severity = suggestion
 # remove unnecessary this qualification
@@ -151,24 +162,42 @@ dotnet_naming_style.pascal_case.capitalization = pascal_case
 # Preserve those spellings; format their code and apply local-variable rules normally.
 # Add new game-data files here before running an automated naming cleanup.
 [BaseHandlers/{AptData,EnvironmentKeyframe,EnvironmentTimeLine,FlaptFile,GraphicsSpec,InstanceList,MaterialEntry,ProgressionData,Renderable,StreetData,TextureState,Traffic,TriggerData}.cs]
+codestyle_preserve_member_names = true
 dotnet_naming_rule.visible_fields_are_pascal_case.severity = none
 dotnet_naming_rule.properties_are_pascal_case.severity = none
 
 [LuaList/{LuaList,LuaListEntry}.cs]
+codestyle_preserve_member_names = true
 dotnet_naming_rule.visible_fields_are_pascal_case.severity = none
 dotnet_naming_rule.properties_are_pascal_case.severity = none
 
 [{VehicleList/VehicleListData,WheelList/WheelListData,WorldCollisionHandler/ClusteredMesh,WorldCollisionHandler/PolygonSoupList,PVSFormat/Polygon,PVSFormat/PVS}.cs]
+codestyle_preserve_member_names = true
 dotnet_naming_rule.visible_fields_are_pascal_case.severity = none
 dotnet_naming_rule.properties_are_pascal_case.severity = none
 
 [VaultFormat/{AttribSys,Burnoutcarasset,Burnoutcargraphicsasset,Camerabumperbehaviour,Cameraexternalbehaviour,Physicsvehiclebaseattribs,Physicsvehiclebodyrollattribs,Physicsvehicleboostattribs,Physicsvehiclecollisionattribs,Physicsvehicledriftattribs,Physicsvehicleengineattribs,Physicsvehiclehandling,Physicsvehiclesteeringattribs,Physicsvehiclesuspensionattribs,RefSpec}.cs]
+codestyle_preserve_member_names = true
 dotnet_naming_rule.visible_fields_are_pascal_case.severity = none
 dotnet_naming_rule.properties_are_pascal_case.severity = none
 
-[*.Designer.cs]
+[*.{Designer,designer}.cs]
 generated_code = true
+codestyle_format_generated_code = true
+
+# Original resource enums and imported compression tables retain their identifiers.
+[{BundleFormat/EntryType,LangEditor/Language,BurnoutImage/SingleColourLookup}.cs]
+codestyle_preserve_member_names = true
+dotnet_naming_rule.visible_fields_are_pascal_case.severity = none
+dotnet_naming_rule.properties_are_pascal_case.severity = none
 
 [*.csproj]
 indent_style = space
 indent_size = 2
+
+[*.glsl]
+end_of_line = crlf
+insert_final_newline = true
+charset = utf-8
+indent_style = space
+indent_size = 4

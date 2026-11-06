@@ -19,6 +19,7 @@ namespace BundleManager
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -72,9 +73,10 @@ namespace BundleManager
             stsMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pboImage).BeginInit();
             SuspendLayout();
-            // 
+
+            //
             // tabList
-            // 
+            //
             tabList.Controls.Add(tabInfo);
             tabList.Controls.Add(tabImports);
             tabList.Controls.Add(tabPrimary);
@@ -87,9 +89,10 @@ namespace BundleManager
             tabList.Size = new System.Drawing.Size(728, 487);
             tabList.TabIndex = 0;
             tabList.SelectedIndexChanged += tabList_SelectedIndexChanged;
-            // 
+
+            //
             // tabInfo
-            // 
+            //
             tabInfo.Controls.Add(txtInfo);
             tabInfo.Location = new System.Drawing.Point(4, 24);
             tabInfo.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -98,9 +101,10 @@ namespace BundleManager
             tabInfo.TabIndex = 3;
             tabInfo.Text = "info";
             tabInfo.UseVisualStyleBackColor = true;
-            // 
+
+            //
             // txtInfo
-            // 
+            //
             txtInfo.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             txtInfo.BackColor = System.Drawing.SystemColors.ControlLightLight;
             txtInfo.BorderStyle = System.Windows.Forms.BorderStyle.None;
@@ -113,9 +117,10 @@ namespace BundleManager
             txtInfo.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             txtInfo.Size = new System.Drawing.Size(700, 451);
             txtInfo.TabIndex = 1;
-            // 
+
+            //
             // tabPrimary
-            // 
+            //
             tabPrimary.Controls.Add(hexData);
             tabPrimary.Controls.Add(valuesData);
             tabPrimary.Location = new System.Drawing.Point(4, 24);
@@ -126,9 +131,10 @@ namespace BundleManager
             tabPrimary.TabIndex = 0;
             tabPrimary.Text = "Primary";
             tabPrimary.UseVisualStyleBackColor = true;
-            // 
+
+            //
             // hexData
-            // 
+            //
             hexData.AutoScroll = true;
             hexData.BackColor = System.Drawing.SystemColors.Window;
             hexData.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -140,17 +146,19 @@ namespace BundleManager
             hexData.Name = "hexData";
             hexData.Size = new System.Drawing.Size(712, 453);
             hexData.TabIndex = 0;
-            // 
+
+            //
             // valuesData
-            // 
+            //
             valuesData.Dock = System.Windows.Forms.DockStyle.Right;
             valuesData.Location = new System.Drawing.Point(376, 3);
             valuesData.Name = "valuesData";
             valuesData.Size = new System.Drawing.Size(340, 453);
             valuesData.TabIndex = 1;
-            // 
+
+            //
             // tabSecondary
-            // 
+            //
             tabSecondary.Controls.Add(hexExtraData);
             tabSecondary.Controls.Add(valuesExtraData);
             tabSecondary.Location = new System.Drawing.Point(4, 24);
@@ -161,9 +169,10 @@ namespace BundleManager
             tabSecondary.TabIndex = 2;
             tabSecondary.Text = "Secondary";
             tabSecondary.UseVisualStyleBackColor = true;
-            // 
+
+            //
             // hexExtraData
-            // 
+            //
             hexExtraData.AutoScroll = true;
             hexExtraData.BackColor = System.Drawing.SystemColors.Window;
             hexExtraData.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -175,14 +184,16 @@ namespace BundleManager
             hexExtraData.Name = "hexExtraData";
             hexExtraData.Size = new System.Drawing.Size(712, 453);
             hexExtraData.TabIndex = 0;
-            // 
+
+            //
             // valuesExtraData
-            // 
+            //
             valuesExtraData.Dock = System.Windows.Forms.DockStyle.Right;
             valuesExtraData.Location = new System.Drawing.Point(376, 3);
             valuesExtraData.Name = "valuesExtraData";
             valuesExtraData.Size = new System.Drawing.Size(340, 453);
             valuesExtraData.TabIndex = 1;
+
             //
             // tabImports
             //
@@ -195,6 +206,7 @@ namespace BundleManager
             tabImports.TabIndex = 4;
             tabImports.Text = "Imports";
             tabImports.UseVisualStyleBackColor = true;
+
             //
             // importsView
             //
@@ -203,9 +215,10 @@ namespace BundleManager
             importsView.Name = "importsView";
             importsView.Size = new System.Drawing.Size(712, 453);
             importsView.TabIndex = 0;
+
             //
             // lblLoading
-            // 
+            //
             lblLoading.Dock = System.Windows.Forms.DockStyle.Fill;
             lblLoading.Font = new System.Drawing.Font("Courier New", 36F, System.Drawing.FontStyle.Bold);
             lblLoading.Location = new System.Drawing.Point(0, 0);
@@ -215,82 +228,113 @@ namespace BundleManager
             lblLoading.TabIndex = 4;
             lblLoading.Text = "Loading";
             lblLoading.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
+
+            //
             // mnuBar
-            // 
-            mnuBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { binaryToolStripMenuItem, editStripMenuItem, imageToolStripMenuItem });
+            //
+            mnuBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                binaryToolStripMenuItem,
+                editStripMenuItem,
+                imageToolStripMenuItem
+            });
             mnuBar.Location = new System.Drawing.Point(0, 0);
             mnuBar.Name = "mnuBar";
             mnuBar.Padding = new System.Windows.Forms.Padding(7, 2, 0, 2);
             mnuBar.Size = new System.Drawing.Size(728, 24);
             mnuBar.TabIndex = 6;
             mnuBar.Text = "menuStrip1";
-            // 
+
+            //
             // binaryToolStripMenuItem
-            // 
-            binaryToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { importHeaderToolStripMenuItem, exportHeaderToolStripMenuItem, toolStripMenuItem1, importBodyToolStripMenuItem, exportBodyToolStripMenuItem });
+            //
+            binaryToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                importHeaderToolStripMenuItem,
+                exportHeaderToolStripMenuItem,
+                toolStripMenuItem1,
+                importBodyToolStripMenuItem,
+                exportBodyToolStripMenuItem
+            });
             binaryToolStripMenuItem.Name = "binaryToolStripMenuItem";
             binaryToolStripMenuItem.Size = new System.Drawing.Size(52, 20);
             binaryToolStripMenuItem.Text = "Binary";
-            // 
+
+            //
             // importHeaderToolStripMenuItem
-            // 
+            //
             importHeaderToolStripMenuItem.Name = "importHeaderToolStripMenuItem";
             importHeaderToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
             importHeaderToolStripMenuItem.Text = "Import Primary Data";
             importHeaderToolStripMenuItem.Click += importDataToolStripMenuItem_Click;
-            // 
+
+            //
             // exportHeaderToolStripMenuItem
-            // 
+            //
             exportHeaderToolStripMenuItem.Name = "exportHeaderToolStripMenuItem";
             exportHeaderToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
             exportHeaderToolStripMenuItem.Text = "Export Primary Data";
             exportHeaderToolStripMenuItem.Click += exportDataToolStripMenuItem_Click;
-            // 
+
+            //
             // toolStripMenuItem1
-            // 
+            //
             toolStripMenuItem1.Name = "toolStripMenuItem1";
             toolStripMenuItem1.Size = new System.Drawing.Size(148, 6);
-            // 
+
+            //
             // importBodyToolStripMenuItem
-            // 
+            //
             importBodyToolStripMenuItem.Name = "importBodyToolStripMenuItem";
             importBodyToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
             importBodyToolStripMenuItem.Text = "Import Secondary Data";
             importBodyToolStripMenuItem.Click += importExtraToolStripMenuItem_Click;
-            // 
+
+            //
             // exportBodyToolStripMenuItem
-            // 
+            //
             exportBodyToolStripMenuItem.Name = "exportBodyToolStripMenuItem";
             exportBodyToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
             exportBodyToolStripMenuItem.Text = "Export Secondary Data";
             exportBodyToolStripMenuItem.Click += exportExtraToolStripMenuItem_Click;
-            // 
+
+            //
             // editStripMenuItem
-            // 
-            editStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { editHashToolStripMenuItem, calcLookupHashToolStripMenuItem, editSeparator, editModeToolStripMenuItem, goToOffsetToolStripMenuItem });
+            //
+            editStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                editHashToolStripMenuItem,
+                calcLookupHashToolStripMenuItem,
+                editSeparator,
+                editModeToolStripMenuItem,
+                goToOffsetToolStripMenuItem
+            });
             editStripMenuItem.Name = "editStripMenuItem";
             editStripMenuItem.Size = new System.Drawing.Size(39, 20);
             editStripMenuItem.Text = "Edit";
-            // 
+
+            //
             // editHashToolStripMenuItem
-            // 
+            //
             editHashToolStripMenuItem.Name = "editHashToolStripMenuItem";
             editHashToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
             editHashToolStripMenuItem.Text = "Edit ID";
             editHashToolStripMenuItem.Click += editId_Click;
-            // 
+
+            //
             // calcLookupHashToolStripMenuItem
-            // 
+            //
             calcLookupHashToolStripMenuItem.Name = "calcLookupHashToolStripMenuItem";
             calcLookupHashToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
             calcLookupHashToolStripMenuItem.Text = "Calc Lookup8 Hash";
             calcLookupHashToolStripMenuItem.Click += calcLookup8_Click;
+
             //
             // editSeparator
             //
             editSeparator.Name = "editSeparator";
             editSeparator.Size = new System.Drawing.Size(173, 6);
+
             //
             // editModeToolStripMenuItem
             //
@@ -301,6 +345,7 @@ namespace BundleManager
             editModeToolStripMenuItem.Text = "Edit Mode";
             editModeToolStripMenuItem.ToolTipText = "Edit the primary and secondary data as hex.";
             editModeToolStripMenuItem.CheckedChanged += editModeToolStripMenuItem_CheckedChanged;
+
             //
             // goToOffsetToolStripMenuItem
             //
@@ -309,46 +354,59 @@ namespace BundleManager
             goToOffsetToolStripMenuItem.Size = new System.Drawing.Size(176, 22);
             goToOffsetToolStripMenuItem.Text = "Go to Offset...";
             goToOffsetToolStripMenuItem.Click += goToOffsetToolStripMenuItem_Click;
+
             //
             // imageToolStripMenuItem
-            // 
-            imageToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { exportToolStripMenuItem, importToolStripMenuItem });
+            //
+            imageToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                exportToolStripMenuItem,
+                importToolStripMenuItem
+            });
             imageToolStripMenuItem.Name = "imageToolStripMenuItem";
             imageToolStripMenuItem.Size = new System.Drawing.Size(52, 20);
             imageToolStripMenuItem.Text = "Image";
-            // 
+
+            //
             // exportToolStripMenuItem
-            // 
+            //
             exportToolStripMenuItem.Name = "exportToolStripMenuItem";
             exportToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             exportToolStripMenuItem.Text = "Export";
             exportToolStripMenuItem.Click += exportToolStripMenuItem_Click;
-            // 
+
+            //
             // importToolStripMenuItem
-            // 
+            //
             importToolStripMenuItem.Name = "importToolStripMenuItem";
             importToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             importToolStripMenuItem.Text = "Import";
             importToolStripMenuItem.Click += importToolStripMenuItem_Click;
-            // 
+
+            //
             // stsMain
-            // 
-            stsMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { statusLabel });
+            //
+            stsMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                statusLabel
+            });
             stsMain.Location = new System.Drawing.Point(0, 487);
             stsMain.Name = "stsMain";
             stsMain.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
             stsMain.Size = new System.Drawing.Size(728, 22);
             stsMain.TabIndex = 7;
-            // 
+
+            //
             // statusLabel
-            // 
+            //
             statusLabel.Name = "statusLabel";
             statusLabel.Size = new System.Drawing.Size(83, 17);
             statusLabel.Text = "Compression: ";
             statusLabel.Visible = false;
-            // 
+
+            //
             // pbMain
-            // 
+            //
             pbMain.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             pbMain.Location = new System.Drawing.Point(14, 443);
             pbMain.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -357,9 +415,10 @@ namespace BundleManager
             pbMain.Size = new System.Drawing.Size(700, 27);
             pbMain.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             pbMain.TabIndex = 8;
-            // 
+
+            //
             // pboImage
-            // 
+            //
             pboImage.BackColor = System.Drawing.Color.DarkGray;
             pboImage.Dock = System.Windows.Forms.DockStyle.Fill;
             pboImage.Location = new System.Drawing.Point(0, 24);
@@ -369,9 +428,10 @@ namespace BundleManager
             pboImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             pboImage.TabIndex = 9;
             pboImage.TabStop = false;
-            // 
+
+            //
             // EntryEditor
-            // 
+            //
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1000, 560);
@@ -404,7 +464,6 @@ namespace BundleManager
             ResumeLayout(false);
             PerformLayout();
         }
-
 
         #endregion
 

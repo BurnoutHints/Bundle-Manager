@@ -19,6 +19,7 @@ namespace VehicleList
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -101,9 +102,10 @@ namespace VehicleList
             lblColorType = new Label();
             cboColorType = new ComboBox();
             SuspendLayout();
-            // 
+
+            //
             // btnOk
-            // 
+            //
             btnOk.Location = new System.Drawing.Point(1003, 680);
             btnOk.Margin = new Padding(4, 5, 4, 5);
             btnOk.Name = "btnOk";
@@ -112,9 +114,10 @@ namespace VehicleList
             btnOk.Text = "OK";
             btnOk.UseVisualStyleBackColor = true;
             btnOk.Click += btnOk_Click;
-            // 
+
+            //
             // btnCancel
-            // 
+            //
             btnCancel.DialogResult = DialogResult.Cancel;
             btnCancel.Location = new System.Drawing.Point(1131, 680);
             btnCancel.Margin = new Padding(4, 5, 4, 5);
@@ -124,9 +127,10 @@ namespace VehicleList
             btnCancel.Text = "Cancel";
             btnCancel.UseVisualStyleBackColor = true;
             btnCancel.Click += btnCancel_Click;
-            // 
+
+            //
             // lblIndex
-            // 
+            //
             lblIndex.AutoSize = true;
             lblIndex.Location = new System.Drawing.Point(14, 10);
             lblIndex.Margin = new Padding(4, 0, 4, 0);
@@ -134,17 +138,19 @@ namespace VehicleList
             lblIndex.Size = new System.Drawing.Size(48, 20);
             lblIndex.TabIndex = 2;
             lblIndex.Text = "Index:";
-            // 
+
+            //
             // txtIndex
-            // 
+            //
             txtIndex.Location = new System.Drawing.Point(150, 7);
             txtIndex.Margin = new Padding(4, 5, 4, 5);
             txtIndex.Name = "txtIndex";
             txtIndex.Size = new System.Drawing.Size(478, 27);
             txtIndex.TabIndex = 3;
-            // 
+
+            //
             // lblID
-            // 
+            //
             lblID.AutoSize = true;
             lblID.Location = new System.Drawing.Point(14, 70);
             lblID.Margin = new Padding(4, 0, 4, 0);
@@ -152,17 +158,19 @@ namespace VehicleList
             lblID.Size = new System.Drawing.Size(27, 20);
             lblID.TabIndex = 4;
             lblID.Text = "ID:";
-            // 
+
+            //
             // txtID
-            // 
+            //
             txtID.Location = new System.Drawing.Point(150, 67);
             txtID.Margin = new Padding(4, 5, 4, 5);
             txtID.Name = "txtID";
             txtID.Size = new System.Drawing.Size(478, 27);
             txtID.TabIndex = 5;
-            // 
+
+            //
             // lblParentID
-            // 
+            //
             lblParentID.AutoSize = true;
             lblParentID.Location = new System.Drawing.Point(14, 40);
             lblParentID.Margin = new Padding(4, 0, 4, 0);
@@ -170,17 +178,19 @@ namespace VehicleList
             lblParentID.Size = new System.Drawing.Size(72, 20);
             lblParentID.TabIndex = 6;
             lblParentID.Text = "Parent ID:";
-            // 
+
+            //
             // txtParentID
-            // 
+            //
             txtParentID.Location = new System.Drawing.Point(150, 37);
             txtParentID.Margin = new Padding(4, 5, 4, 5);
             txtParentID.Name = "txtParentID";
             txtParentID.Size = new System.Drawing.Size(478, 27);
             txtParentID.TabIndex = 7;
-            // 
+
+            //
             // lblWheels
-            // 
+            //
             lblWheels.AutoSize = true;
             lblWheels.Location = new System.Drawing.Point(14, 550);
             lblWheels.Margin = new Padding(4, 0, 4, 0);
@@ -188,17 +198,19 @@ namespace VehicleList
             lblWheels.Size = new System.Drawing.Size(60, 20);
             lblWheels.TabIndex = 8;
             lblWheels.Text = "Wheels:";
-            // 
+
+            //
             // txtWheels
-            // 
+            //
             txtWheels.Location = new System.Drawing.Point(150, 547);
             txtWheels.Margin = new Padding(4, 5, 4, 5);
             txtWheels.Name = "txtWheels";
             txtWheels.Size = new System.Drawing.Size(478, 27);
             txtWheels.TabIndex = 9;
-            // 
+
+            //
             // lblName
-            // 
+            //
             lblName.AutoSize = true;
             lblName.Location = new System.Drawing.Point(14, 130);
             lblName.Margin = new Padding(4, 0, 4, 0);
@@ -206,17 +218,19 @@ namespace VehicleList
             lblName.Size = new System.Drawing.Size(52, 20);
             lblName.TabIndex = 10;
             lblName.Text = "Name:";
-            // 
+
+            //
             // txtName
-            // 
+            //
             txtName.Location = new System.Drawing.Point(150, 127);
             txtName.Margin = new Padding(4, 5, 4, 5);
             txtName.Name = "txtName";
             txtName.Size = new System.Drawing.Size(478, 27);
             txtName.TabIndex = 11;
-            // 
+
+            //
             // lblBrand
-            // 
+            //
             lblBrand.AutoSize = true;
             lblBrand.Location = new System.Drawing.Point(14, 100);
             lblBrand.Margin = new Padding(4, 0, 4, 0);
@@ -224,17 +238,19 @@ namespace VehicleList
             lblBrand.Size = new System.Drawing.Size(51, 20);
             lblBrand.TabIndex = 12;
             lblBrand.Text = "Brand:";
-            // 
+
+            //
             // txtBrand
-            // 
+            //
             txtBrand.Location = new System.Drawing.Point(150, 97);
             txtBrand.Margin = new Padding(4, 5, 4, 5);
             txtBrand.Name = "txtBrand";
             txtBrand.Size = new System.Drawing.Size(478, 27);
             txtBrand.TabIndex = 13;
-            // 
+
+            //
             // lblDamageLimit
-            // 
+            //
             lblDamageLimit.AutoSize = true;
             lblDamageLimit.Location = new System.Drawing.Point(14, 370);
             lblDamageLimit.Margin = new Padding(4, 0, 4, 0);
@@ -242,17 +258,19 @@ namespace VehicleList
             lblDamageLimit.Size = new System.Drawing.Size(106, 20);
             lblDamageLimit.TabIndex = 14;
             lblDamageLimit.Text = "Damage Limit:";
-            // 
+
+            //
             // txtDamageLimit
-            // 
+            //
             txtDamageLimit.Location = new System.Drawing.Point(150, 367);
             txtDamageLimit.Margin = new Padding(4, 5, 4, 5);
             txtDamageLimit.Name = "txtDamageLimit";
             txtDamageLimit.Size = new System.Drawing.Size(478, 27);
             txtDamageLimit.TabIndex = 15;
-            // 
+
+            //
             // lblFlags
-            // 
+            //
             lblFlags.AutoSize = true;
             lblFlags.Location = new System.Drawing.Point(674, 570);
             lblFlags.Margin = new Padding(4, 0, 4, 0);
@@ -260,19 +278,43 @@ namespace VehicleList
             lblFlags.Size = new System.Drawing.Size(46, 20);
             lblFlags.TabIndex = 16;
             lblFlags.Text = "Flags:";
-            // 
+
+            //
             // chlFlags
-            // 
+            //
             chlFlags.CheckOnClick = true;
-            chlFlags.Items.AddRange(new object[] { "Is Race Vehicle", "Can Check Traffic", "Can Be Checked", "Is Trailer", "Can Tow Trailer", "Can Be Painted", "Unknown0", "Is First Car in Speed Range", "Has Switchable Boost", "Unknown1", "Unknown2", "Is WIP/Dev", "Is from 1.0", "Is from 1.3", "Is from 1.4", "Is from 1.5", "Is from 1.6", "Is from 1.7", "Is from 1.8", "Is from 1.9" });
+            chlFlags.Items.AddRange(new object[]
+            {
+                "Is Race Vehicle",
+                "Can Check Traffic",
+                "Can Be Checked",
+                "Is Trailer",
+                "Can Tow Trailer",
+                "Can Be Painted",
+                "Unknown0",
+                "Is First Car in Speed Range",
+                "Has Switchable Boost",
+                "Unknown1",
+                "Unknown2",
+                "Is WIP/Dev",
+                "Is from 1.0",
+                "Is from 1.3",
+                "Is from 1.4",
+                "Is from 1.5",
+                "Is from 1.6",
+                "Is from 1.7",
+                "Is from 1.8",
+                "Is from 1.9"
+            });
             chlFlags.Location = new System.Drawing.Point(776, 507);
             chlFlags.Margin = new Padding(4, 5, 4, 5);
             chlFlags.Name = "chlFlags";
             chlFlags.Size = new System.Drawing.Size(476, 158);
             chlFlags.TabIndex = 17;
-            // 
+
+            //
             // lblBoostLength
-            // 
+            //
             lblBoostLength.AutoSize = true;
             lblBoostLength.Location = new System.Drawing.Point(14, 310);
             lblBoostLength.Margin = new Padding(4, 0, 4, 0);
@@ -280,17 +322,19 @@ namespace VehicleList
             lblBoostLength.Size = new System.Drawing.Size(99, 20);
             lblBoostLength.TabIndex = 18;
             lblBoostLength.Text = "Boost Length:";
-            // 
+
+            //
             // txtBoostLength
-            // 
+            //
             txtBoostLength.Location = new System.Drawing.Point(150, 307);
             txtBoostLength.Margin = new Padding(4, 5, 4, 5);
             txtBoostLength.Name = "txtBoostLength";
             txtBoostLength.Size = new System.Drawing.Size(478, 27);
             txtBoostLength.TabIndex = 19;
-            // 
+
+            //
             // lblRank
-            // 
+            //
             lblRank.AutoSize = true;
             lblRank.Location = new System.Drawing.Point(674, 160);
             lblRank.Margin = new Padding(4, 0, 4, 0);
@@ -298,20 +342,30 @@ namespace VehicleList
             lblRank.Size = new System.Drawing.Size(44, 20);
             lblRank.TabIndex = 20;
             lblRank.Text = "Rank:";
-            // 
+
+            //
             // cboRank
-            // 
+            //
             cboRank.DropDownStyle = ComboBoxStyle.DropDownList;
             cboRank.FormattingEnabled = true;
-            cboRank.Items.AddRange(new object[] { "Learner", "D_Class", "C_Class", "B_Class", "A_Class", "Burnout" });
+            cboRank.Items.AddRange(new object[]
+            {
+                "Learner",
+                "D_Class",
+                "C_Class",
+                "B_Class",
+                "A_Class",
+                "Burnout"
+            });
             cboRank.Location = new System.Drawing.Point(776, 157);
             cboRank.Margin = new Padding(4, 5, 4, 5);
             cboRank.Name = "cboRank";
             cboRank.Size = new System.Drawing.Size(476, 28);
             cboRank.TabIndex = 21;
-            // 
+
+            //
             // lblBoostCapacity
-            // 
+            //
             lblBoostCapacity.AutoSize = true;
             lblBoostCapacity.Location = new System.Drawing.Point(14, 280);
             lblBoostCapacity.Margin = new Padding(4, 0, 4, 0);
@@ -319,17 +373,19 @@ namespace VehicleList
             lblBoostCapacity.Size = new System.Drawing.Size(111, 20);
             lblBoostCapacity.TabIndex = 22;
             lblBoostCapacity.Text = "Boost Capacity:";
-            // 
+
+            //
             // txtBoostCapacity
-            // 
+            //
             txtBoostCapacity.Location = new System.Drawing.Point(150, 277);
             txtBoostCapacity.Margin = new Padding(4, 5, 4, 5);
             txtBoostCapacity.Name = "txtBoostCapacity";
             txtBoostCapacity.Size = new System.Drawing.Size(478, 27);
             txtBoostCapacity.TabIndex = 23;
-            // 
+
+            //
             // lblStrengthStat
-            // 
+            //
             lblStrengthStat.AutoSize = true;
             lblStrengthStat.Location = new System.Drawing.Point(14, 340);
             lblStrengthStat.Margin = new Padding(4, 0, 4, 0);
@@ -337,17 +393,19 @@ namespace VehicleList
             lblStrengthStat.Size = new System.Drawing.Size(98, 20);
             lblStrengthStat.TabIndex = 24;
             lblStrengthStat.Text = "Strength Stat:";
-            // 
+
+            //
             // txtStrengthStat
-            // 
+            //
             txtStrengthStat.Location = new System.Drawing.Point(150, 337);
             txtStrengthStat.Margin = new Padding(4, 5, 4, 5);
             txtStrengthStat.Name = "txtStrengthStat";
             txtStrengthStat.Size = new System.Drawing.Size(478, 27);
             txtStrengthStat.TabIndex = 25;
-            // 
+
+            //
             // lblAttribSysCollectionKey
-            // 
+            //
             lblAttribSysCollectionKey.AutoSize = true;
             lblAttribSysCollectionKey.Location = new System.Drawing.Point(14, 400);
             lblAttribSysCollectionKey.Margin = new Padding(4, 0, 4, 0);
@@ -355,17 +413,19 @@ namespace VehicleList
             lblAttribSysCollectionKey.Size = new System.Drawing.Size(90, 20);
             lblAttribSysCollectionKey.TabIndex = 26;
             lblAttribSysCollectionKey.Text = "AttribSys ID:";
-            // 
+
+            //
             // txtAttribSysCollectionKey
-            // 
+            //
             txtAttribSysCollectionKey.Location = new System.Drawing.Point(150, 397);
             txtAttribSysCollectionKey.Margin = new Padding(4, 5, 4, 5);
             txtAttribSysCollectionKey.Name = "txtAttribSysCollectionKey";
             txtAttribSysCollectionKey.Size = new System.Drawing.Size(478, 27);
             txtAttribSysCollectionKey.TabIndex = 27;
-            // 
+
+            //
             // lblExhaustName
-            // 
+            //
             lblExhaustName.AutoSize = true;
             lblExhaustName.Location = new System.Drawing.Point(14, 520);
             lblExhaustName.Margin = new Padding(4, 0, 4, 0);
@@ -373,17 +433,19 @@ namespace VehicleList
             lblExhaustName.Size = new System.Drawing.Size(106, 20);
             lblExhaustName.TabIndex = 28;
             lblExhaustName.Text = "Exhaust Name:";
-            // 
+
+            //
             // txtExhaustName
-            // 
+            //
             txtExhaustName.Location = new System.Drawing.Point(150, 517);
             txtExhaustName.Margin = new Padding(4, 5, 4, 5);
             txtExhaustName.Name = "txtExhaustName";
             txtExhaustName.Size = new System.Drawing.Size(478, 27);
             txtExhaustName.TabIndex = 29;
-            // 
+
+            //
             // lblExhaustID
-            // 
+            //
             lblExhaustID.AutoSize = true;
             lblExhaustID.Location = new System.Drawing.Point(14, 490);
             lblExhaustID.Margin = new Padding(4, 0, 4, 0);
@@ -391,17 +453,19 @@ namespace VehicleList
             lblExhaustID.Size = new System.Drawing.Size(81, 20);
             lblExhaustID.TabIndex = 30;
             lblExhaustID.Text = "Exhaust ID:";
-            // 
+
+            //
             // txtExhaustID
-            // 
+            //
             txtExhaustID.Location = new System.Drawing.Point(150, 487);
             txtExhaustID.Margin = new Padding(4, 5, 4, 5);
             txtExhaustID.Name = "txtExhaustID";
             txtExhaustID.Size = new System.Drawing.Size(478, 27);
             txtExhaustID.TabIndex = 31;
-            // 
+
+            //
             // lblEngineID
-            // 
+            //
             lblEngineID.AutoSize = true;
             lblEngineID.Location = new System.Drawing.Point(14, 430);
             lblEngineID.Margin = new Padding(4, 0, 4, 0);
@@ -409,17 +473,19 @@ namespace VehicleList
             lblEngineID.Size = new System.Drawing.Size(76, 20);
             lblEngineID.TabIndex = 32;
             lblEngineID.Text = "Engine ID:";
-            // 
+
+            //
             // txtEngineID
-            // 
+            //
             txtEngineID.Location = new System.Drawing.Point(150, 427);
             txtEngineID.Margin = new Padding(4, 5, 4, 5);
             txtEngineID.Name = "txtEngineID";
             txtEngineID.Size = new System.Drawing.Size(478, 27);
             txtEngineID.TabIndex = 33;
-            // 
+
+            //
             // lblEngineName
-            // 
+            //
             lblEngineName.AutoSize = true;
             lblEngineName.Location = new System.Drawing.Point(14, 460);
             lblEngineName.Margin = new Padding(4, 0, 4, 0);
@@ -427,17 +493,19 @@ namespace VehicleList
             lblEngineName.Size = new System.Drawing.Size(101, 20);
             lblEngineName.TabIndex = 34;
             lblEngineName.Text = "Engine Name:";
-            // 
+
+            //
             // txtEngineName
-            // 
+            //
             txtEngineName.Location = new System.Drawing.Point(150, 457);
             txtEngineName.Margin = new Padding(4, 5, 4, 5);
             txtEngineName.Name = "txtEngineName";
             txtEngineName.Size = new System.Drawing.Size(478, 27);
             txtEngineName.TabIndex = 35;
-            // 
+
+            //
             // lblClassUnlock
-            // 
+            //
             lblClassUnlock.AutoSize = true;
             lblClassUnlock.Location = new System.Drawing.Point(674, 130);
             lblClassUnlock.Margin = new Padding(4, 0, 4, 0);
@@ -445,20 +513,30 @@ namespace VehicleList
             lblClassUnlock.Size = new System.Drawing.Size(94, 20);
             lblClassUnlock.TabIndex = 36;
             lblClassUnlock.Text = "Class Unlock:";
-            // 
+
+            //
             // cboClassUnlock
-            // 
+            //
             cboClassUnlock.DropDownStyle = ComboBoxStyle.DropDownList;
             cboClassUnlock.FormattingEnabled = true;
-            cboClassUnlock.Items.AddRange(new object[] { "SuperClassUnlock", "MuscleClassUnlock", "F1ClassUnlock", "TunerClassUnlock", "HotRodClassUnlock", "RivalGen" });
+            cboClassUnlock.Items.AddRange(new object[]
+            {
+                "SuperClassUnlock",
+                "MuscleClassUnlock",
+                "F1ClassUnlock",
+                "TunerClassUnlock",
+                "HotRodClassUnlock",
+                "RivalGen"
+            });
             cboClassUnlock.Location = new System.Drawing.Point(776, 127);
             cboClassUnlock.Margin = new Padding(4, 5, 4, 5);
             cboClassUnlock.Name = "cboClassUnlock";
             cboClassUnlock.Size = new System.Drawing.Size(476, 28);
             cboClassUnlock.TabIndex = 37;
-            // 
+
+            //
             // lblCarWon
-            // 
+            //
             lblCarWon.AutoSize = true;
             lblCarWon.Location = new System.Drawing.Point(14, 610);
             lblCarWon.Margin = new Padding(4, 0, 4, 0);
@@ -466,17 +544,19 @@ namespace VehicleList
             lblCarWon.Size = new System.Drawing.Size(68, 20);
             lblCarWon.TabIndex = 38;
             lblCarWon.Text = "Car Won:";
-            // 
+
+            //
             // txtCarWon
-            // 
+            //
             txtCarWon.Location = new System.Drawing.Point(150, 607);
             txtCarWon.Margin = new Padding(4, 5, 4, 5);
             txtCarWon.Name = "txtCarWon";
             txtCarWon.Size = new System.Drawing.Size(478, 27);
             txtCarWon.TabIndex = 39;
-            // 
+
+            //
             // lblCarReleased
-            // 
+            //
             lblCarReleased.AutoSize = true;
             lblCarReleased.Location = new System.Drawing.Point(14, 580);
             lblCarReleased.Margin = new Padding(4, 0, 4, 0);
@@ -484,17 +564,19 @@ namespace VehicleList
             lblCarReleased.Size = new System.Drawing.Size(98, 20);
             lblCarReleased.TabIndex = 40;
             lblCarReleased.Text = "Car Released:";
-            // 
+
+            //
             // txtCarReleased
-            // 
+            //
             txtCarReleased.Location = new System.Drawing.Point(150, 577);
             txtCarReleased.Margin = new Padding(4, 5, 4, 5);
             txtCarReleased.Name = "txtCarReleased";
             txtCarReleased.Size = new System.Drawing.Size(478, 27);
             txtCarReleased.TabIndex = 41;
-            // 
+
+            //
             // lblAIMusic
-            // 
+            //
             lblAIMusic.AutoSize = true;
             lblAIMusic.Location = new System.Drawing.Point(674, 190);
             lblAIMusic.Margin = new Padding(4, 0, 4, 0);
@@ -502,20 +584,31 @@ namespace VehicleList
             lblAIMusic.Size = new System.Drawing.Size(68, 20);
             lblAIMusic.TabIndex = 42;
             lblAIMusic.Text = "AI Music:";
-            // 
+
+            //
             // cboAIMusic
-            // 
+            //
             cboAIMusic.DropDownStyle = ComboBoxStyle.DropDownList;
             cboAIMusic.FormattingEnabled = true;
-            cboAIMusic.Items.AddRange(new object[] { "None", "Muscle", "Truck", "Tuner", "Sedan", "Exotic", "Super" });
+            cboAIMusic.Items.AddRange(new object[]
+            {
+                "None",
+                "Muscle",
+                "Truck",
+                "Tuner",
+                "Sedan",
+                "Exotic",
+                "Super"
+            });
             cboAIMusic.Location = new System.Drawing.Point(776, 187);
             cboAIMusic.Margin = new Padding(4, 5, 4, 5);
             cboAIMusic.Name = "cboAIMusic";
             cboAIMusic.Size = new System.Drawing.Size(476, 28);
             cboAIMusic.TabIndex = 43;
-            // 
+
+            //
             // lblAIExhaust1
-            // 
+            //
             lblAIExhaust1.AutoSize = true;
             lblAIExhaust1.Location = new System.Drawing.Point(674, 220);
             lblAIExhaust1.Margin = new Padding(4, 0, 4, 0);
@@ -523,20 +616,30 @@ namespace VehicleList
             lblAIExhaust1.Size = new System.Drawing.Size(80, 20);
             lblAIExhaust1.TabIndex = 44;
             lblAIExhaust1.Text = "AI Exhaust:";
-            // 
+
+            //
             // cboAIExhaust1
-            // 
+            //
             cboAIExhaust1.DropDownStyle = ComboBoxStyle.DropDownList;
             cboAIExhaust1.FormattingEnabled = true;
-            cboAIExhaust1.Items.AddRange(new object[] { "None", "AIROD_EX", "AI_CIVIC_EX", "AI_GT_ENG", "AI_MUST_EX", "AI_F1_EX" });
+            cboAIExhaust1.Items.AddRange(new object[]
+            {
+                "None",
+                "AIROD_EX",
+                "AI_CIVIC_EX",
+                "AI_GT_ENG",
+                "AI_MUST_EX",
+                "AI_F1_EX"
+            });
             cboAIExhaust1.Location = new System.Drawing.Point(776, 217);
             cboAIExhaust1.Margin = new Padding(4, 5, 4, 5);
             cboAIExhaust1.Name = "cboAIExhaust1";
             cboAIExhaust1.Size = new System.Drawing.Size(476, 28);
             cboAIExhaust1.TabIndex = 45;
-            // 
+
+            //
             // lblAIExhaust2
-            // 
+            //
             lblAIExhaust2.AutoSize = true;
             lblAIExhaust2.Location = new System.Drawing.Point(674, 250);
             lblAIExhaust2.Margin = new Padding(4, 0, 4, 0);
@@ -544,20 +647,30 @@ namespace VehicleList
             lblAIExhaust2.Size = new System.Drawing.Size(92, 20);
             lblAIExhaust2.TabIndex = 46;
             lblAIExhaust2.Text = "AI Exhaust 2:";
-            // 
+
+            //
             // cboAIExhaust2
-            // 
+            //
             cboAIExhaust2.DropDownStyle = ComboBoxStyle.DropDownList;
             cboAIExhaust2.FormattingEnabled = true;
-            cboAIExhaust2.Items.AddRange(new object[] { "None", "AIROD_EX", "AI_CIVIC_EX", "AI_GT_ENG", "AI_MUST_EX", "AI_F1_EX" });
+            cboAIExhaust2.Items.AddRange(new object[]
+            {
+                "None",
+                "AIROD_EX",
+                "AI_CIVIC_EX",
+                "AI_GT_ENG",
+                "AI_MUST_EX",
+                "AI_F1_EX"
+            });
             cboAIExhaust2.Location = new System.Drawing.Point(776, 247);
             cboAIExhaust2.Margin = new Padding(4, 5, 4, 5);
             cboAIExhaust2.Name = "cboAIExhaust2";
             cboAIExhaust2.Size = new System.Drawing.Size(476, 28);
             cboAIExhaust2.TabIndex = 47;
-            // 
+
+            //
             // lblAIExhaust3
-            // 
+            //
             lblAIExhaust3.AutoSize = true;
             lblAIExhaust3.Location = new System.Drawing.Point(674, 280);
             lblAIExhaust3.Margin = new Padding(4, 0, 4, 0);
@@ -565,20 +678,30 @@ namespace VehicleList
             lblAIExhaust3.Size = new System.Drawing.Size(92, 20);
             lblAIExhaust3.TabIndex = 48;
             lblAIExhaust3.Text = "AI Exhaust 3:";
-            // 
+
+            //
             // cboAIExhaust3
-            // 
+            //
             cboAIExhaust3.DropDownStyle = ComboBoxStyle.DropDownList;
             cboAIExhaust3.FormattingEnabled = true;
-            cboAIExhaust3.Items.AddRange(new object[] { "None", "AIROD_EX", "AI_CIVIC_EX", "AI_GT_ENG", "AI_MUST_EX", "AI_F1_EX" });
+            cboAIExhaust3.Items.AddRange(new object[]
+            {
+                "None",
+                "AIROD_EX",
+                "AI_CIVIC_EX",
+                "AI_GT_ENG",
+                "AI_MUST_EX",
+                "AI_F1_EX"
+            });
             cboAIExhaust3.Location = new System.Drawing.Point(776, 277);
             cboAIExhaust3.Margin = new Padding(4, 5, 4, 5);
             cboAIExhaust3.Name = "cboAIExhaust3";
             cboAIExhaust3.Size = new System.Drawing.Size(476, 28);
             cboAIExhaust3.TabIndex = 49;
-            // 
+
+            //
             // lblCategory
-            // 
+            //
             lblCategory.AutoSize = true;
             lblCategory.Location = new System.Drawing.Point(674, 370);
             lblCategory.Margin = new Padding(4, 0, 4, 0);
@@ -586,19 +709,31 @@ namespace VehicleList
             lblCategory.Size = new System.Drawing.Size(72, 20);
             lblCategory.TabIndex = 50;
             lblCategory.Text = "Category:";
-            // 
+
+            //
             // chlCategory
-            // 
+            //
             chlCategory.CheckOnClick = true;
-            chlCategory.Items.AddRange(new object[] { "Paradise Cars", "Paradise Bikes", "Online Cars", "Toy Cars", "Legendary Cars", "Boost Specials", "Cop Cars", "Island Cars" });
+            chlCategory.Items.AddRange(new object[]
+            {
+                "Paradise Cars",
+                "Paradise Bikes",
+                "Online Cars",
+                "Toy Cars",
+                "Legendary Cars",
+                "Boost Specials",
+                "Cop Cars",
+                "Island Cars"
+            });
             chlCategory.Location = new System.Drawing.Point(776, 307);
             chlCategory.Margin = new Padding(4, 5, 4, 5);
             chlCategory.Name = "chlCategory";
             chlCategory.Size = new System.Drawing.Size(476, 158);
             chlCategory.TabIndex = 51;
-            // 
+
+            //
             // lblVehicleType
-            // 
+            //
             lblVehicleType.AutoSize = true;
             lblVehicleType.Location = new System.Drawing.Point(674, 10);
             lblVehicleType.Margin = new Padding(4, 0, 4, 0);
@@ -606,20 +741,27 @@ namespace VehicleList
             lblVehicleType.Size = new System.Drawing.Size(94, 20);
             lblVehicleType.TabIndex = 52;
             lblVehicleType.Text = "Vehicle Type:";
-            // 
+
+            //
             // cboVehicleType
-            // 
+            //
             cboVehicleType.DropDownStyle = ComboBoxStyle.DropDownList;
             cboVehicleType.FormattingEnabled = true;
-            cboVehicleType.Items.AddRange(new object[] { "Car", "Bike", "Plane" });
+            cboVehicleType.Items.AddRange(new object[]
+            {
+                "Car",
+                "Bike",
+                "Plane"
+            });
             cboVehicleType.Location = new System.Drawing.Point(776, 7);
             cboVehicleType.Margin = new Padding(4, 5, 4, 5);
             cboVehicleType.Name = "cboVehicleType";
             cboVehicleType.Size = new System.Drawing.Size(476, 28);
             cboVehicleType.TabIndex = 53;
-            // 
+
+            //
             // lblBoostType
-            // 
+            //
             lblBoostType.AutoSize = true;
             lblBoostType.Location = new System.Drawing.Point(674, 40);
             lblBoostType.Margin = new Padding(4, 0, 4, 0);
@@ -627,20 +769,29 @@ namespace VehicleList
             lblBoostType.Size = new System.Drawing.Size(85, 20);
             lblBoostType.TabIndex = 54;
             lblBoostType.Text = "Boost Type:";
-            // 
+
+            //
             // cboBoostType
-            // 
+            //
             cboBoostType.DropDownStyle = ComboBoxStyle.DropDownList;
             cboBoostType.FormattingEnabled = true;
-            cboBoostType.Items.AddRange(new object[] { "Speed", "Aggression", "Stunt", "None", "Locked" });
+            cboBoostType.Items.AddRange(new object[]
+            {
+                "Speed",
+                "Aggression",
+                "Stunt",
+                "None",
+                "Locked"
+            });
             cboBoostType.Location = new System.Drawing.Point(776, 37);
             cboBoostType.Margin = new Padding(4, 5, 4, 5);
             cboBoostType.Name = "cboBoostType";
             cboBoostType.Size = new System.Drawing.Size(476, 28);
             cboBoostType.TabIndex = 55;
-            // 
+
+            //
             // lblFinishType
-            // 
+            //
             lblFinishType.AutoSize = true;
             lblFinishType.Location = new System.Drawing.Point(674, 70);
             lblFinishType.Margin = new Padding(4, 0, 4, 0);
@@ -648,20 +799,30 @@ namespace VehicleList
             lblFinishType.Size = new System.Drawing.Size(84, 20);
             lblFinishType.TabIndex = 56;
             lblFinishType.Text = "Finish Type:";
-            // 
+
+            //
             // cboFinishType
-            // 
+            //
             cboFinishType.DropDownStyle = ComboBoxStyle.DropDownList;
             cboFinishType.FormattingEnabled = true;
-            cboFinishType.Items.AddRange(new object[] { "Default", "Colour", "Pattern", "Platinum", "Gold", "Community" });
+            cboFinishType.Items.AddRange(new object[]
+            {
+                "Default",
+                "Colour",
+                "Pattern",
+                "Platinum",
+                "Gold",
+                "Community"
+            });
             cboFinishType.Location = new System.Drawing.Point(776, 67);
             cboFinishType.Margin = new Padding(4, 5, 4, 5);
             cboFinishType.Name = "cboFinishType";
             cboFinishType.Size = new System.Drawing.Size(476, 28);
             cboFinishType.TabIndex = 57;
-            // 
+
+            //
             // lblMaxSpeed
-            // 
+            //
             lblMaxSpeed.AutoSize = true;
             lblMaxSpeed.Location = new System.Drawing.Point(14, 190);
             lblMaxSpeed.Margin = new Padding(4, 0, 4, 0);
@@ -669,17 +830,19 @@ namespace VehicleList
             lblMaxSpeed.Size = new System.Drawing.Size(86, 20);
             lblMaxSpeed.TabIndex = 58;
             lblMaxSpeed.Text = "Max Speed:";
-            // 
+
+            //
             // txtMaxSpeed
-            // 
+            //
             txtMaxSpeed.Location = new System.Drawing.Point(150, 187);
             txtMaxSpeed.Margin = new Padding(4, 5, 4, 5);
             txtMaxSpeed.Name = "txtMaxSpeed";
             txtMaxSpeed.Size = new System.Drawing.Size(478, 27);
             txtMaxSpeed.TabIndex = 59;
-            // 
+
+            //
             // lblMaxBoostSpeed
-            // 
+            //
             lblMaxBoostSpeed.AutoSize = true;
             lblMaxBoostSpeed.Location = new System.Drawing.Point(14, 250);
             lblMaxBoostSpeed.Margin = new Padding(4, 0, 4, 0);
@@ -687,17 +850,19 @@ namespace VehicleList
             lblMaxBoostSpeed.Size = new System.Drawing.Size(128, 20);
             lblMaxBoostSpeed.TabIndex = 60;
             lblMaxBoostSpeed.Text = "Max Boost Speed:";
-            // 
+
+            //
             // txtMaxBoostSpeed
-            // 
+            //
             txtMaxBoostSpeed.Location = new System.Drawing.Point(150, 247);
             txtMaxBoostSpeed.Margin = new Padding(4, 5, 4, 5);
             txtMaxBoostSpeed.Name = "txtMaxBoostSpeed";
             txtMaxBoostSpeed.Size = new System.Drawing.Size(478, 27);
             txtMaxBoostSpeed.TabIndex = 61;
-            // 
+
+            //
             // lblSpeedStat
-            // 
+            //
             lblSpeedStat.AutoSize = true;
             lblSpeedStat.Location = new System.Drawing.Point(14, 160);
             lblSpeedStat.Margin = new Padding(4, 0, 4, 0);
@@ -705,17 +870,19 @@ namespace VehicleList
             lblSpeedStat.Size = new System.Drawing.Size(84, 20);
             lblSpeedStat.TabIndex = 62;
             lblSpeedStat.Text = "Speed Stat:";
-            // 
+
+            //
             // txtSpeedStat
-            // 
+            //
             txtSpeedStat.Location = new System.Drawing.Point(150, 157);
             txtSpeedStat.Margin = new Padding(4, 5, 4, 5);
             txtSpeedStat.Name = "txtSpeedStat";
             txtSpeedStat.Size = new System.Drawing.Size(478, 27);
             txtSpeedStat.TabIndex = 63;
-            // 
+
+            //
             // lblBoostStat
-            // 
+            //
             lblBoostStat.AutoSize = true;
             lblBoostStat.Location = new System.Drawing.Point(14, 220);
             lblBoostStat.Margin = new Padding(4, 0, 4, 0);
@@ -723,17 +890,19 @@ namespace VehicleList
             lblBoostStat.Size = new System.Drawing.Size(80, 20);
             lblBoostStat.TabIndex = 64;
             lblBoostStat.Text = "Boost Stat:";
-            // 
+
+            //
             // txtBoostStat
-            // 
+            //
             txtBoostStat.Location = new System.Drawing.Point(150, 217);
             txtBoostStat.Margin = new Padding(4, 5, 4, 5);
             txtBoostStat.Name = "txtBoostStat";
             txtBoostStat.Size = new System.Drawing.Size(478, 27);
             txtBoostStat.TabIndex = 65;
-            // 
+
+            //
             // lblColor
-            // 
+            //
             lblColor.AutoSize = true;
             lblColor.Location = new System.Drawing.Point(14, 640);
             lblColor.Margin = new Padding(4, 0, 4, 0);
@@ -741,17 +910,19 @@ namespace VehicleList
             lblColor.Size = new System.Drawing.Size(48, 20);
             lblColor.TabIndex = 66;
             lblColor.Text = "Color:";
-            // 
+
+            //
             // txtColor
-            // 
+            //
             txtColor.Location = new System.Drawing.Point(150, 637);
             txtColor.Margin = new Padding(4, 5, 4, 5);
             txtColor.Name = "txtColor";
             txtColor.Size = new System.Drawing.Size(478, 27);
             txtColor.TabIndex = 67;
-            // 
+
+            //
             // lblColorType
-            // 
+            //
             lblColorType.AutoSize = true;
             lblColorType.Location = new System.Drawing.Point(674, 100);
             lblColorType.Margin = new Padding(4, 0, 4, 0);
@@ -759,20 +930,29 @@ namespace VehicleList
             lblColorType.Size = new System.Drawing.Size(83, 20);
             lblColorType.TabIndex = 68;
             lblColorType.Text = "Color Type:";
-            // 
+
+            //
             // cboColorType
-            // 
+            //
             cboColorType.DropDownStyle = ComboBoxStyle.DropDownList;
             cboColorType.FormattingEnabled = true;
-            cboColorType.Items.AddRange(new object[] { "Gloss", "Metallic", "Pearlescent", "Special", "Party" });
+            cboColorType.Items.AddRange(new object[]
+            {
+                "Gloss",
+                "Metallic",
+                "Pearlescent",
+                "Special",
+                "Party"
+            });
             cboColorType.Location = new System.Drawing.Point(776, 97);
             cboColorType.Margin = new Padding(4, 5, 4, 5);
             cboColorType.Name = "cboColorType";
             cboColorType.Size = new System.Drawing.Size(476, 28);
             cboColorType.TabIndex = 69;
-            // 
+
+            //
             // VehicleEditor
-            // 
+            //
             AcceptButton = btnOk;
             AccessibleName = "";
             AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -881,7 +1061,7 @@ namespace VehicleList
         private System.Windows.Forms.Label lblDamageLimit;
         private System.Windows.Forms.TextBox txtDamageLimit;
         private System.Windows.Forms.Label lblFlags;
-        public  System.Windows.Forms.CheckedListBox chlFlags;
+        public System.Windows.Forms.CheckedListBox chlFlags;
         private System.Windows.Forms.Label lblBoostLength;
         private System.Windows.Forms.TextBox txtBoostLength;
         private System.Windows.Forms.Label lblRank;

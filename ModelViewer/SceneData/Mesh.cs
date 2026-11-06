@@ -154,7 +154,7 @@ public class Mesh
         _vertexArray = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexArray);
         GL.BufferData(BufferTarget.ArrayBuffer, TexturedVertex.SizeInBytes * vertices.Count, vertices.ToArray(), BufferUsageHint.StaticDraw);
-        
+
         // Indices
         _indexArray = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, _indexArray);
@@ -363,7 +363,7 @@ public class Mesh
 
         GL.VertexAttrib3(0, transform.ExtractTranslation());
         GL.VertexPointer(5, VertexPointerType.Float, TexturedVertex.SizeInBytes, 0);
-        
+
         GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexArray);
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, _indexArray);
         GL.DrawElements(PrimitiveType.Triangles, Indices.Count, DrawElementsType.UnsignedInt, 0);

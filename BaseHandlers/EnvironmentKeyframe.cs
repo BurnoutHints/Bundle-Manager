@@ -239,23 +239,23 @@ public class EnvironmentKeyframe : IEntryData
             throw new ReadFailedError($"Unsupported environment keyframe version {muVersion}, expected 8.");
 
         // Vector2 and Vector3 take 16 bytes
-        Vector2 ReadVector2()
+        Vector2 readVector2()
         {
             Vector2 v = new(br.ReadSingle(), br.ReadSingle());
             br.BaseStream.Position += 8;
             return v;
         }
 
-        Vector3 ReadVector3()
+        Vector3 readVector3()
         {
             Vector3 v = new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
             br.BaseStream.Position += 4;
             return v;
         }
 
-        Vector4 ReadVector4() => new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+        Vector4 readVector4() => new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
 
-        float[] ReadFloats() => [br.ReadSingle(), br.ReadSingle()];
+        float[] readFloats() => [br.ReadSingle(), br.ReadSingle()];
 
         br.BaseStream.Position = 0x10;
         mBloomData = new()
@@ -264,7 +264,7 @@ public class EnvironmentKeyframe : IEntryData
             mfThreshold = br.ReadSingle()
         };
         br.BaseStream.Position = 0x20;
-        mBloomData.mv4Scale = ReadVector4();
+        mBloomData.mv4Scale = readVector4();
 
         mVignetteData = new()
         {
@@ -272,10 +272,10 @@ public class EnvironmentKeyframe : IEntryData
             mfSharpness = br.ReadSingle()
         };
         br.BaseStream.Position = 0x40;
-        mVignetteData.mv2Amount = ReadVector2();
-        mVignetteData.mv2Centre = ReadVector2();
-        mVignetteData.mv4InnerColour = ReadVector4();
-        mVignetteData.mv4OuterColour = ReadVector4();
+        mVignetteData.mv2Amount = readVector2();
+        mVignetteData.mv2Centre = readVector2();
+        mVignetteData.mv4InnerColour = readVector4();
+        mVignetteData.mv4OuterColour = readVector4();
 
         mTintData = new()
         {
@@ -284,9 +284,9 @@ public class EnvironmentKeyframe : IEntryData
 
         br.BaseStream.Position = 0x90;
         ScatteringData s = mScatteringData = new();
-        s.mv3SkyTopColour = ReadVector3();
-        s.mv3SkyHorColour = ReadVector3();
-        s.mv3SkySunColour = ReadVector3();
+        s.mv3SkyTopColour = readVector3();
+        s.mv3SkyHorColour = readVector3();
+        s.mv3SkySunColour = readVector3();
         s.mfSkyHorPow = br.ReadSingle();
         s.mfSkySunPow = br.ReadSingle();
         s.mfSkyDrk = br.ReadSingle();
@@ -294,41 +294,41 @@ public class EnvironmentKeyframe : IEntryData
         s.mfSkyHorBleedPow = br.ReadSingle();
         s.mfSkySunBleedPow = br.ReadSingle();
         br.BaseStream.Position = 0xE0;
-        s.mv3ScattTopColour = ReadVector3();
-        s.mv3ScattHorColour = ReadVector3();
-        s.mv3ScattSunColour = ReadVector3();
+        s.mv3ScattTopColour = readVector3();
+        s.mv3ScattHorColour = readVector3();
+        s.mv3ScattSunColour = readVector3();
         s.mfScattHorPow = br.ReadSingle();
         s.mfScattSunPow = br.ReadSingle();
         s.mfScattDrk = br.ReadSingle();
         s.mfScattHorBleedScl = br.ReadSingle();
         s.mfScattHorBleedPow = br.ReadSingle();
         s.mfScattSunBleedPow = br.ReadSingle();
-        s.mafScattDist = ReadFloats();
+        s.mafScattDist = readFloats();
         s.mfScattPow = br.ReadSingle();
         s.mfScattCap = br.ReadSingle();
 
         br.BaseStream.Position = 0x140;
         LightingData l = mLightingData = new();
-        l.mv3KeyLightColour = ReadVector3();
-        l.mv3SpecularColour = ReadVector3();
-        l.mv3KeyFillColour = ReadVector3();
-        l.mv3ShadowFillColour = ReadVector3();
-        l.mv3RightFillColour = ReadVector3();
-        l.mv3LeftFillColour = ReadVector3();
-        l.mv3UpFillColour = ReadVector3();
-        l.mv3DownFillColour = ReadVector3();
+        l.mv3KeyLightColour = readVector3();
+        l.mv3SpecularColour = readVector3();
+        l.mv3KeyFillColour = readVector3();
+        l.mv3ShadowFillColour = readVector3();
+        l.mv3RightFillColour = readVector3();
+        l.mv3LeftFillColour = readVector3();
+        l.mv3UpFillColour = readVector3();
+        l.mv3DownFillColour = readVector3();
         l.mfAmbientIrradianceScale = br.ReadSingle();
 
         br.BaseStream.Position = 0x1D0;
         mCloudsData = new()
         {
-            mav3LayerLiteColour = [ReadVector3(), ReadVector3()],
-            mav3LayerDarkColour = [ReadVector3(), ReadVector3()],
-            mafLayerDensity = ReadFloats(),
-            mafLayerFeathering = ReadFloats(),
-            mafLayerOpacity = ReadFloats(),
-            mafLayerSpeed = ReadFloats(),
-            mafLayerScale = ReadFloats(),
+            mav3LayerLiteColour = [readVector3(), readVector3()],
+            mav3LayerDarkColour = [readVector3(), readVector3()],
+            mafLayerDensity = readFloats(),
+            mafLayerFeathering = readFloats(),
+            mafLayerOpacity = readFloats(),
+            mafLayerSpeed = readFloats(),
+            mafLayerScale = readFloats(),
             mfDirectionAngle = br.ReadSingle()
         };
 
@@ -342,14 +342,14 @@ public class EnvironmentKeyframe : IEntryData
         using BinaryWriter2 bw = new(new MemoryStream(data));
         bw.BigEndian = entry.Console;
 
-        void WriteVector2(Vector2 v)
+        void writeVector2(Vector2 v)
         {
             bw.Write(v.X);
             bw.Write(v.Y);
             bw.BaseStream.Position += 8;
         }
 
-        void WriteVector3(Vector3 v)
+        void writeVector3(Vector3 v)
         {
             bw.Write(v.X);
             bw.Write(v.Y);
@@ -357,7 +357,7 @@ public class EnvironmentKeyframe : IEntryData
             bw.BaseStream.Position += 4;
         }
 
-        void WriteVector4(Vector4 v)
+        void writeVector4(Vector4 v)
         {
             bw.Write(v.X);
             bw.Write(v.Y);
@@ -365,7 +365,7 @@ public class EnvironmentKeyframe : IEntryData
             bw.Write(v.W);
         }
 
-        void WriteArray<T>(T[] values, Action<T> write, string name)
+        void writeArray<T>(T[] values, Action<T> write, string name)
         {
             if (values.Length != 2)
                 throw new InvalidDataException($"{name} has {values.Length} entries, it needs 2.");
@@ -380,21 +380,21 @@ public class EnvironmentKeyframe : IEntryData
         bw.Write(mBloomData.mfLuminance);
         bw.Write(mBloomData.mfThreshold);
         bw.BaseStream.Position = 0x20;
-        WriteVector4(mBloomData.mv4Scale);
+        writeVector4(mBloomData.mv4Scale);
 
         bw.Write(mVignetteData.mfAngle);
         bw.Write(mVignetteData.mfSharpness);
         bw.BaseStream.Position = 0x40;
-        WriteVector2(mVignetteData.mv2Amount);
-        WriteVector2(mVignetteData.mv2Centre);
-        WriteVector4(mVignetteData.mv4InnerColour);
-        WriteVector4(mVignetteData.mv4OuterColour);
+        writeVector2(mVignetteData.mv2Amount);
+        writeVector2(mVignetteData.mv2Centre);
+        writeVector4(mVignetteData.mv4InnerColour);
+        writeVector4(mVignetteData.mv4OuterColour);
 
         bw.BaseStream.Position = 0x90;
         ScatteringData s = mScatteringData;
-        WriteVector3(s.mv3SkyTopColour);
-        WriteVector3(s.mv3SkyHorColour);
-        WriteVector3(s.mv3SkySunColour);
+        writeVector3(s.mv3SkyTopColour);
+        writeVector3(s.mv3SkyHorColour);
+        writeVector3(s.mv3SkySunColour);
         bw.Write(s.mfSkyHorPow);
         bw.Write(s.mfSkySunPow);
         bw.Write(s.mfSkyDrk);
@@ -402,40 +402,40 @@ public class EnvironmentKeyframe : IEntryData
         bw.Write(s.mfSkyHorBleedPow);
         bw.Write(s.mfSkySunBleedPow);
         bw.BaseStream.Position = 0xE0;
-        WriteVector3(s.mv3ScattTopColour);
-        WriteVector3(s.mv3ScattHorColour);
-        WriteVector3(s.mv3ScattSunColour);
+        writeVector3(s.mv3ScattTopColour);
+        writeVector3(s.mv3ScattHorColour);
+        writeVector3(s.mv3ScattSunColour);
         bw.Write(s.mfScattHorPow);
         bw.Write(s.mfScattSunPow);
         bw.Write(s.mfScattDrk);
         bw.Write(s.mfScattHorBleedScl);
         bw.Write(s.mfScattHorBleedPow);
         bw.Write(s.mfScattSunBleedPow);
-        WriteArray(s.mafScattDist, bw.Write, nameof(s.mafScattDist));
+        writeArray(s.mafScattDist, bw.Write, nameof(s.mafScattDist));
         bw.Write(s.mfScattPow);
         bw.Write(s.mfScattCap);
 
         bw.BaseStream.Position = 0x140;
         LightingData l = mLightingData;
-        WriteVector3(l.mv3KeyLightColour);
-        WriteVector3(l.mv3SpecularColour);
-        WriteVector3(l.mv3KeyFillColour);
-        WriteVector3(l.mv3ShadowFillColour);
-        WriteVector3(l.mv3RightFillColour);
-        WriteVector3(l.mv3LeftFillColour);
-        WriteVector3(l.mv3UpFillColour);
-        WriteVector3(l.mv3DownFillColour);
+        writeVector3(l.mv3KeyLightColour);
+        writeVector3(l.mv3SpecularColour);
+        writeVector3(l.mv3KeyFillColour);
+        writeVector3(l.mv3ShadowFillColour);
+        writeVector3(l.mv3RightFillColour);
+        writeVector3(l.mv3LeftFillColour);
+        writeVector3(l.mv3UpFillColour);
+        writeVector3(l.mv3DownFillColour);
         bw.Write(l.mfAmbientIrradianceScale);
 
         bw.BaseStream.Position = 0x1D0;
         CloudsData c = mCloudsData;
-        WriteArray(c.mav3LayerLiteColour, WriteVector3, nameof(c.mav3LayerLiteColour));
-        WriteArray(c.mav3LayerDarkColour, WriteVector3, nameof(c.mav3LayerDarkColour));
-        WriteArray(c.mafLayerDensity, bw.Write, nameof(c.mafLayerDensity));
-        WriteArray(c.mafLayerFeathering, bw.Write, nameof(c.mafLayerFeathering));
-        WriteArray(c.mafLayerOpacity, bw.Write, nameof(c.mafLayerOpacity));
-        WriteArray(c.mafLayerSpeed, bw.Write, nameof(c.mafLayerSpeed));
-        WriteArray(c.mafLayerScale, bw.Write, nameof(c.mafLayerScale));
+        writeArray(c.mav3LayerLiteColour, writeVector3, nameof(c.mav3LayerLiteColour));
+        writeArray(c.mav3LayerDarkColour, writeVector3, nameof(c.mav3LayerDarkColour));
+        writeArray(c.mafLayerDensity, bw.Write, nameof(c.mafLayerDensity));
+        writeArray(c.mafLayerFeathering, bw.Write, nameof(c.mafLayerFeathering));
+        writeArray(c.mafLayerOpacity, bw.Write, nameof(c.mafLayerOpacity));
+        writeArray(c.mafLayerSpeed, bw.Write, nameof(c.mafLayerSpeed));
+        writeArray(c.mafLayerScale, bw.Write, nameof(c.mafLayerScale));
         bw.Write(c.mfDirectionAngle);
 
         // The colour cube is the import at the TintData pointer

@@ -17,6 +17,7 @@ namespace BundleManager
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -49,105 +50,125 @@ namespace BundleManager
             this.mnuMain.SuspendLayout();
             this.tspMain.SuspendLayout();
             this.SuspendLayout();
-            // 
+
+            //
             // stsMain
-            // 
+            //
             this.stsMain.Location = new System.Drawing.Point(0, 436);
             this.stsMain.Name = "stsMain";
             this.stsMain.Size = new System.Drawing.Size(582, 22);
             this.stsMain.TabIndex = 0;
             this.stsMain.Text = "statusStrip1";
-            // 
+
+            //
             // mnuMain
-            // 
-            this.mnuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem,
-            this.viewToolStripMenuItem});
+            //
+            this.mnuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                this.fileToolStripMenuItem,
+                this.viewToolStripMenuItem
+            });
             this.mnuMain.Location = new System.Drawing.Point(0, 0);
             this.mnuMain.Name = "mnuMain";
             this.mnuMain.Size = new System.Drawing.Size(582, 24);
             this.mnuMain.TabIndex = 1;
             this.mnuMain.Text = "menuStrip1";
-            // 
+
+            //
             // fileToolStripMenuItem
-            // 
-            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.openFolderToolStripMenuItem,
-            this.dumpInfoToolStripMenuItem,
-            this.recentSeparatorToolStripMenu,
-            this.toolStripMenuItem1,
-            this.exitToolStripMenuItem});
+            //
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                this.openFolderToolStripMenuItem,
+                this.dumpInfoToolStripMenuItem,
+                this.recentSeparatorToolStripMenu,
+                this.toolStripMenuItem1,
+                this.exitToolStripMenuItem
+            });
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
-            // 
+
+            //
             // openFolderToolStripMenuItem
-            // 
+            //
             this.openFolderToolStripMenuItem.Image = global::BundleManager.Properties.Resources.openfolderHS;
             this.openFolderToolStripMenuItem.Name = "openFolderToolStripMenuItem";
             this.openFolderToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
             this.openFolderToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
             this.openFolderToolStripMenuItem.Text = "Open Folder";
             this.openFolderToolStripMenuItem.Click += new System.EventHandler(this.openFolderToolStripMenuItem_Click);
-            // 
+
+            //
             // recentSeparatorToolStripMenu
-            // 
+            //
             this.recentSeparatorToolStripMenu.Name = "recentSeparatorToolStripMenu";
             this.recentSeparatorToolStripMenu.Size = new System.Drawing.Size(179, 6);
-            // 
+
+            //
             // toolStripMenuItem1
-            // 
+            //
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
             this.toolStripMenuItem1.Size = new System.Drawing.Size(179, 6);
-            // 
+
+            //
             // exitToolStripMenuItem
-            // 
+            //
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             this.exitToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
-            // 
+
+            //
             // viewToolStripMenuItem
-            // 
-            this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.ignoreIDConflictsToolStripMenuItem,
-            this.loadMaterialsToolStripMenuItem});
+            //
+            this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                this.ignoreIDConflictsToolStripMenuItem,
+                this.loadMaterialsToolStripMenuItem
+            });
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
-            // 
+
+            //
             // ignoreIDConflictsToolStripMenuItem
-            // 
+            //
             this.ignoreIDConflictsToolStripMenuItem.Checked = true;
             this.ignoreIDConflictsToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.ignoreIDConflictsToolStripMenuItem.Name = "ignoreIDConflictsToolStripMenuItem";
             this.ignoreIDConflictsToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
             this.ignoreIDConflictsToolStripMenuItem.Text = "Ignore ID Conflicts";
             this.ignoreIDConflictsToolStripMenuItem.Click += new System.EventHandler(this.ignoreIDConflictsToolStripMenuItem_Click);
-            // 
+
+            //
             // loadMaterialsToolStripMenuItem
-            // 
+            //
             this.loadMaterialsToolStripMenuItem.Checked = true;
             this.loadMaterialsToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.loadMaterialsToolStripMenuItem.Name = "loadMaterialsToolStripMenuItem";
             this.loadMaterialsToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
             this.loadMaterialsToolStripMenuItem.Text = "Load Materials";
             this.loadMaterialsToolStripMenuItem.Click += new System.EventHandler(this.loadMaterialsToolStripMenuItem_Click);
-            // 
+
+            //
             // tspMain
-            // 
-            this.tspMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.tsbOpen,
-            this.toolStripSeparator1,
-            this.tsbSwitchMode});
+            //
+            this.tspMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                this.tsbOpen,
+                this.toolStripSeparator1,
+                this.tsbSwitchMode
+            });
             this.tspMain.Location = new System.Drawing.Point(0, 24);
             this.tspMain.Name = "tspMain";
             this.tspMain.Size = new System.Drawing.Size(582, 25);
             this.tspMain.TabIndex = 2;
             this.tspMain.Text = "toolStrip1";
-            // 
+
+            //
             // tsbOpen
-            // 
+            //
             this.tsbOpen.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.tsbOpen.Image = global::BundleManager.Properties.Resources.openfolderHS;
             this.tsbOpen.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -155,28 +176,33 @@ namespace BundleManager
             this.tsbOpen.Size = new System.Drawing.Size(23, 22);
             this.tsbOpen.Text = "Open Folder";
             this.tsbOpen.Click += new System.EventHandler(this.tsbOpen_Click);
-            // 
+
+            //
             // toolStripSeparator1
-            // 
+            //
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
-            // 
+
+            //
             // tsbSwitchMode
-            // 
+            //
             this.tsbSwitchMode.Image = global::BundleManager.Properties.Resources.icon;
             this.tsbSwitchMode.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tsbSwitchMode.Name = "tsbSwitchMode";
             this.tsbSwitchMode.Size = new System.Drawing.Size(152, 22);
             this.tsbSwitchMode.Text = "Switch To Bundle Mode";
             this.tsbSwitchMode.Click += new System.EventHandler(this.tsbSwitchMode_Click);
-            // 
+
+            //
             // lstMain
-            // 
-            this.lstMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            //
+            this.lstMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.lstMain.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.colName});
+            this.lstMain.Columns.AddRange(new System.Windows.Forms.ColumnHeader[]
+            {
+                this.colName
+            });
             this.lstMain.Location = new System.Drawing.Point(12, 52);
             this.lstMain.Name = "lstMain";
             this.lstMain.Size = new System.Drawing.Size(558, 381);
@@ -184,21 +210,24 @@ namespace BundleManager
             this.lstMain.UseCompatibleStateImageBehavior = false;
             this.lstMain.View = System.Windows.Forms.View.Details;
             this.lstMain.DoubleClick += new System.EventHandler(this.lstMain_DoubleClick);
-            // 
+
+            //
             // colName
-            // 
+            //
             this.colName.Text = "Name";
             this.colName.Width = 480;
-            // 
+
+            //
             // dumpInfoToolStripMenuItem
-            // 
+            //
             this.dumpInfoToolStripMenuItem.Name = "dumpInfoToolStripMenuItem";
             this.dumpInfoToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
             this.dumpInfoToolStripMenuItem.Text = "Dump Info";
             this.dumpInfoToolStripMenuItem.Click += new System.EventHandler(this.dumpInfoToolStripMenuItem_Click);
-            // 
+
+            //
             // FileView
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(582, 458);

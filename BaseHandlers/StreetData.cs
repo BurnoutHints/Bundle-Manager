@@ -575,16 +575,16 @@ public class StreetData : IEntryData
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
 
-        int ReadPtr() => x64
+        int readPtr() => x64
             ? (int)br.ReadInt64()
             : br.ReadInt32();
 
         miVersion = br.ReadInt32();
         br.ReadInt32(); // miSize, recomputed on write
-        mpaStreets = ReadPtr();
-        mpaJunctions = ReadPtr();
-        mpaRoads = ReadPtr();
-        mpaChallengeParScores = ReadPtr();
+        mpaStreets = readPtr();
+        mpaJunctions = readPtr();
+        mpaRoads = readPtr();
+        mpaChallengeParScores = readPtr();
         int miStreetCount = br.ReadInt32();
         int miJunctionCount = br.ReadInt32();
         int miRoadCount = br.ReadInt32();
@@ -653,7 +653,7 @@ public class StreetData : IEntryData
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
 
-        void WritePtr(int ptr)
+        void writePtr(int ptr)
         {
             if (x64)
                 bw.Write((long)ptr);
@@ -664,10 +664,10 @@ public class StreetData : IEntryData
         long headerPos = ms.Position;
         bw.Write(miVersion);
         bw.Write(0); // miSize
-        WritePtr(0); // mpaStreets
-        WritePtr(0); // mpaJunctions
-        WritePtr(0); // mpaRoads
-        WritePtr(0); // mpaChallengeParScores
+        writePtr(0); // mpaStreets
+        writePtr(0); // mpaJunctions
+        writePtr(0); // mpaRoads
+        writePtr(0); // mpaChallengeParScores
         bw.Write(streets.Count);
         bw.Write(junctions.Count);
         bw.Write(roads.Count);
@@ -755,10 +755,10 @@ public class StreetData : IEntryData
 
         ms.Position = headerPos + 4;
         bw.Write(miSizeOut);
-        WritePtr(streetsOffset);
-        WritePtr(junctionsOffset);
-        WritePtr(roadsOffset);
-        WritePtr(challengesOffset);
+        writePtr(streetsOffset);
+        writePtr(junctionsOffset);
+        writePtr(roadsOffset);
+        writePtr(challengesOffset);
 
         bw.Flush();
         byte[] data = ms.ToArray();

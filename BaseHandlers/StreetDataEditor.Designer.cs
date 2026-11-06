@@ -21,6 +21,7 @@ namespace BaseHandlers
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -80,55 +81,71 @@ namespace BaseHandlers
             roadsPage.SuspendLayout();
             challengesPage.SuspendLayout();
             SuspendLayout();
-            // 
+
+            //
             // streetNumber
-            // 
+            //
             streetNumber.Text = "#";
-            // 
+
+            //
             // streetRoadIndex
-            // 
+            //
             streetRoadIndex.Text = "ReadIndex";
-            // 
+
+            //
             // streetSpanIndex
-            // 
+            //
             streetSpanIndex.Text = "SpanIndex";
-            // 
+
+            //
             // streetSpanType
-            // 
+            //
             streetSpanType.Text = "SpanType";
-            // 
+
+            //
             // streetMaxSpeed
-            // 
+            //
             streetMaxSpeed.Text = "MaxSpeed";
-            // 
+
+            //
             // streetMinSpeed
-            // 
+            //
             streetMinSpeed.Text = "MinSpeed";
-            // 
+
+            //
             // menu
-            // 
-            menu.Items.AddRange(new ToolStripItem[] { fileMenu });
+            //
+            menu.Items.AddRange(new ToolStripItem[]
+            {
+                fileMenu
+            });
             menu.Location = new Point(0, 0);
             menu.Name = "menu";
             menu.Size = new Size(1020, 24);
             menu.TabIndex = 0;
-            // 
+
+            //
             // fileMenu
-            // 
-            fileMenu.DropDownItems.AddRange(new ToolStripItem[] { exportJsonItem });
+            //
+            fileMenu.DropDownItems.AddRange(new ToolStripItem[]
+            {
+                exportJsonItem
+            });
             fileMenu.Name = "fileMenu";
             fileMenu.Size = new Size(37, 20);
             fileMenu.Text = "File";
-            // 
+
+            //
             // exportJsonItem
-            // 
+            //
             exportJsonItem.Name = "exportJsonItem";
             exportJsonItem.Size = new Size(153, 22);
             exportJsonItem.Text = "Export to JSON";
             exportJsonItem.Click += exportJsonItem_Click;
-            // 
+
+            //
             // tabs
-            // 
+            //
             tabs.Controls.Add(streetsPage);
             tabs.Controls.Add(junctionsPage);
             tabs.Controls.Add(roadsPage);
@@ -139,20 +156,30 @@ namespace BaseHandlers
             tabs.SelectedIndex = 0;
             tabs.Size = new Size(1020, 351);
             tabs.TabIndex = 1;
-            // 
+
+            //
             // streetsPage
-            // 
+            //
             streetsPage.Controls.Add(streetsList);
             streetsPage.Location = new Point(4, 24);
             streetsPage.Name = "streetsPage";
             streetsPage.Size = new Size(1012, 323);
             streetsPage.TabIndex = 0;
             streetsPage.Text = "streets";
-            // 
+
+            //
             // streetsList
-            // 
+            //
             streetsList.AllowColumnReorder = true;
-            streetsList.Columns.AddRange(new ColumnHeader[] { streetNumber, streetRoadIndex, streetSpanIndex, streetSpanType, streetMaxSpeed, streetMinSpeed });
+            streetsList.Columns.AddRange(new ColumnHeader[]
+            {
+                streetNumber,
+                streetRoadIndex,
+                streetSpanIndex,
+                streetSpanType,
+                streetMaxSpeed,
+                streetMinSpeed
+            });
             streetsList.ContextMenuStrip = streetsContextMenu;
             streetsList.Dock = DockStyle.Fill;
             streetsList.FullRowSelect = true;
@@ -167,25 +194,35 @@ namespace BaseHandlers
             streetsList.ColumnClick += list_ColumnClick;
             streetsList.DoubleClick += list_DoubleClick;
             streetsList.KeyDown += list_KeyDown;
-            // 
+
+            //
             // streetsContextMenu
-            // 
+            //
             streetsContextMenu.Name = "streetsContextMenu";
             streetsContextMenu.Size = new Size(61, 4);
-            // 
+
+            //
             // junctionsPage
-            // 
+            //
             junctionsPage.Controls.Add(junctionsList);
             junctionsPage.Location = new Point(4, 24);
             junctionsPage.Name = "junctionsPage";
             junctionsPage.Size = new Size(1012, 323);
             junctionsPage.TabIndex = 1;
             junctionsPage.Text = "junctions";
-            // 
+
+            //
             // junctionsList
-            // 
+            //
             junctionsList.AllowColumnReorder = true;
-            junctionsList.Columns.AddRange(new ColumnHeader[] { junctionNumber, junctionRoadIndex, junctionSpanIndex, junctionSpanType, junctionName });
+            junctionsList.Columns.AddRange(new ColumnHeader[]
+            {
+                junctionNumber,
+                junctionRoadIndex,
+                junctionSpanIndex,
+                junctionSpanType,
+                junctionName
+            });
             junctionsList.ContextMenuStrip = junctionsContextMenu;
             junctionsList.Dock = DockStyle.Fill;
             junctionsList.FullRowSelect = true;
@@ -200,45 +237,62 @@ namespace BaseHandlers
             junctionsList.ColumnClick += list_ColumnClick;
             junctionsList.DoubleClick += list_DoubleClick;
             junctionsList.KeyDown += list_KeyDown;
-            // 
+
+            //
             // junctionNumber
-            // 
+            //
             junctionNumber.Text = "#";
-            // 
+
+            //
             // junctionRoadIndex
-            // 
+            //
             junctionRoadIndex.Text = "RoadIndex";
-            // 
+
+            //
             // junctionSpanIndex
-            // 
+            //
             junctionSpanIndex.Text = "SpanIndex";
-            // 
+
+            //
             // junctionSpanType
-            // 
+            //
             junctionSpanType.Text = "SpanType";
-            // 
+
+            //
             // junctionName
-            // 
+            //
             junctionName.Text = "Name";
-            // 
+
+            //
             // junctionsContextMenu
-            // 
+            //
             junctionsContextMenu.Name = "junctionsContextMenu";
             junctionsContextMenu.Size = new Size(61, 4);
-            // 
+
+            //
             // roadsPage
-            // 
+            //
             roadsPage.Controls.Add(roadsList);
             roadsPage.Location = new Point(4, 24);
             roadsPage.Name = "roadsPage";
             roadsPage.Size = new Size(1012, 323);
             roadsPage.TabIndex = 2;
             roadsPage.Text = "roads";
-            // 
+
+            //
             // roadsList
-            // 
+            //
             roadsList.AllowColumnReorder = true;
-            roadsList.Columns.AddRange(new ColumnHeader[] { roadNumber, roadDebugName, roadRefX, roadRefY, roadRefZ, roadChallenge, roadGamedbId });
+            roadsList.Columns.AddRange(new ColumnHeader[]
+            {
+                roadNumber,
+                roadDebugName,
+                roadRefX,
+                roadRefY,
+                roadRefZ,
+                roadChallenge,
+                roadGamedbId
+            });
             roadsList.ContextMenuStrip = roadsContextMenu;
             roadsList.Dock = DockStyle.Fill;
             roadsList.FullRowSelect = true;
@@ -253,53 +307,70 @@ namespace BaseHandlers
             roadsList.ColumnClick += list_ColumnClick;
             roadsList.DoubleClick += list_DoubleClick;
             roadsList.KeyDown += list_KeyDown;
-            // 
+
+            //
             // roadNumber
-            // 
+            //
             roadNumber.Text = "#";
-            // 
+
+            //
             // roadDebugName
-            // 
+            //
             roadDebugName.Text = "DebugName";
-            // 
+
+            //
             // roadRefX
-            // 
+            //
             roadRefX.Text = "RefX";
-            // 
+
+            //
             // roadRefY
-            // 
+            //
             roadRefY.Text = "RefY";
-            // 
+
+            //
             // roadRefZ
-            // 
+            //
             roadRefZ.Text = "RefZ";
-            // 
+
+            //
             // roadChallenge
-            // 
+            //
             roadChallenge.Text = "Challenge";
-            // 
+
+            //
             // roadGamedbId
-            // 
+            //
             roadGamedbId.Text = "GameDB ID";
-            // 
+
+            //
             // roadsContextMenu
-            // 
+            //
             roadsContextMenu.Name = "roadsContextMenu";
             roadsContextMenu.Size = new Size(61, 4);
-            // 
+
+            //
             // challengesPage
-            // 
+            //
             challengesPage.Controls.Add(challengesList);
             challengesPage.Location = new Point(4, 24);
             challengesPage.Name = "challengesPage";
             challengesPage.Size = new Size(1012, 323);
             challengesPage.TabIndex = 3;
             challengesPage.Text = "challenges";
-            // 
+
+            //
             // challengesList
-            // 
+            //
             challengesList.AllowColumnReorder = true;
-            challengesList.Columns.AddRange(new ColumnHeader[] { challengeNumber, challengeScore0, challengeScore1, challengeRival0, challengeRival1 });
+            challengesList.Columns.AddRange(new ColumnHeader[]
+            {
+                challengeNumber,
+                challengeScore0,
+                challengeScore1,
+                challengeRival0,
+                challengeRival1
+            });
             challengesList.ContextMenuStrip = challengesContextMenu;
             challengesList.Dock = DockStyle.Fill;
             challengesList.FullRowSelect = true;
@@ -314,42 +385,50 @@ namespace BaseHandlers
             challengesList.ColumnClick += list_ColumnClick;
             challengesList.DoubleClick += list_DoubleClick;
             challengesList.KeyDown += list_KeyDown;
-            // 
+
+            //
             // challengesContextMenu
-            // 
+            //
             challengesContextMenu.Name = "challengesContextMenu";
             challengesContextMenu.Size = new Size(61, 4);
-            // 
+
+            //
             // propertyGrid
-            // 
+            //
             propertyGrid.Dock = DockStyle.Bottom;
             propertyGrid.Location = new Point(0, 375);
             propertyGrid.Name = "propertyGrid";
             propertyGrid.Size = new Size(1020, 300);
             propertyGrid.TabIndex = 2;
-            // 
+
+            //
             // challengeNumber
-            // 
+            //
             challengeNumber.Text = "#";
-            // 
+
+            //
             // challengeScore0
-            // 
+            //
             challengeScore0.Text = "Score 0";
-            // 
+
+            //
             // challengeScore1
-            // 
+            //
             challengeScore1.Text = "Score 1";
-            // 
+
+            //
             // challengeRival0
-            // 
+            //
             challengeRival0.Text = "Rival 0";
-            // 
+
+            //
             // challengeRival1
-            // 
+            //
             challengeRival1.Text = "Rival 1";
-            // 
+
+            //
             // StreetDataEditor
-            // 
+            //
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1020, 675);

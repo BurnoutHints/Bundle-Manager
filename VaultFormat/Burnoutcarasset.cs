@@ -23,7 +23,7 @@ public class Burnoutcarasset : IAttribute
 
     public RefSpec CameraBumperBehaviourAsset { get; set; }
 
-    public byte[] VehicleID;//See StrE	
+    public byte[] VehicleID;//See StrE
 
     public long PhysicsAsset { get; set; }
 

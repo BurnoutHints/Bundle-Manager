@@ -17,6 +17,7 @@ namespace BaseHandlers
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -39,47 +40,56 @@ namespace BaseHandlers
             this.colScale = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.mnuMain.SuspendLayout();
             this.SuspendLayout();
-            // 
+
+            //
             // mnuMain
-            // 
-            this.mnuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.renderToolStripMenuItem,
-            this.debugToolStripMenuItem});
+            //
+            this.mnuMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                this.renderToolStripMenuItem,
+                this.debugToolStripMenuItem
+            });
             this.mnuMain.Location = new System.Drawing.Point(0, 0);
             this.mnuMain.Name = "mnuMain";
             this.mnuMain.Size = new System.Drawing.Size(800, 24);
             this.mnuMain.TabIndex = 0;
             this.mnuMain.Text = "menuStrip1";
-            // 
+
+            //
             // debugToolStripMenuItem
-            // 
+            //
             this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
             this.debugToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
             this.debugToolStripMenuItem.Text = "Debug";
             this.debugToolStripMenuItem.Click += new System.EventHandler(this.debugToolStripMenuItem_Click);
-            // 
+
+            //
             // stsMain
-            // 
+            //
             this.stsMain.Location = new System.Drawing.Point(0, 428);
             this.stsMain.Name = "stsMain";
             this.stsMain.Size = new System.Drawing.Size(800, 22);
             this.stsMain.TabIndex = 1;
             this.stsMain.Text = "statusStrip1";
-            // 
+
+            //
             // renderToolStripMenuItem
-            // 
+            //
             this.renderToolStripMenuItem.Name = "renderToolStripMenuItem";
             this.renderToolStripMenuItem.Size = new System.Drawing.Size(56, 20);
             this.renderToolStripMenuItem.Text = "Render";
             this.renderToolStripMenuItem.Click += new System.EventHandler(this.renderToolStripMenuItem_Click);
-            // 
+
+            //
             // lstMain
-            // 
-            this.lstMain.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.colModel,
-            this.colTranslation,
-            this.colRotation,
-            this.colScale});
+            //
+            this.lstMain.Columns.AddRange(new System.Windows.Forms.ColumnHeader[]
+            {
+                this.colModel,
+                this.colTranslation,
+                this.colRotation,
+                this.colScale
+            });
             this.lstMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lstMain.FullRowSelect = true;
             this.lstMain.GridLines = true;
@@ -92,28 +102,33 @@ namespace BaseHandlers
             this.lstMain.View = System.Windows.Forms.View.Details;
             this.lstMain.SizeChanged += new System.EventHandler(this.lstMain_SizeChanged);
             this.lstMain.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lstMain_MouseDoubleClick);
-            // 
+
+            //
             // colModel
-            // 
+            //
             this.colModel.Text = "Model";
-            // 
+
+            //
             // colTranslation
-            // 
+            //
             this.colTranslation.Text = "Position";
             this.colTranslation.Width = 120;
-            // 
+
+            //
             // colRotation
-            // 
+            //
             this.colRotation.Text = "Rotation";
             this.colRotation.Width = 120;
-            // 
+
+            //
             // colScale
-            // 
+            //
             this.colScale.Text = "Scale";
             this.colScale.Width = 120;
-            // 
+
+            //
             // InstanceListEditor
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);

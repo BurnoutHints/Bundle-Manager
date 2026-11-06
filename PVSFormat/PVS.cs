@@ -97,7 +97,7 @@ public class PVS : IEntryData
             ? 0x18
             : 0x10;
 
-        long ReadPtr() => x64
+        long readPtr() => x64
             ? (long)br.ReadUInt64()
             : br.ReadUInt32();
 
@@ -107,7 +107,7 @@ public class PVS : IEntryData
 
         // Get zones
         br.BaseStream.Position = ptrSize;
-        br.BaseStream.Position = ReadPtr();
+        br.BaseStream.Position = readPtr();
         long zonePos;
         long unsafeNeighboursPos;
         long unsafeNeighbourZonePos;
@@ -118,7 +118,7 @@ public class PVS : IEntryData
             zonePos = br.BaseStream.Position;
 
             // Get points
-            br.BaseStream.Position = ReadPtr();
+            br.BaseStream.Position = readPtr();
 
             for (int j = 0; j < 4; ++j)
             {
@@ -130,13 +130,13 @@ public class PVS : IEntryData
             br.BaseStream.Position = zonePos + zoneIDOffset + 0xE;
             zone.NumUnsafeNeighbours = br.ReadInt16();
             br.BaseStream.Position = zonePos + 2 * ptrSize;
-            unsafeNeighboursPos = ReadPtr();
+            unsafeNeighboursPos = readPtr();
 
             for (int j = 0; j < zone.NumUnsafeNeighbours; ++j)
             {
                 Neighbour neighbour = new();
                 br.BaseStream.Position = unsafeNeighboursPos + 0x10 * j;
-                unsafeNeighbourZonePos = ReadPtr();
+                unsafeNeighbourZonePos = readPtr();
                 neighbour.Flags = (NeighbourFlags)br.ReadUInt32();
                 br.BaseStream.Position = unsafeNeighbourZonePos + zoneIDOffset;
                 neighbour.ZoneId = br.ReadUInt64();
@@ -168,7 +168,7 @@ public class PVS : IEntryData
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
 
-        void WritePtr(uint ptr)
+        void writePtr(uint ptr)
         {
             if (x64)
                 bw.Write((ulong)ptr);
@@ -212,10 +212,10 @@ public class PVS : IEntryData
             zoneCountsPtr = (zoneCountsPtr & 0xFFFFFFF0) + 0x10;
 
         // Write ZoneList
-        WritePtr(pointsPtr);
-        WritePtr(zonesPtr);
-        WritePtr(zoneStartsPtr);
-        WritePtr(zoneCountsPtr);
+        writePtr(pointsPtr);
+        writePtr(zonesPtr);
+        writePtr(zoneStartsPtr);
+        writePtr(zoneCountsPtr);
         bw.Write(data.TotalZones);
         bw.Write(data.TotalZones * 0x4);
 
@@ -225,13 +225,13 @@ public class PVS : IEntryData
         for (int i = 0; i < data.TotalZones; ++i)
         {
             bw.BaseStream.Position = zonesPtr + i * 0x30;
-            WritePtr((uint)(pointsPtr + i * 0x4 * 0x10)); // Points
-            WritePtr(0); // Safe neighbours
+            writePtr((uint)(pointsPtr + i * 0x4 * 0x10)); // Points
+            writePtr(0); // Safe neighbours
 
             if (data.Zones[i].NumUnsafeNeighbours == 0) // Unsafe neighbours
-                WritePtr(0);
+                writePtr(0);
             else
-                WritePtr(neighboursPtr + neighboursPosition);
+                writePtr(neighboursPtr + neighboursPosition);
 
             if (!x64)
                 bw.Write(0); // Padding
@@ -260,7 +260,7 @@ public class PVS : IEntryData
                 ulong zoneID = data.Zones[i].UnsafeNeighbours[j].ZoneId;
                 int neighbourZoneIndex = data.Zones.FindIndex(z => z.ZoneId == zoneID);
                 uint neighbourZonePtr = (uint)(zonesPtr + neighbourZoneIndex * 0x30);
-                WritePtr(neighbourZonePtr);
+                writePtr(neighbourZonePtr);
                 bw.Write((uint)data.Zones[i].UnsafeNeighbours[j].Flags);
                 neighboursPosition += 0x10;
             }

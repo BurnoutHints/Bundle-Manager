@@ -17,6 +17,7 @@ namespace BundleUtilities
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -34,10 +35,11 @@ namespace BundleUtilities
             this.lblStatus = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
             this.SuspendLayout();
-            // 
+
+            //
             // pboMain
-            // 
-            this.pboMain.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            //
+            this.pboMain.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pboMain.Location = new System.Drawing.Point(12, 38);
             this.pboMain.MarqueeAnimationSpeed = 10;
@@ -45,18 +47,20 @@ namespace BundleUtilities
             this.pboMain.Size = new System.Drawing.Size(539, 23);
             this.pboMain.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.pboMain.TabIndex = 0;
-            // 
+
+            //
             // lblStatus
-            // 
+            //
             this.lblStatus.AutoSize = true;
             this.lblStatus.Location = new System.Drawing.Point(9, 15);
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(48, 13);
             this.lblStatus.TabIndex = 1;
             this.lblStatus.Text = "Loading:";
-            // 
+
+            //
             // btnCancel
-            // 
+            //
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Location = new System.Drawing.Point(476, 67);
@@ -66,9 +70,10 @@ namespace BundleUtilities
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
-            // 
+
+            //
             // LoadingDialog
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;

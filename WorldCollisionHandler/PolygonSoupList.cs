@@ -142,14 +142,14 @@ public class PolygonSoupChunk
     {
         PolygonSoupChunk result = new();
 
-        long ReadPtr() => x64
+        long readPtr() => x64
             ? (long)br.ReadUInt64()
             : br.ReadUInt32();
 
         result.Position = br.ReadVector3I();
         result.Scale = br.ReadSingle();
-        long propertyListStart = ReadPtr();
-        long pointListStart = ReadPtr();
+        long propertyListStart = readPtr();
+        long pointListStart = readPtr();
         br.ReadInt16(); // Length
         byte propertyListCount = br.ReadByte();
         result.QuadCount = br.ReadByte();
@@ -176,7 +176,7 @@ public class PolygonSoupChunk
 
     public void Write(BinaryWriter2 bw, bool x64)
     {
-        void WritePtr(long ptr)
+        void writePtr(long ptr)
         {
             if (x64)
                 bw.Write((ulong)ptr);
@@ -188,9 +188,9 @@ public class PolygonSoupChunk
         bw.Write(Position);
         bw.Write(Scale);
         long propListStartPtr = bw.BaseStream.Position;
-        WritePtr(0);
+        writePtr(0);
         long pointListStartPtr = bw.BaseStream.Position;
-        WritePtr(0);
+        writePtr(0);
         long lengthPtr = bw.BaseStream.Position;
         bw.Write((ushort)0);
         bw.Write((byte)PropertyList.Count);
@@ -201,7 +201,7 @@ public class PolygonSoupChunk
 
         long cPos = bw.BaseStream.Position;
         bw.BaseStream.Position = pointListStartPtr;
-        WritePtr(cPos);
+        writePtr(cPos);
         bw.BaseStream.Position = cPos;
 
         for (int i = 0; i < PointList.Count; i++)
@@ -212,7 +212,7 @@ public class PolygonSoupChunk
         bw.BaseStream.Position = (16 * ((bw.BaseStream.Position + 15) / 16));
         cPos = bw.BaseStream.Position;
         bw.BaseStream.Position = propListStartPtr;
-        WritePtr(cPos);
+        writePtr(cPos);
         bw.BaseStream.Position = cPos;
 
         for (int i = 0; i < PropertyList.Count; i++)
@@ -536,7 +536,7 @@ public class PolygonSoupList : IEntryData
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
 
-        long ReadPtr() => x64
+        long readPtr() => x64
             ? (long)br.ReadUInt64()
             : br.ReadUInt32();
 
@@ -544,8 +544,8 @@ public class PolygonSoupList : IEntryData
         Unknown4 = br.ReadInt32();
         Max = br.ReadVector3F();
         Unknown8 = br.ReadInt32();
-        long chunkPointerStart = ReadPtr();
-        long boxListStart = ReadPtr();
+        long chunkPointerStart = readPtr();
+        long boxListStart = readPtr();
         int chunkCount = br.ReadInt32();
         br.ReadUInt32(); // FileSize
 
@@ -563,7 +563,7 @@ public class PolygonSoupList : IEntryData
 
         for (int i = 0; i < chunkCount; i++)
         {
-            chunkPointers.Add(ReadPtr());
+            chunkPointers.Add(readPtr());
         }
 
         for (int i = 0; i < chunkCount; i++)
@@ -619,7 +619,7 @@ public class PolygonSoupList : IEntryData
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
 
-        void WritePtr(long ptr)
+        void writePtr(long ptr)
         {
             if (x64)
                 bw.Write((ulong)ptr);
@@ -632,9 +632,9 @@ public class PolygonSoupList : IEntryData
         bw.Write(Max);
         bw.Write(Unknown8);
         long chunkPointerStartPos = bw.BaseStream.Position;
-        WritePtr(0);
+        writePtr(0);
         long boxListStartPos = bw.BaseStream.Position;
-        WritePtr(0);
+        writePtr(0);
         bw.Write(Chunks.Count);
         long fileSizePos = bw.BaseStream.Position;
         bw.Write((uint)0);
@@ -669,14 +669,14 @@ public class PolygonSoupList : IEntryData
 
         for (int i = 0; i < Chunks.Count; i++)
         {
-            WritePtr(0);
+            writePtr(0);
         }
 
         bw.BaseStream.Position = (16 * ((bw.BaseStream.Position + 15) / 16));
         cPos = bw.BaseStream.Position;
         uint boxListStart = (uint)bw.BaseStream.Position;
         bw.BaseStream.Position = boxListStartPos;
-        WritePtr(cPos);
+        writePtr(cPos);
 
         for (int i = 0; i < Chunks.Count; i++)
         {
@@ -750,7 +750,7 @@ public class PolygonSoupList : IEntryData
 
         for (int i = 0; i < Chunks.Count; i++)
         {
-            WritePtr(chunkPointers[i]);
+            writePtr(chunkPointers[i]);
         }
 
         bw.Flush();

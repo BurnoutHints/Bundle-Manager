@@ -17,6 +17,7 @@ namespace BundleManager
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -31,17 +32,19 @@ namespace BundleManager
             this.cboSelect = new System.Windows.Forms.ComboBox();
             this.btnOk = new System.Windows.Forms.Button();
             this.SuspendLayout();
-            // 
+
+            //
             // cboSelect
-            // 
+            //
             this.cboSelect.FormattingEnabled = true;
             this.cboSelect.Location = new System.Drawing.Point(12, 12);
             this.cboSelect.Name = "cboSelect";
             this.cboSelect.Size = new System.Drawing.Size(121, 21);
             this.cboSelect.TabIndex = 0;
-            // 
+
+            //
             // btnOk
-            // 
+            //
             this.btnOk.Location = new System.Drawing.Point(35, 39);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
@@ -49,9 +52,10 @@ namespace BundleManager
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
-            // 
+
+            //
             // VertexSizePicker
-            // 
+            //
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;

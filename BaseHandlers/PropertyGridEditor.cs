@@ -40,7 +40,7 @@ public class PropertyGridEditor : Form, IEntryEditor
             Visible = false
         };
 
-        PropertyGrid MakeGrid(object data)
+        PropertyGrid makeGrid(object data)
         {
             // Categorized without Alphabetical keeps fields in the order they're declared
             PropertyGrid grid = new()
@@ -59,13 +59,13 @@ public class PropertyGridEditor : Form, IEntryEditor
         }
 
         // A page that's already a control is shown as it is
-        Control MakePage(object data) => data is Control control
+        Control makePage(object data) => data is Control control
             ? control
-            : MakeGrid(data);
+            : makeGrid(data);
 
         if (pages.Length == 1)
         {
-            Controls.Add(MakePage(pages[0].Data));
+            Controls.Add(makePage(pages[0].Data));
         }
         else
         {
@@ -79,7 +79,7 @@ public class PropertyGridEditor : Form, IEntryEditor
                 {
                     Controls =
                     {
-                        MakePage(currentData)
+                        makePage(currentData)
                     }
                 });
 

@@ -328,20 +328,20 @@ public partial class EntryEditor : Form
 
     private List<Dependency> AskImports(List<Dependency> found, List<Dependency> current)
     {
-        static string Imports(int count) => count == 1
+        static string imports(int count) => count == 1
             ? "1 import"
             : $"{count} imports";
 
-        TaskDialogCommandLinkButton useFound = new($"Use the {Imports(found.Count)} at the end of the file", "The file ends with its own import table.");
-        TaskDialogCommandLinkButton keep = new($"Keep the resource's {Imports(current.Count)}", "The file is the resource without its import table.");
+        TaskDialogCommandLinkButton useFound = new($"Use the {imports(found.Count)} at the end of the file", "The file ends with its own import table.");
+        TaskDialogCommandLinkButton keep = new($"Keep the resource's {imports(current.Count)}", "The file is the resource without its import table.");
         TaskDialogCommandLinkButton none = new("No imports", "The new resource doesn't import anything.");
 
         TaskDialogPage page = new()
         {
             Caption = "Import Data",
             Heading = found.Count > 0
-                ? $"This file seems to end with {Imports(found.Count)}"
-                : $"This file doesn't end with the resource's {Imports(current.Count)}",
+                ? $"This file seems to end with {imports(found.Count)}"
+                : $"This file doesn't end with the resource's {imports(current.Count)}",
             Text = "There's no _imports.yaml next to it to say which imports it has.",
             Icon = TaskDialogIcon.Warning,
             AllowCancel = true

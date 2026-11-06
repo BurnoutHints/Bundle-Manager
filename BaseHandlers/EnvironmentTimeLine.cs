@@ -44,7 +44,7 @@ public class EnvironmentTimeLine : IEntryData
             ? 8
             : 4;
 
-        long ReadPtr()
+        long readPtr()
         {
             if (!x64)
                 return br.ReadUInt32();
@@ -59,7 +59,7 @@ public class EnvironmentTimeLine : IEntryData
             throw new ReadFailedError($"Unsupported environment time line version {muVersion}, expected 1.");
 
         int numLocations = br.ReadInt32();
-        long locations = ReadPtr();
+        long locations = readPtr();
 
         // The keyframe pointers are filled by the imports
         Dictionary<long, ulong> imports = entry.GetDependencies().ToDictionary(d => (long)d.EntryPointerOffset, d => d.EntryID);
@@ -72,8 +72,8 @@ public class EnvironmentTimeLine : IEntryData
                 ? 0x18
                 : 0xC);
             int numKeyframes = br.ReadInt32();
-            long times = ReadPtr();
-            long keyframes = ReadPtr();
+            long times = readPtr();
+            long keyframes = readPtr();
 
             TimeLineLocation location = new();
 
@@ -116,13 +116,13 @@ public class EnvironmentTimeLine : IEntryData
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
 
-        void Align(int alignment)
+        void align(int alignment)
         {
             while (ms.Position % alignment != 0)
                 bw.Write((byte)0);
         }
 
-        void Ptr(long value)
+        void ptr(long value)
         {
             if (!x64)
             {
@@ -130,35 +130,35 @@ public class EnvironmentTimeLine : IEntryData
                 return;
             }
 
-            Align(8);
+            align(8);
             bw.Write((ulong)value);
         }
 
-        void Patch(long pos, long value)
+        void patch(long pos, long value)
         {
             long end = ms.Position;
             ms.Position = pos;
-            Ptr(value);
+            ptr(value);
             ms.Position = end;
         }
 
         bw.Write(muVersion);
         bw.Write(mpLocationDatii.Count);
-        Ptr(0x10); // The locations follow the header
+        ptr(0x10); // The locations follow the header
 
-        Align(16);
+        align(16);
         List<(long Times, long Keyframes)> pointers = [];
 
         foreach (TimeLineLocation location in mpLocationDatii)
         {
             bw.Write(location.Keyframes.Count);
-            Align(x64
+            align(x64
                 ? 8
                 : 4);
             long times = ms.Position;
-            Ptr(0);
+            ptr(0);
             long keyframes = ms.Position;
-            Ptr(0);
+            ptr(0);
             pointers.Add((times: times, keyframes: keyframes));
         }
 
@@ -169,8 +169,8 @@ public class EnvironmentTimeLine : IEntryData
         {
             TimeLineKeyframe[] keyframes = [.. mpLocationDatii[i].Keyframes.OrderBy(k => k.mfTime)];
 
-            Align(16);
-            Patch(pointers[i].Keyframes, ms.Position);
+            align(16);
+            patch(pointers[i].Keyframes, ms.Position);
 
             foreach (TimeLineKeyframe keyframe in keyframes)
             {
@@ -179,17 +179,17 @@ public class EnvironmentTimeLine : IEntryData
                     ID = keyframe.mpKeyframe,
                     EntryPointerOffset = (uint)ms.Position
                 });
-                Ptr(0);
+                ptr(0);
             }
 
-            Align(16);
-            Patch(pointers[i].Times, ms.Position);
+            align(16);
+            patch(pointers[i].Times, ms.Position);
 
             foreach (TimeLineKeyframe keyframe in keyframes)
                 bw.Write(keyframe.mfTime);
         }
 
-        Align(16);
+        align(16);
         bw.Flush();
 
         importCount = imports.Count;

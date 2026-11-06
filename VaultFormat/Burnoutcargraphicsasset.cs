@@ -11,7 +11,7 @@ public class Burnoutcargraphicsasset : IAttribute
 
     public int PlayerColourIndex { get; set; }
 
-    public short Alloc { get; set; } // Allocate space for x* Size. Always 1 in VEH_P*	
+    public short Alloc { get; set; } // Allocate space for x* Size. Always 1 in VEH_P*
 
     public short Num_RandomTrafficColours { get; set; } // Count
 

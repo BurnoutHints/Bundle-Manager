@@ -458,7 +458,7 @@ public class Traffic : IEntryData
         br.BigEndian = entry.Console;
         int pointerSize = PointerSize(entry);
 
-        long Ptr()
+        long ptr()
         {
             br.BaseStream.Position = (br.BaseStream.Position + pointerSize - 1) & -pointerSize;
             return pointerSize == 8
@@ -466,7 +466,7 @@ public class Traffic : IEntryData
                 : br.ReadUInt32();
         }
 
-        List<T> At<T>(long offset, int count, Func<T> read)
+        List<T> at<T>(long offset, int count, Func<T> read)
         {
             long back = br.BaseStream.Position;
             br.BaseStream.Position = offset;
@@ -479,16 +479,16 @@ public class Traffic : IEntryData
             return items;
         }
 
-        Vector4 V4() => new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+        Vector4 v4() => new(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
 
-        ushort U16() => br.ReadUInt16();
+        ushort u16() => br.ReadUInt16();
 
-        int Limit(int count, int max, string what) => count <= max
+        int limit(int count, int max, string what) => count <= max
             ? count
             : throw new ReadFailedError($"Traffic data has {count} {what}, more than the {max} there's room for.");
 
         // Ranges into a shared array become lists in their owners, which only keeps the data if they follow on from each other
-        List<T> Take<T>(List<T> all, ref int next, int offset, int count, string what)
+        List<T> take<T>(List<T> all, ref int next, int offset, int count, string what)
         {
             if (offset != next || offset + count > all.Count)
                 throw new ReadFailedError($"Traffic data {what} ranges overlap or have gaps, so they can't be edited as lists.");
@@ -497,7 +497,7 @@ public class Traffic : IEntryData
             return all.GetRange(offset, count);
         }
 
-        void TookAll<T>(List<T> all, int next, string what)
+        void tookAll<T>(List<T> all, int next, string what)
         {
             if (next != all.Count)
                 throw new ReadFailedError($"Traffic data has {what} that nothing uses, so it can't be edited as lists.");
@@ -506,7 +506,7 @@ public class Traffic : IEntryData
         // Indexes become references once everything they can refer to is read
         List<Action> links = [];
 
-        T Get<T>(List<T> list, int index, string what) =>
+        T get<T>(List<T> list, int index, string what) =>
                     index >= 0 && index < list.Count
                         ? list[index]
                         : throw new ReadFailedError($"Traffic data refers to {what} {index}, which doesn't exist.");
@@ -517,84 +517,84 @@ public class Traffic : IEntryData
             throw new ReadFailedError($"Traffic data version {muDataVersion} can't be read, only versions 44 (v1.0 to v1.3) and 45.");
 
         br.ReadByte();
-        int numHulls = U16();
+        int numHulls = u16();
         br.ReadUInt32(); // muSizeInBytes
-        long pvs = Ptr(), hulls = Ptr(), flowTypes = Ptr();
-        int numFlowTypes = U16(), numVehicleTypes = U16(), numVehicleAssets = br.ReadByte(), numVehicleTraits = br.ReadByte();
-        int numKillZones = U16(), numKillZoneRegions = U16();
-        long killZoneIDs = Ptr(), killZones = Ptr(), killZoneRegions = Ptr(), vehicleTypes = Ptr(), vehicleTypesUpdate = Ptr(), vehicleAssets = Ptr(), vehicleTraits = Ptr();
-        int numLights = U16(), numLightTypes = U16();
-        U16(); // muNumCoronas, the light types give it (and the v1.0 X360 file has it byte swapped)
-        long lightPositions = Ptr(), instanceIDs = Ptr(), instanceTypes = Ptr(), lightTypes = Ptr(), coronaTypes = Ptr(), coronaPositions = Ptr();
+        long pvs = ptr(), hulls = ptr(), flowTypes = ptr();
+        int numFlowTypes = u16(), numVehicleTypes = u16(), numVehicleAssets = br.ReadByte(), numVehicleTraits = br.ReadByte();
+        int numKillZones = u16(), numKillZoneRegions = u16();
+        long killZoneIDs = ptr(), killZones = ptr(), killZoneRegions = ptr(), vehicleTypes = ptr(), vehicleTypesUpdate = ptr(), vehicleAssets = ptr(), vehicleTraits = ptr();
+        int numLights = u16(), numLightTypes = u16();
+        u16(); // muNumCoronas, the light types give it (and the v1.0 X360 file has it byte swapped)
+        long lightPositions = ptr(), instanceIDs = ptr(), instanceTypes = ptr(), lightTypes = ptr(), coronaTypes = ptr(), coronaPositions = ptr();
         br.ReadBytes(129 * 2); // mauInstanceHashOffsets, and the two hash tables after it, are rebuilt when saving
-        Ptr();
-        Ptr();
+        ptr();
+        ptr();
         int numPaintColours = br.ReadByte();
-        long paintColours = Ptr();
+        long paintColours = ptr();
 
         br.BaseStream.Position = pvs;
         mPvs = new()
         {
-            mGridMin = V4(),
-            mCellSize = V4(),
-            mRecipCellSize = V4(),
+            mGridMin = v4(),
+            mCellSize = v4(),
+            mRecipCellSize = v4(),
             muNumCells_X = br.ReadUInt32(),
             muNumCells_Z = br.ReadUInt32()
         };
         int numCells = (int)br.ReadUInt32();
-        mPvs.maHullPvs = At(Ptr(), numCells, () =>
+        mPvs.maHullPvs = at(ptr(), numCells, () =>
         {
-            ushort[] currentHullIDs = [.. Enumerable.Range(0, 8).Select(_ => U16())];
-            int currentCount = Limit((int)br.ReadUInt32(), 8, "hulls in a PVS cell");
+            ushort[] currentHullIDs = [.. Enumerable.Range(0, 8).Select(_ => u16())];
+            int currentCount = limit((int)br.ReadUInt32(), 8, "hulls in a PVS cell");
             PVSCell cell = new();
-            links.Add(() => cell.maHulls = [.. currentHullIDs[..currentCount].Select(id => Get(maHulls, id, "hull"))]);
+            links.Add(() => cell.maHulls = [.. currentHullIDs[..currentCount].Select(id => get(maHulls, id, "hull"))]);
             return cell;
         });
 
         List<(int First, int Last)> lightRanges = [];
         List<List<StopLine>> hullStopLines = [];
 
-        Hull ReadHull(long offset)
+        Hull readHull(long offset)
         {
             br.BaseStream.Position = offset;
             int numSections = br.ReadByte(), numSpans = br.ReadByte(), numJunctions = br.ReadByte(), numStopLines = br.ReadByte();
-            int numNeighbours = br.ReadByte(), numStatic = br.ReadByte(), numAssets = Limit(br.ReadByte(), 16, "vehicle assets in a hull");
+            int numNeighbours = br.ReadByte(), numStatic = br.ReadByte(), numAssets = limit(br.ReadByte(), 16, "vehicle assets in a hull");
             br.ReadByte();
-            int numRungs = U16();
-            lightRanges.Add((U16(), U16()));
+            int numRungs = u16();
+            lightRanges.Add((u16(), u16()));
             int numTriggers = br.ReadByte(), numStartData = br.ReadByte();
-            long sections = Ptr(), rungs = Ptr(), rungLengths = Ptr(), neighbours = Ptr(), spans = Ptr(), statics = Ptr(), flows = Ptr();
-            long junctions = Ptr(), stopLines = Ptr(), triggers = Ptr(), startData = Ptr(), junctionLookup = Ptr();
+            long sections = ptr(), rungs = ptr(), rungLengths = ptr(), neighbours = ptr(), spans = ptr(), statics = ptr(), flows = ptr();
+            long junctions = ptr(), stopLines = ptr(), triggers = ptr(), startData = ptr(), junctionLookup = ptr();
             Hull currentHull = new();
             byte[] assetIDs = br.ReadBytes(16)[..numAssets];
-            links.Add(() => currentHull.maVehicleAssets = [.. assetIDs.Select(id => Get(maVehicleAssets, id, "vehicle asset"))]);
+            links.Add(() => currentHull.maVehicleAssets = [.. assetIDs.Select(id => get(maVehicleAssets, id, "vehicle asset"))]);
 
-            List<LaneRung> allRungs = At(rungs, numRungs, () => new LaneRung()
+            List<LaneRung> allRungs = at(rungs, numRungs, () => new LaneRung()
             {
-                maPoints = [V4(), V4()]
+                maPoints = [v4(), v4()]
             });
 
-            List<float> lengths = At(rungLengths, numRungs, br.ReadSingle);
+            List<float> lengths = at(rungLengths, numRungs, br.ReadSingle);
 
             for (int currentI2 = 0; currentI2 < numRungs; currentI2++)
                 allRungs[currentI2].mfCumulativeLength = lengths[currentI2];
 
             List<(byte Section, byte SharedLength, byte OurRung, byte TheirRung)> allNeighbours =
-                            At(neighbours, numNeighbours, () => (br.ReadByte(), br.ReadByte(), br.ReadByte(), br.ReadByte()));
-            List<StopLine> allStopLines = At(stopLines, numStopLines, () => new StopLine()
+                            at(neighbours, numNeighbours, () => (br.ReadByte(), br.ReadByte(), br.ReadByte(), br.ReadByte()));
+            List<StopLine> allStopLines = at(stopLines, numStopLines, () => new StopLine()
             {
-                muParamFixed = U16()
+                muParamFixed = u16()
             });
 
             hullStopLines.Add(allStopLines);
-            List<(ushort Type, ushort PerMinute)> sectionFlows = At(flows, numSections, () => (U16(), U16()));
+            List<(ushort Type, ushort PerMinute)> sectionFlows = at(flows, numSections, () => (u16(), u16()));
 
             int nextRung = 0, nextNeighbour = 0, nextStopLine = 0;
-            currentHull.maSections = At(sections, numSections, () =>
+            currentHull.maSections = at(sections, numSections, () =>
             {
                 int rungOffset = (int)br.ReadUInt32(), sectionRungs = br.ReadByte(), stopLineOffset = br.ReadByte(), sectionStopLines = br.ReadByte();
                 int spanIndex = br.ReadByte();
-                ushort[] forwardHulls = [U16(), U16(), U16()], backwardHulls = [U16(), U16(), U16()];
+                ushort[] forwardHulls = [u16(), u16(), u16()], backwardHulls = [u16(), u16(), u16()];
                 byte[] forwardSections = br.ReadBytes(3), backwardSections = br.ReadBytes(3);
                 Section section = new()
                 {
@@ -602,19 +602,19 @@ public class Traffic : IEntryData
                     muTurnRightProb = br.ReadByte()
                 };
 
-                int neighbourOffset = U16(), left = br.ReadByte(), right = br.ReadByte();
+                int neighbourOffset = u16(), left = br.ReadByte(), right = br.ReadByte();
                 section.muChangeLeftProb = br.ReadByte();
                 section.muChangeRightProb = br.ReadByte();
-                U16();
+                u16();
                 section.mfSpeed = br.ReadSingle();
                 section.mfLength = br.ReadSingle();
                 br.ReadUInt32();
-                section.maRungs = Take(allRungs, ref nextRung, rungOffset, sectionRungs, "section rung");
+                section.maRungs = take(allRungs, ref nextRung, rungOffset, sectionRungs, "section rung");
 
                 if (sectionStopLines > 0) // A section without any has 255 as its offset
-                    section.maStopLines = Take(allStopLines, ref nextStopLine, stopLineOffset, sectionStopLines, "section stop line");
+                    section.maStopLines = take(allStopLines, ref nextStopLine, stopLineOffset, sectionStopLines, "section stop line");
 
-                List<Neighbour> Neighbours(int start, int count) => [..Take(allNeighbours, ref nextNeighbour, start, count, "section neighbour").Select(raw =>
+                List<Neighbour> neighbours(int start, int count) => [..take(allNeighbours, ref nextNeighbour, start, count, "section neighbour").Select(raw =>
                 {
                     Neighbour neighbour = new()
                     {
@@ -623,31 +623,31 @@ public class Traffic : IEntryData
 
                     links.Add(() =>
                     {
-                        neighbour.mSection = Get(currentHull.maSections, raw.Section, "section");
-                        neighbour.mOurStartRung = Get(section.maRungs, raw.OurRung, "rung");
-                        neighbour.mTheirStartRung = Get(neighbour.mSection.maRungs, raw.TheirRung, "rung");
+                        neighbour.mSection = get(currentHull.maSections, raw.Section, "section");
+                        neighbour.mOurStartRung = get(section.maRungs, raw.OurRung, "rung");
+                        neighbour.mTheirStartRung = get(neighbour.mSection.maRungs, raw.TheirRung, "rung");
                     });
                     return neighbour;
                 })];
 
-                section.maLeftNeighbours = Neighbours(neighbourOffset, left);
-                section.maRightNeighbours = Neighbours(neighbourOffset + left, right);
+                section.maLeftNeighbours = neighbours(neighbourOffset, left);
+                section.maRightNeighbours = neighbours(neighbourOffset + left, right);
 
-                Section[] Links(ushort[] hullIDs, byte[] sectionIDs) => [..hullIDs.Zip(sectionIDs, (h, s) => h == 0xFFFF
+                Section[] resolveLinks(ushort[] hullIDs, byte[] sectionIDs) => [..hullIDs.Zip(sectionIDs, (h, s) => h == 0xFFFF
                     ? null
-                    : Get(Get(maHulls, h, "hull").maSections, s, "section"))];
+                    : get(get(maHulls, h, "hull").maSections, s, "section"))];
 
                 links.Add(() =>
                 {
-                    section.mSpan = Get(currentHull.maSectionSpans, spanIndex, "section span");
-                    section.Forward = Links(forwardHulls, forwardSections);
-                    section.Backward = Links(backwardHulls, backwardSections);
+                    section.mSpan = get(currentHull.maSectionSpans, spanIndex, "section span");
+                    section.Forward = resolveLinks(forwardHulls, forwardSections);
+                    section.Backward = resolveLinks(backwardHulls, backwardSections);
                 });
                 return section;
             });
-            TookAll(allRungs, nextRung, "rungs");
-            TookAll(allNeighbours, nextNeighbour, "neighbours");
-            TookAll(allStopLines, nextStopLine, "stop lines");
+            tookAll(allRungs, nextRung, "rungs");
+            tookAll(allNeighbours, nextNeighbour, "neighbours");
+            tookAll(allStopLines, nextStopLine, "stop lines");
 
             for (int currentI3 = 0; currentI3 < numSections; currentI3++)
             {
@@ -656,54 +656,54 @@ public class Traffic : IEntryData
                 section.muVehiclesPerMinute = perMinute;
                 links.Add(() => section.mFlowType = flowType == 0xFFFF
                     ? null
-                    : Get(maFlowTypes, flowType, "flow type"));
+                    : get(maFlowTypes, flowType, "flow type"));
             }
 
-            currentHull.maSectionSpans = At(spans, numSpans, () =>
+            currentHull.maSectionSpans = at(spans, numSpans, () =>
             {
                 SectionSpan span = new()
                 {
-                    muMaxVehicles = U16()
+                    muMaxVehicles = u16()
                 };
 
-                U16();
+                u16();
                 span.mfMaxVehicleRecip = br.ReadSingle();
                 return span;
             });
-            currentHull.maStaticTrafficVehicles = At(statics, numStatic, () =>
+            currentHull.maStaticTrafficVehicles = at(statics, numStatic, () =>
             {
                 StaticTrafficVehicle vehicle = new()
                 {
-                    mTransform = [V4(), V4(), V4(), V4()]
+                    mTransform = [v4(), v4(), v4(), v4()]
                 };
 
-                ushort flowType = U16();
+                ushort flowType = u16();
                 vehicle.mExistsAtAllChance = br.ReadByte();
                 vehicle.muFlags = br.ReadByte();
                 br.ReadBytes(12);
                 links.Add(() => vehicle.mFlowType = flowType == 0xFFFF
                     ? null
-                    : Get(maFlowTypes, flowType, "flow type"));
+                    : get(maFlowTypes, flowType, "flow type"));
                 return vehicle;
             });
-            currentHull.maJunctions = At(junctions, numJunctions, () => ReadJunction(currentHull));
-            currentHull.maLightTriggers = At(triggers, numTriggers, () => new LightTrigger()
+            currentHull.maJunctions = at(junctions, numJunctions, () => readJunction(currentHull));
+            currentHull.maLightTriggers = at(triggers, numTriggers, () => new LightTrigger()
             {
-                mDimensions = V4(),
-                mPosPlusYRot = V4()
+                mDimensions = v4(),
+                mPosPlusYRot = v4()
             });
-            List<byte> triggerJunctions = At(junctionLookup, numTriggers, br.ReadByte);
+            List<byte> triggerJunctions = at(junctionLookup, numTriggers, br.ReadByte);
 
             for (int currentI4 = 0; currentI4 < numTriggers; currentI4++)
-                currentHull.maLightTriggers[currentI4].mJunction = Get(currentHull.maJunctions, triggerJunctions[currentI4], "junction");
+                currentHull.maLightTriggers[currentI4].mJunction = get(currentHull.maJunctions, triggerJunctions[currentI4], "junction");
 
-            currentHull.maLightTriggerStartData = At(startData, numStartData, () =>
+            currentHull.maLightTriggerStartData = at(startData, numStartData, () =>
             {
-                Vector4[] positions = [.. Enumerable.Range(0, 8).Select(_ => V4())];
-                Vector4[] directions = [.. Enumerable.Range(0, 8).Select(_ => V4())];
+                Vector4[] positions = [.. Enumerable.Range(0, 8).Select(_ => v4())];
+                Vector4[] directions = [.. Enumerable.Range(0, 8).Select(_ => v4())];
                 ulong[] ids = [.. Enumerable.Range(0, 16).Select(_ => br.ReadUInt64())];
                 byte[] difficulties = br.ReadBytes(16);
-                int numPositions = Limit(br.ReadByte(), 8, "starting positions"), numDestinations = Limit(br.ReadByte(), 16, "destinations");
+                int numPositions = limit(br.ReadByte(), 8, "starting positions"), numDestinations = limit(br.ReadByte(), 16, "destinations");
                 LightTriggerStartData data = new()
                 {
                     muNumLanes = br.ReadByte(),
@@ -725,43 +725,43 @@ public class Traffic : IEntryData
             return currentHull;
         }
 
-        TrafficLightController ReadController(Hull hull)
+        TrafficLightController readController(Hull hull)
         {
-            ushort[] lightIDs = [U16(), U16()];
+            ushort[] lightIDs = [u16(), u16()];
             byte[] stopLineIDs = br.ReadBytes(6);
-            ushort[] stopLineHulls = [U16(), U16(), U16(), U16(), U16(), U16()];
-            int numStopLines = Limit(br.ReadByte(), 6, "stop lines in a traffic light controller");
-            int numLightIDs = Limit(br.ReadByte(), 2, "traffic lights in a traffic light controller");
+            ushort[] stopLineHulls = [u16(), u16(), u16(), u16(), u16(), u16()];
+            int numStopLines = limit(br.ReadByte(), 6, "stop lines in a traffic light controller");
+            int numLightIDs = limit(br.ReadByte(), 2, "traffic lights in a traffic light controller");
             TrafficLightController controller = new();
             links.Add(() =>
             {
                 int first = lightRanges[maHulls.IndexOf(hull)].First;
-                controller.maTrafficLights = [.. lightIDs[..numLightIDs].Select(id => Get(hull.maTrafficLights, id - first, "hull traffic light"))];
-                controller.maStopLines = [.. Enumerable.Range(0, numStopLines).Select(i => Get(Get(hullStopLines, stopLineHulls[i], "hull"), stopLineIDs[i], "stop line"))];
+                controller.maTrafficLights = [.. lightIDs[..numLightIDs].Select(id => get(hull.maTrafficLights, id - first, "hull traffic light"))];
+                controller.maStopLines = [.. Enumerable.Range(0, numStopLines).Select(i => get(get(hullStopLines, stopLineHulls[i], "hull"), stopLineIDs[i], "stop line"))];
             });
             return controller;
         }
 
-        JunctionLogicBox ReadJunction(Hull hull)
+        JunctionLogicBox readJunction(Hull hull)
         {
             JunctionLogicBox junction = new()
             {
                 muID = br.ReadUInt32()
             };
 
-            ushort[] timings = [.. Enumerable.Range(0, 16).Select(_ => U16())];
+            ushort[] timings = [.. Enumerable.Range(0, 16).Select(_ => u16())];
             byte[] stoppedStates = br.ReadBytes(16);
-            int numStates = Limit(br.ReadByte(), 16, "junction states"), numControllers = Limit(br.ReadByte(), 8, "traffic light controllers");
-            U16();
+            int numStates = limit(br.ReadByte(), 16, "junction states"), numControllers = limit(br.ReadByte(), 8, "traffic light controllers");
+            u16();
             junction.muEventJunctionID = br.ReadUInt32();
             int[] startData = [br.ReadInt32(), br.ReadInt32(), muDataVersion >= 45
                 ? br.ReadInt32()
                 : -1];
-            List<TrafficLightController> controllers = [.. Enumerable.Range(0, 8).Select(_ => ReadController(hull))];
+            List<TrafficLightController> controllers = [.. Enumerable.Range(0, 8).Select(_ => readController(hull))];
             br.ReadBytes(muDataVersion >= 45
                 ? 8
                 : 12);
-            junction.mPosition = V4();
+            junction.mPosition = v4();
             junction.maStates = [.. Enumerable.Range(0, numStates).Select(i => new JunctionState()
             {
                 muStateTiming = timings[i],
@@ -772,21 +772,21 @@ public class Traffic : IEntryData
             {
                 LightTriggerStartData[] data = [..startData.Select(i => i < 0
                     ? null
-                    : Get(hull.maLightTriggerStartData, i, "light trigger start data"))];
+                    : get(hull.maLightTriggerStartData, i, "light trigger start data"))];
                 (junction.mOfflineStartData, junction.mOnlineStartData, junction.mBikeStartData) = (data[0], data[1], data[2]);
             });
             return junction;
         }
 
-        maHulls = [.. At(hulls, numHulls, Ptr).Select(ReadHull)];
+        maHulls = [.. at(hulls, numHulls, ptr).Select(readHull)];
 
-        maFlowTypes = [.. At(flowTypes, numFlowTypes, Ptr).Select(offset =>
+        maFlowTypes = [.. at(flowTypes, numFlowTypes, ptr).Select(offset =>
         {
             br.BaseStream.Position = offset;
-            long ids = Ptr(), probs = Ptr();
+            long ids = ptr(), probs = ptr();
             int currentCount2 = br.ReadByte();
-            List<ushort> typeIDs = At(ids, currentCount2, U16);
-            List<byte> cumulative = At(probs, currentCount2, br.ReadByte);
+            List<ushort> typeIDs = at(ids, currentCount2, u16);
+            List<byte> cumulative = at(probs, currentCount2, br.ReadByte);
             return new FlowType()
             {
                 maVehicleTypes = [..typeIDs.Select((id, i) =>
@@ -796,15 +796,15 @@ public class Traffic : IEntryData
                         muCumulativeProb = cumulative[i]
                     };
 
-                    links.Add(() => currentType.mVehicleType = Get(maVehicleTypes, id, "vehicle type"));
+                    links.Add(() => currentType.mVehicleType = get(maVehicleTypes, id, "vehicle type"));
                     return currentType;
                 })]
             };
         })];
 
-        maVehicleTypes = At(vehicleTypes, numVehicleTypes, () =>
+        maVehicleTypes = at(vehicleTypes, numVehicleTypes, () =>
         {
-            int trailer = U16();
+            int trailer = u16();
             VehicleType currentType2 = new()
             {
                 mxVehicleFlags = br.ReadByte(),
@@ -818,9 +818,9 @@ public class Traffic : IEntryData
             {
                 currentType2.mTrailerFlowType = trailer == 0xFFFF
                     ? null
-                    : Get(maFlowTypes, trailer, "flow type");
-                currentType2.mAsset = Get(maVehicleAssets, asset, "vehicle asset");
-                currentType2.mTraits = Get(maVehicleTraits, traits, "vehicle traits");
+                    : get(maFlowTypes, trailer, "flow type");
+                currentType2.mAsset = get(maVehicleAssets, asset, "vehicle asset");
+                currentType2.mTraits = get(maVehicleTraits, traits, "vehicle traits");
             });
             return currentType2;
         });
@@ -835,11 +835,11 @@ public class Traffic : IEntryData
             currentType3.mfMass = br.ReadSingle();
         }
 
-        maVehicleAssets = At(vehicleAssets, numVehicleAssets, () => new VehicleAsset()
+        maVehicleAssets = at(vehicleAssets, numVehicleAssets, () => new VehicleAsset()
         {
             mVehicleId = br.ReadUInt64()
         });
-        maVehicleTraits = At(vehicleTraits, numVehicleTraits, () =>
+        maVehicleTraits = at(vehicleTraits, numVehicleTraits, () =>
         {
             VehicleTraits traits = new()
             {
@@ -856,23 +856,23 @@ public class Traffic : IEntryData
             return traits;
         });
 
-        List<ulong> zoneIDs = At(killZoneIDs, numKillZones, br.ReadUInt64);
-        List<KillZoneRegion> regions = At(killZoneRegions, numKillZoneRegions, () =>
+        List<ulong> zoneIDs = at(killZoneIDs, numKillZones, br.ReadUInt64);
+        List<KillZoneRegion> regions = at(killZoneRegions, numKillZoneRegions, () =>
         {
-            int currentHull2 = U16(), section = br.ReadByte(), currentStart = br.ReadByte(), end = br.ReadByte();
+            int currentHull2 = u16(), section = br.ReadByte(), currentStart = br.ReadByte(), end = br.ReadByte();
             br.ReadByte();
             KillZoneRegion region = new();
             links.Add(() =>
             {
-                region.mSection = Get(Get(maHulls, currentHull2, "hull").maSections, section, "section");
-                region.mStartRung = Get(region.mSection.maRungs, currentStart, "rung");
-                region.mEndRung = Get(region.mSection.maRungs, end, "rung");
+                region.mSection = get(get(maHulls, currentHull2, "hull").maSections, section, "section");
+                region.mStartRung = get(region.mSection.maRungs, currentStart, "rung");
+                region.mEndRung = get(region.mSection.maRungs, end, "rung");
             });
             return region;
         });
-        List<(int Offset, int Count)> zoneRanges = At(killZones, numKillZones, () =>
+        List<(int Offset, int Count)> zoneRanges = at(killZones, numKillZones, () =>
         {
-            int regionOffset = U16(), regionCount = br.ReadByte();
+            int regionOffset = u16(), regionCount = br.ReadByte();
             br.ReadByte();
             return (regionOffset: regionOffset, regionCount: regionCount);
         });
@@ -883,14 +883,14 @@ public class Traffic : IEntryData
             maKillZones.Add(new()
             {
                 mId = zoneIDs[currentI5],
-                maRegions = Take(regions, ref nextRegion, zoneRanges[currentI5].Offset, zoneRanges[currentI5].Count, "kill zone region")
+                maRegions = take(regions, ref nextRegion, zoneRanges[currentI5].Offset, zoneRanges[currentI5].Count, "kill zone region")
             });
 
-        TookAll(regions, nextRegion, "kill zone regions");
+        tookAll(regions, nextRegion, "kill zone regions");
 
-        List<Vector4> positions = At(lightPositions, numLights, V4);
-        List<uint> ids = At(instanceIDs, numLights, br.ReadUInt32);
-        List<byte> types = At(instanceTypes, numLights, br.ReadByte);
+        List<Vector4> positions = at(lightPositions, numLights, v4);
+        List<uint> ids = at(instanceIDs, numLights, br.ReadUInt32);
+        List<byte> types = at(instanceTypes, numLights, br.ReadByte);
         List<TrafficLight> lights = [.. positions.Select((position, i) => new TrafficLight()
         {
             mPosAndYRotation = position,
@@ -901,7 +901,7 @@ public class Traffic : IEntryData
         {
             TrafficLight light = lights[currentI6];
             int currentType4 = types[currentI6];
-            links.Add(() => light.mType = Get(maTrafficLightTypes, currentType4, "traffic light type"));
+            links.Add(() => light.mType = get(maTrafficLightTypes, currentType4, "traffic light type"));
         }
 
         // Each hull has a range of the lights, and a hull without any has where the next range would start
@@ -914,15 +914,15 @@ public class Traffic : IEntryData
             if (first != nextLight || last < first)
                 throw new ReadFailedError("Traffic data hull traffic light ranges overlap or have gaps, so they can't be edited as lists.");
 
-            maHulls[currentI7].maTrafficLights = Take(lights, ref nextLight, first, last - first, "traffic light");
+            maHulls[currentI7].maTrafficLights = take(lights, ref nextLight, first, last - first, "traffic light");
         }
 
-        TookAll(lights, nextLight, "traffic lights");
+        tookAll(lights, nextLight, "traffic lights");
 
-        List<(int Offset, int Count)> typeCoronas = At(lightTypes, numLightTypes, () => ((int)br.ReadByte(), (int)br.ReadByte()));
+        List<(int Offset, int Count)> typeCoronas = at(lightTypes, numLightTypes, () => ((int)br.ReadByte(), (int)br.ReadByte()));
         int numCoronas = typeCoronas.Sum(t => t.Count);
-        List<byte> coronaStates = At(coronaTypes, numCoronas, br.ReadByte);
-        List<Vector4> coronaPositionList = At(coronaPositions, numCoronas, V4);
+        List<byte> coronaStates = at(coronaTypes, numCoronas, br.ReadByte);
+        List<Vector4> coronaPositionList = at(coronaPositions, numCoronas, v4);
         List<Corona> coronas = [.. coronaStates.Select((state, i) => new Corona()
         {
             meState = (ETrafficLightState)state,
@@ -932,12 +932,12 @@ public class Traffic : IEntryData
         int nextCorona = 0;
         maTrafficLightTypes = [.. typeCoronas.Select(t => new TrafficLightType()
         {
-            maCoronas = Take(coronas, ref nextCorona, t.Offset, t.Count, "traffic light corona")
+            maCoronas = take(coronas, ref nextCorona, t.Offset, t.Count, "traffic light corona")
         })];
 
-        maPaintColours = At(paintColours, numPaintColours, () => new PaintColour()
+        maPaintColours = at(paintColours, numPaintColours, () => new PaintColour()
         {
-            mColour = V4()
+            mColour = v4()
         });
 
         foreach (Action link in links)

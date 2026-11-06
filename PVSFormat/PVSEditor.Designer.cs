@@ -17,6 +17,7 @@ namespace PVSFormat
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -70,20 +71,23 @@ namespace PVSFormat
             ((System.ComponentModel.ISupportInitialize)point1YNumericUpDown).BeginInit();
             ((System.ComponentModel.ISupportInitialize)point1XNumericUpDown).BeginInit();
             SuspendLayout();
-            // 
+
+            //
             // pvsSplitContainer
-            // 
+            //
             pvsSplitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             pvsSplitContainer.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
             pvsSplitContainer.Location = new System.Drawing.Point(0, 0);
             pvsSplitContainer.Name = "pvsSplitContainer";
-            // 
+
+            //
             // pvsSplitContainer.Panel1
-            // 
+            //
             pvsSplitContainer.Panel1.Controls.Add(pvsMain);
-            // 
+
+            //
             // pvsSplitContainer.Panel2
-            // 
+            //
             pvsSplitContainer.Panel2.Controls.Add(deleteZoneButton);
             pvsSplitContainer.Panel2.Controls.Add(addZoneButton);
             pvsSplitContainer.Panel2.Controls.Add(zonesListBox);
@@ -114,9 +118,10 @@ namespace PVSFormat
             pvsSplitContainer.Size = new System.Drawing.Size(784, 561);
             pvsSplitContainer.SplitterDistance = 580;
             pvsSplitContainer.TabIndex = 0;
-            // 
+
+            //
             // pvsMain
-            // 
+            //
             pvsMain.BackColor = System.Drawing.Color.Black;
             pvsMain.Dock = System.Windows.Forms.DockStyle.Fill;
             pvsMain.Font = new System.Drawing.Font("Courier New", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
@@ -128,9 +133,10 @@ namespace PVSFormat
             pvsMain.TabIndex = 0;
             pvsMain.Click += pvsMain_Click;
             pvsMain.DoubleClick += pvsMain_DoubleClick;
-            // 
+
+            //
             // deleteZoneButton
-            // 
+            //
             deleteZoneButton.Enabled = false;
             deleteZoneButton.Location = new System.Drawing.Point(131, 8);
             deleteZoneButton.Name = "deleteZoneButton";
@@ -139,9 +145,10 @@ namespace PVSFormat
             deleteZoneButton.Text = "Delete";
             deleteZoneButton.UseVisualStyleBackColor = true;
             deleteZoneButton.Click += deleteZoneButton_Click;
-            // 
+
+            //
             // addZoneButton
-            // 
+            //
             addZoneButton.Location = new System.Drawing.Point(11, 8);
             addZoneButton.Name = "addZoneButton";
             addZoneButton.Size = new System.Drawing.Size(56, 23);
@@ -149,9 +156,10 @@ namespace PVSFormat
             addZoneButton.Text = "Add";
             addZoneButton.UseVisualStyleBackColor = true;
             addZoneButton.Click += addZoneButton_Click;
-            // 
+
+            //
             // zonesListBox
-            // 
+            //
             zonesListBox.FormattingEnabled = true;
             zonesListBox.ItemHeight = 15;
             zonesListBox.Location = new System.Drawing.Point(12, 32);
@@ -160,9 +168,10 @@ namespace PVSFormat
             zonesListBox.Sorted = true;
             zonesListBox.TabIndex = 26;
             zonesListBox.SelectedIndexChanged += zonesListBox_SelectedIndexChanged;
-            // 
+
+            //
             // deleteNeighbourButton
-            // 
+            //
             deleteNeighbourButton.Enabled = false;
             deleteNeighbourButton.Location = new System.Drawing.Point(131, 353);
             deleteNeighbourButton.Name = "deleteNeighbourButton";
@@ -171,9 +180,10 @@ namespace PVSFormat
             deleteNeighbourButton.Text = "Delete";
             deleteNeighbourButton.UseVisualStyleBackColor = true;
             deleteNeighbourButton.Click += deleteNeighbourButton_Click;
-            // 
+
+            //
             // addNeighbourButton
-            // 
+            //
             addNeighbourButton.Enabled = false;
             addNeighbourButton.Location = new System.Drawing.Point(11, 353);
             addNeighbourButton.Name = "addNeighbourButton";
@@ -182,45 +192,50 @@ namespace PVSFormat
             addNeighbourButton.Text = "Add";
             addNeighbourButton.UseVisualStyleBackColor = true;
             addNeighbourButton.Click += addNeighbourButton_Click;
-            // 
+
+            //
             // yLabel2
-            // 
+            //
             yLabel2.AutoSize = true;
             yLabel2.Location = new System.Drawing.Point(100, 269);
             yLabel2.Name = "yLabel2";
             yLabel2.Size = new System.Drawing.Size(13, 15);
             yLabel2.TabIndex = 22;
             yLabel2.Text = "y";
-            // 
+
+            //
             // yLabel3
-            // 
+            //
             yLabel3.AutoSize = true;
             yLabel3.Location = new System.Drawing.Point(100, 298);
             yLabel3.Name = "yLabel3";
             yLabel3.Size = new System.Drawing.Size(13, 15);
             yLabel3.TabIndex = 21;
             yLabel3.Text = "y";
-            // 
+
+            //
             // yLabel4
-            // 
+            //
             yLabel4.AutoSize = true;
             yLabel4.Location = new System.Drawing.Point(100, 327);
             yLabel4.Name = "yLabel4";
             yLabel4.Size = new System.Drawing.Size(13, 15);
             yLabel4.TabIndex = 20;
             yLabel4.Text = "y";
-            // 
+
+            //
             // yLabel1
-            // 
+            //
             yLabel1.AutoSize = true;
             yLabel1.Location = new System.Drawing.Point(100, 240);
             yLabel1.Name = "yLabel1";
             yLabel1.Size = new System.Drawing.Size(13, 15);
             yLabel1.TabIndex = 19;
             yLabel1.Text = "y";
-            // 
+
+            //
             // immediateCheckBox
-            // 
+            //
             immediateCheckBox.AutoSize = true;
             immediateCheckBox.Enabled = false;
             immediateCheckBox.Location = new System.Drawing.Point(97, 538);
@@ -230,9 +245,10 @@ namespace PVSFormat
             immediateCheckBox.Text = "Immediate";
             immediateCheckBox.UseVisualStyleBackColor = true;
             immediateCheckBox.CheckedChanged += immediateCheckBox_CheckedChanged;
-            // 
+
+            //
             // renderCheckBox
-            // 
+            //
             renderCheckBox.AutoSize = true;
             renderCheckBox.Enabled = false;
             renderCheckBox.Location = new System.Drawing.Point(23, 538);
@@ -242,18 +258,20 @@ namespace PVSFormat
             renderCheckBox.Text = "Render";
             renderCheckBox.UseVisualStyleBackColor = true;
             renderCheckBox.CheckedChanged += renderCheckBox_CheckedChanged;
-            // 
+
+            //
             // zonesLabel
-            // 
+            //
             zonesLabel.AutoSize = true;
             zonesLabel.Location = new System.Drawing.Point(79, 12);
             zonesLabel.Name = "zonesLabel";
             zonesLabel.Size = new System.Drawing.Size(39, 15);
             zonesLabel.TabIndex = 15;
             zonesLabel.Text = "Zones";
-            // 
+
+            //
             // neighboursListBox
-            // 
+            //
             neighboursListBox.Enabled = false;
             neighboursListBox.FormattingEnabled = true;
             neighboursListBox.ItemHeight = 15;
@@ -263,159 +281,270 @@ namespace PVSFormat
             neighboursListBox.Sorted = true;
             neighboursListBox.TabIndex = 14;
             neighboursListBox.SelectedIndexChanged += neighboursListBox_SelectedIndexChanged;
-            // 
+
+            //
             // neighboursLabel
-            // 
+            //
             neighboursLabel.AutoSize = true;
             neighboursLabel.Location = new System.Drawing.Point(65, 357);
             neighboursLabel.Name = "neighboursLabel";
             neighboursLabel.Size = new System.Drawing.Size(69, 15);
             neighboursLabel.TabIndex = 13;
             neighboursLabel.Text = "Neighbours";
-            // 
+
+            //
             // xLabel2
-            // 
+            //
             xLabel2.AutoSize = true;
             xLabel2.Location = new System.Drawing.Point(10, 269);
             xLabel2.Name = "xLabel2";
             xLabel2.Size = new System.Drawing.Size(13, 15);
             xLabel2.TabIndex = 12;
             xLabel2.Text = "x";
-            // 
+
+            //
             // point2YNumericUpDown
-            // 
+            //
             point2YNumericUpDown.DecimalPlaces = 3;
             point2YNumericUpDown.Enabled = false;
             point2YNumericUpDown.Location = new System.Drawing.Point(115, 265);
-            point2YNumericUpDown.Maximum = new decimal(new int[] { 50000, 0, 0, 0 });
-            point2YNumericUpDown.Minimum = new decimal(new int[] { 50000, 0, 0, int.MinValue });
+            point2YNumericUpDown.Maximum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                0
+            });
+            point2YNumericUpDown.Minimum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                int.MinValue
+            });
             point2YNumericUpDown.Name = "point2YNumericUpDown";
             point2YNumericUpDown.Size = new System.Drawing.Size(70, 23);
             point2YNumericUpDown.TabIndex = 11;
             point2YNumericUpDown.ValueChanged += point2YNumericUpDown_ValueChanged;
-            // 
+
+            //
             // point2XNumericUpDown
-            // 
+            //
             point2XNumericUpDown.DecimalPlaces = 3;
             point2XNumericUpDown.Enabled = false;
             point2XNumericUpDown.Location = new System.Drawing.Point(24, 265);
-            point2XNumericUpDown.Maximum = new decimal(new int[] { 50000, 0, 0, 0 });
-            point2XNumericUpDown.Minimum = new decimal(new int[] { 50000, 0, 0, int.MinValue });
+            point2XNumericUpDown.Maximum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                0
+            });
+            point2XNumericUpDown.Minimum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                int.MinValue
+            });
             point2XNumericUpDown.Name = "point2XNumericUpDown";
             point2XNumericUpDown.Size = new System.Drawing.Size(70, 23);
             point2XNumericUpDown.TabIndex = 10;
             point2XNumericUpDown.ValueChanged += point2XNumericUpDown_ValueChanged;
-            // 
+
+            //
             // xLabel3
-            // 
+            //
             xLabel3.AutoSize = true;
             xLabel3.Location = new System.Drawing.Point(10, 298);
             xLabel3.Name = "xLabel3";
             xLabel3.Size = new System.Drawing.Size(13, 15);
             xLabel3.TabIndex = 9;
             xLabel3.Text = "x";
-            // 
+
+            //
             // point3YNumericUpDown
-            // 
+            //
             point3YNumericUpDown.DecimalPlaces = 3;
             point3YNumericUpDown.Enabled = false;
             point3YNumericUpDown.Location = new System.Drawing.Point(115, 294);
-            point3YNumericUpDown.Maximum = new decimal(new int[] { 50000, 0, 0, 0 });
-            point3YNumericUpDown.Minimum = new decimal(new int[] { 50000, 0, 0, int.MinValue });
+            point3YNumericUpDown.Maximum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                0
+            });
+            point3YNumericUpDown.Minimum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                int.MinValue
+            });
             point3YNumericUpDown.Name = "point3YNumericUpDown";
             point3YNumericUpDown.Size = new System.Drawing.Size(70, 23);
             point3YNumericUpDown.TabIndex = 8;
             point3YNumericUpDown.ValueChanged += point3YNumericUpDown_ValueChanged;
-            // 
+
+            //
             // point3XNumericUpDown
-            // 
+            //
             point3XNumericUpDown.DecimalPlaces = 3;
             point3XNumericUpDown.Enabled = false;
             point3XNumericUpDown.Location = new System.Drawing.Point(24, 294);
-            point3XNumericUpDown.Maximum = new decimal(new int[] { 50000, 0, 0, 0 });
-            point3XNumericUpDown.Minimum = new decimal(new int[] { 50000, 0, 0, int.MinValue });
+            point3XNumericUpDown.Maximum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                0
+            });
+            point3XNumericUpDown.Minimum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                int.MinValue
+            });
             point3XNumericUpDown.Name = "point3XNumericUpDown";
             point3XNumericUpDown.Size = new System.Drawing.Size(70, 23);
             point3XNumericUpDown.TabIndex = 7;
             point3XNumericUpDown.ValueChanged += point3XNumericUpDown_ValueChanged;
-            // 
+
+            //
             // xLabel4
-            // 
+            //
             xLabel4.AutoSize = true;
             xLabel4.Location = new System.Drawing.Point(10, 327);
             xLabel4.Name = "xLabel4";
             xLabel4.Size = new System.Drawing.Size(13, 15);
             xLabel4.TabIndex = 6;
             xLabel4.Text = "x";
-            // 
+
+            //
             // point4YNumericUpDown
-            // 
+            //
             point4YNumericUpDown.DecimalPlaces = 3;
             point4YNumericUpDown.Enabled = false;
             point4YNumericUpDown.Location = new System.Drawing.Point(115, 323);
-            point4YNumericUpDown.Maximum = new decimal(new int[] { 50000, 0, 0, 0 });
-            point4YNumericUpDown.Minimum = new decimal(new int[] { 50000, 0, 0, int.MinValue });
+            point4YNumericUpDown.Maximum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                0
+            });
+            point4YNumericUpDown.Minimum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                int.MinValue
+            });
             point4YNumericUpDown.Name = "point4YNumericUpDown";
             point4YNumericUpDown.Size = new System.Drawing.Size(70, 23);
             point4YNumericUpDown.TabIndex = 5;
             point4YNumericUpDown.ValueChanged += point4YNumericUpDown_ValueChanged;
-            // 
+
+            //
             // point4XNumericUpDown
-            // 
+            //
             point4XNumericUpDown.DecimalPlaces = 3;
             point4XNumericUpDown.Enabled = false;
             point4XNumericUpDown.Location = new System.Drawing.Point(24, 323);
-            point4XNumericUpDown.Maximum = new decimal(new int[] { 50000, 0, 0, 0 });
-            point4XNumericUpDown.Minimum = new decimal(new int[] { 50000, 0, 0, int.MinValue });
+            point4XNumericUpDown.Maximum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                0
+            });
+            point4XNumericUpDown.Minimum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                int.MinValue
+            });
             point4XNumericUpDown.Name = "point4XNumericUpDown";
             point4XNumericUpDown.Size = new System.Drawing.Size(70, 23);
             point4XNumericUpDown.TabIndex = 4;
             point4XNumericUpDown.ValueChanged += point4XNumericUpDown_ValueChanged;
-            // 
+
+            //
             // xLabel1
-            // 
+            //
             xLabel1.AutoSize = true;
             xLabel1.Location = new System.Drawing.Point(10, 240);
             xLabel1.Name = "xLabel1";
             xLabel1.Size = new System.Drawing.Size(13, 15);
             xLabel1.TabIndex = 3;
             xLabel1.Text = "x";
-            // 
+
+            //
             // point1YNumericUpDown
-            // 
+            //
             point1YNumericUpDown.DecimalPlaces = 3;
             point1YNumericUpDown.Enabled = false;
             point1YNumericUpDown.Location = new System.Drawing.Point(115, 236);
-            point1YNumericUpDown.Maximum = new decimal(new int[] { 50000, 0, 0, 0 });
-            point1YNumericUpDown.Minimum = new decimal(new int[] { 50000, 0, 0, int.MinValue });
+            point1YNumericUpDown.Maximum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                0
+            });
+            point1YNumericUpDown.Minimum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                int.MinValue
+            });
             point1YNumericUpDown.Name = "point1YNumericUpDown";
             point1YNumericUpDown.Size = new System.Drawing.Size(70, 23);
             point1YNumericUpDown.TabIndex = 2;
             point1YNumericUpDown.ValueChanged += point1YNumericUpDown_ValueChanged;
-            // 
+
+            //
             // point1XNumericUpDown
-            // 
+            //
             point1XNumericUpDown.DecimalPlaces = 3;
             point1XNumericUpDown.Enabled = false;
             point1XNumericUpDown.Location = new System.Drawing.Point(24, 236);
-            point1XNumericUpDown.Maximum = new decimal(new int[] { 50000, 0, 0, 0 });
-            point1XNumericUpDown.Minimum = new decimal(new int[] { 50000, 0, 0, int.MinValue });
+            point1XNumericUpDown.Maximum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                0
+            });
+            point1XNumericUpDown.Minimum = new decimal(new int[]
+            {
+                50000,
+                0,
+                0,
+                int.MinValue
+            });
             point1XNumericUpDown.Name = "point1XNumericUpDown";
             point1XNumericUpDown.Size = new System.Drawing.Size(70, 23);
             point1XNumericUpDown.TabIndex = 1;
             point1XNumericUpDown.ValueChanged += point1XNumericUpDown_ValueChanged;
-            // 
+
+            //
             // pointsLabel
-            // 
+            //
             pointsLabel.AutoSize = true;
             pointsLabel.Location = new System.Drawing.Point(78, 218);
             pointsLabel.Name = "pointsLabel";
             pointsLabel.Size = new System.Drawing.Size(40, 15);
             pointsLabel.TabIndex = 0;
             pointsLabel.Text = "Points";
-            // 
+
+            //
             // PVSEditor
-            // 
+            //
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(784, 561);

@@ -46,7 +46,7 @@ public class GenericModel
             GenericMesh mesh = Meshes[meshIndex];
 
             List<Face> newFaces = new List<Face>();
-            
+
             for (int i = 0; i < mesh.Faces.Count; i += pointCount)
             {
                 int remaining = mesh.Faces.Count - i;

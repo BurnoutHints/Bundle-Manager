@@ -17,6 +17,7 @@ namespace BundleManager
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -48,9 +49,10 @@ namespace BundleManager
             importsListBox = new System.Windows.Forms.ListBox();
             ((System.ComponentModel.ISupportInitialize)importCountUpDown).BeginInit();
             SuspendLayout();
-            // 
+
+            //
             // importButton
-            // 
+            //
             importButton.Location = new System.Drawing.Point(562, 298);
             importButton.Name = "importButton";
             importButton.Size = new System.Drawing.Size(88, 23);
@@ -58,9 +60,10 @@ namespace BundleManager
             importButton.Text = "Import";
             importButton.UseVisualStyleBackColor = true;
             importButton.Click += importButton_Click;
-            // 
+
+            //
             // resourceIDTextBox
-            // 
+            //
             resourceIDTextBox.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
             resourceIDTextBox.Location = new System.Drawing.Point(563, 27);
             resourceIDTextBox.MaxLength = 8;
@@ -68,45 +71,50 @@ namespace BundleManager
             resourceIDTextBox.Size = new System.Drawing.Size(85, 23);
             resourceIDTextBox.TabIndex = 1;
             resourceIDTextBox.Text = "XXXXXXXX";
-            // 
+
+            //
             // label1
-            // 
+            //
             label1.AutoSize = true;
             label1.Location = new System.Drawing.Point(563, 9);
             label1.Name = "label1";
             label1.Size = new System.Drawing.Size(88, 15);
             label1.TabIndex = 2;
             label1.Text = "ID to import as:";
-            // 
+
+            //
             // resourceNameTextBox
-            // 
+            //
             resourceNameTextBox.Location = new System.Drawing.Point(12, 27);
             resourceNameTextBox.Name = "resourceNameTextBox";
             resourceNameTextBox.Size = new System.Drawing.Size(528, 23);
             resourceNameTextBox.TabIndex = 3;
             resourceNameTextBox.Text = "bundlemanager://my_really_cool_and_extremely_long_resource_name";
             resourceNameTextBox.TextChanged += resourceNameTextBox_TextChanged;
-            // 
+
+            //
             // label2
-            // 
+            //
             label2.AutoSize = true;
             label2.Location = new System.Drawing.Point(12, 9);
             label2.Name = "label2";
             label2.Size = new System.Drawing.Size(242, 15);
             label2.TabIndex = 4;
             label2.Text = "What would you like to name your resource?";
-            // 
+
+            //
             // label3
-            // 
+            //
             label3.AutoSize = true;
             label3.Location = new System.Drawing.Point(546, 31);
             label3.Name = "label3";
             label3.Size = new System.Drawing.Size(15, 15);
             label3.TabIndex = 5;
             label3.Text = ">";
-            // 
+
+            //
             // secondaryDataPathSelectorButton
-            // 
+            //
             secondaryDataPathSelectorButton.Location = new System.Drawing.Point(508, 175);
             secondaryDataPathSelectorButton.Name = "secondaryDataPathSelectorButton";
             secondaryDataPathSelectorButton.Size = new System.Drawing.Size(140, 23);
@@ -114,9 +122,10 @@ namespace BundleManager
             secondaryDataPathSelectorButton.Text = "Select Secondary Data";
             secondaryDataPathSelectorButton.UseVisualStyleBackColor = true;
             secondaryDataPathSelectorButton.Click += secondaryDataPathSelectorButton_Click;
-            // 
+
+            //
             // autoUpdateIDCheckBox
-            // 
+            //
             autoUpdateIDCheckBox.AutoSize = true;
             autoUpdateIDCheckBox.Location = new System.Drawing.Point(546, 56);
             autoUpdateIDCheckBox.Name = "autoUpdateIDCheckBox";
@@ -125,27 +134,30 @@ namespace BundleManager
             autoUpdateIDCheckBox.Text = "Auto update ID";
             autoUpdateIDCheckBox.UseVisualStyleBackColor = true;
             autoUpdateIDCheckBox.CheckedChanged += autoUpdateIDCheckBox_CheckedChanged;
-            // 
+
+            //
             // selectTypeLabel
-            // 
+            //
             selectTypeLabel.AutoSize = true;
             selectTypeLabel.Location = new System.Drawing.Point(11, 60);
             selectTypeLabel.Name = "selectTypeLabel";
             selectTypeLabel.Size = new System.Drawing.Size(202, 15);
             selectTypeLabel.TabIndex = 9;
             selectTypeLabel.Text = "Select the resource type to import as:";
-            // 
+
+            //
             // resourceTypeComboBox
-            // 
+            //
             resourceTypeComboBox.FormattingEnabled = true;
             resourceTypeComboBox.Location = new System.Drawing.Point(11, 78);
             resourceTypeComboBox.Name = "resourceTypeComboBox";
             resourceTypeComboBox.Size = new System.Drawing.Size(229, 23);
             resourceTypeComboBox.TabIndex = 10;
             resourceTypeComboBox.Text = "AptData";
+
             //
             // primaryImportPathLabel
-            // 
+            //
             primaryImportPathLabel.AutoSize = true;
             primaryImportPathLabel.Location = new System.Drawing.Point(12, 114);
             primaryImportPathLabel.Name = "primaryImportPathLabel";
@@ -153,17 +165,19 @@ namespace BundleManager
             primaryImportPathLabel.TabIndex = 13;
             primaryImportPathLabel.Text = "Primary data path:";
             primaryImportPathLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
-            // 
+
+            //
             // primaryResourcePathTextBox
-            // 
+            //
             primaryResourcePathTextBox.Location = new System.Drawing.Point(12, 132);
             primaryResourcePathTextBox.Name = "primaryResourcePathTextBox";
             primaryResourcePathTextBox.Size = new System.Drawing.Size(490, 23);
             primaryResourcePathTextBox.TabIndex = 14;
             primaryResourcePathTextBox.Text = "my_really_cool_and_extremely_long_primary_resource_path";
-            // 
+
+            //
             // secondaryImportPathLabel
-            // 
+            //
             secondaryImportPathLabel.AutoSize = true;
             secondaryImportPathLabel.Location = new System.Drawing.Point(12, 158);
             secondaryImportPathLabel.Name = "secondaryImportPathLabel";
@@ -171,17 +185,19 @@ namespace BundleManager
             secondaryImportPathLabel.TabIndex = 15;
             secondaryImportPathLabel.Text = "Secondary data path:";
             secondaryImportPathLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
-            // 
+
+            //
             // secondaryResourcePathTextBox
-            // 
+            //
             secondaryResourcePathTextBox.Location = new System.Drawing.Point(12, 176);
             secondaryResourcePathTextBox.Name = "secondaryResourcePathTextBox";
             secondaryResourcePathTextBox.Size = new System.Drawing.Size(490, 23);
             secondaryResourcePathTextBox.TabIndex = 16;
             secondaryResourcePathTextBox.Text = "my_really_cool_and_extremely_long_secondary_resource_path";
+
             //
             // primaryDataPathSelectorButton
-            // 
+            //
             primaryDataPathSelectorButton.Location = new System.Drawing.Point(508, 132);
             primaryDataPathSelectorButton.Name = "primaryDataPathSelectorButton";
             primaryDataPathSelectorButton.Size = new System.Drawing.Size(140, 23);
@@ -189,6 +205,7 @@ namespace BundleManager
             primaryDataPathSelectorButton.Text = "Select Primary Data";
             primaryDataPathSelectorButton.UseVisualStyleBackColor = true;
             primaryDataPathSelectorButton.Click += primaryDataPathSelectorButton_Click;
+
             //
             // importsLabel
             //
@@ -198,6 +215,7 @@ namespace BundleManager
             importsLabel.Size = new System.Drawing.Size(51, 15);
             importsLabel.TabIndex = 20;
             importsLabel.Text = "Imports:";
+
             //
             // importCountUpDown
             //
@@ -205,6 +223,7 @@ namespace BundleManager
             importCountUpDown.Name = "importCountUpDown";
             importCountUpDown.Size = new System.Drawing.Size(60, 23);
             importCountUpDown.TabIndex = 21;
+
             //
             // importsListBox
             //
@@ -214,6 +233,7 @@ namespace BundleManager
             importsListBox.Name = "importsListBox";
             importsListBox.Size = new System.Drawing.Size(568, 64);
             importsListBox.TabIndex = 22;
+
             //
             // ImportResourceForm
             //

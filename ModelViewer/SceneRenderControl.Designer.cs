@@ -2,12 +2,12 @@ namespace ModelViewer
 {
     partial class SceneRenderControl
     {
-        /// <summary> 
+        /// <summary>
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary> 
+        /// <summary>
         /// Clean up any resources being used.
         /// </summary>
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
@@ -15,17 +15,19 @@ namespace ModelViewer
         {
             if (disposing)
                 StopRendering();
+
             if (disposing && (components != null))
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
         #region Component Designer generated code
 
-        /// <summary> 
-        /// Required method for Designer support - do not modify 
+        /// <summary>
+        /// Required method for Designer support - do not modify
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent()
@@ -33,14 +35,16 @@ namespace ModelViewer
             components = new System.ComponentModel.Container();
             tmrUpdate = new System.Windows.Forms.Timer(this.components);
             SuspendLayout();
-            // 
+
+            //
             // tmrUpdate
-            // 
+            //
             tmrUpdate.Interval = 17;
             tmrUpdate.Tick += new System.EventHandler(this.tmrUpdate_Tick);
-            // 
+
+            //
             // SceneRenderControl
-            // 
+            //
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -50,6 +54,7 @@ namespace ModelViewer
         }
 
         #endregion
+
         private System.Windows.Forms.Timer tmrUpdate;
     }
 }

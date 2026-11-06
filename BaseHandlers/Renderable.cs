@@ -381,7 +381,7 @@ public class Renderable : IEntryData
 
     private static Vector3 ReadElementX64(BinaryReader2 br, long vertex, VertexAttribute attribute)
     {
-        float Dec3N(uint value) => Math.Max(((int)(value << 22) >> 22) / 511f, -1f); // signed 10 bits
+        float dec3N(uint value) => Math.Max(((int)(value << 22) >> 22) / 511f, -1f); // signed 10 bits
 
         br.BaseStream.Position = vertex + attribute.Offset;
 
@@ -395,7 +395,7 @@ public class Renderable : IEntryData
                 return new((float)br.ReadHalf(), (float)br.ReadHalf(), 0);
             case 0x2A2187: // DEC3N
                 uint packed = br.ReadUInt32();
-                return new(Dec3N(packed), Dec3N(packed >> 10), Dec3N(packed >> 20));
+                return new(dec3N(packed), dec3N(packed >> 10), dec3N(packed >> 20));
         }
 
         return Vector3.Zero;
@@ -453,7 +453,7 @@ public class Renderable : IEntryData
 
         bool x64 = entry.Platform == BundlePlatform.PCx64;
 
-        ulong ImportAt(long offset) => dependencies.Find(d => d.EntryPointerOffset == offset).EntryID;
+        ulong importAt(long offset) => dependencies.Find(d => d.EntryPointerOffset == offset).EntryID;
 
         Unknown1 = br.ReadSingle();
         Unknown2 = br.ReadSingle();
@@ -532,7 +532,7 @@ public class Renderable : IEntryData
 
             if (x64)
             {
-                mesh.MaterialID = ImportAt(MeshVertexOffsets[i] + 0x20);
+                mesh.MaterialID = importAt(MeshVertexOffsets[i] + 0x20);
                 br.BaseStream.Position += 0x28;
                 int numVD = br.ReadByte();
                 br.ReadByte(); // instance count
@@ -544,7 +544,7 @@ public class Renderable : IEntryData
                 mesh.VertexDescriptionIDs = new ulong[numVD];
 
                 for (int j = 0; j < numVD; j++)
-                    mesh.VertexDescriptionIDs[j] = ImportAt(MeshVertexOffsets[i] + 0x38 + 8 * (numVB + j));
+                    mesh.VertexDescriptionIDs[j] = importAt(MeshVertexOffsets[i] + 0x38 + 8 * (numVB + j));
 
                 Meshes.Add(mesh);
                 continue;
@@ -612,7 +612,7 @@ public class Renderable : IEntryData
         Dictionary<ulong, MaterialEntry> materials = [];
         Dictionary<ulong, VertexDesc> descriptions = [];
 
-        BundleEntry Find(ulong id) => entry.Archive.GetEntryByID(id) ?? BundleCache.GetEntryByID(id);
+        BundleEntry find(ulong id) => entry.Archive.GetEntryByID(id) ?? BundleCache.GetEntryByID(id);
 
         loader?.SetStatus("Loading Meshes");
 
@@ -629,7 +629,7 @@ public class Renderable : IEntryData
             {
                 if (!materials.TryGetValue(mesh.MaterialID, out mesh.Material))
                 {
-                    BundleEntry materialEntry = Find(mesh.MaterialID);
+                    BundleEntry materialEntry = find(mesh.MaterialID);
                     materials[mesh.MaterialID] = mesh.Material = materialEntry == null
                         ? null
                         : MaterialEntry.Read(materialEntry);
@@ -644,7 +644,7 @@ public class Renderable : IEntryData
 
                 if (!descriptions.TryGetValue(vertexDescID, out mesh.VertexDescriptions[j]))
                 {
-                    BundleEntry descEntry = Find(vertexDescID);
+                    BundleEntry descEntry = find(vertexDescID);
                     descriptions[vertexDescID] = mesh.VertexDescriptions[j] = descEntry == null
                         ? null
                         : VertexDesc.Read(descEntry);

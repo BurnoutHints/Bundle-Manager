@@ -17,6 +17,7 @@ namespace BundleManager
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -33,9 +34,10 @@ namespace BundleManager
             this.txtSearch = new System.Windows.Forms.TextBox();
             this.lblName = new System.Windows.Forms.Label();
             this.SuspendLayout();
-            // 
+
+            //
             // btnSearch
-            // 
+            //
             this.btnSearch.Location = new System.Drawing.Point(366, 38);
             this.btnSearch.Name = "btnSearch";
             this.btnSearch.Size = new System.Drawing.Size(75, 23);
@@ -43,9 +45,10 @@ namespace BundleManager
             this.btnSearch.Text = "Search";
             this.btnSearch.UseVisualStyleBackColor = true;
             this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
-            // 
+
+            //
             // btnCancel
-            // 
+            //
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Location = new System.Drawing.Point(12, 38);
             this.btnCancel.Name = "btnCancel";
@@ -54,25 +57,28 @@ namespace BundleManager
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
-            // 
+
+            //
             // txtSearch
-            // 
+            //
             this.txtSearch.Location = new System.Drawing.Point(72, 12);
             this.txtSearch.Name = "txtSearch";
             this.txtSearch.Size = new System.Drawing.Size(369, 20);
             this.txtSearch.TabIndex = 0;
-            // 
+
+            //
             // lblName
-            // 
+            //
             this.lblName.AutoSize = true;
             this.lblName.Location = new System.Drawing.Point(12, 15);
             this.lblName.Name = "lblName";
             this.lblName.Size = new System.Drawing.Size(54, 13);
             this.lblName.TabIndex = 3;
             this.lblName.Text = "Name/ID:";
-            // 
+
+            //
             // SearchDialog
-            // 
+            //
             this.AcceptButton = this.btnSearch;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;

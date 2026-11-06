@@ -134,9 +134,9 @@ internal static class ObjectYAML
             if (node is not YamlSequenceNode { Children.Count: 4 } v || v.Children.Any(i => i is not YamlScalarNode))
                 throw Yaml.Error(Yaml.Line(node), $"{name} should be [x, y, z, w].");
 
-            float F(int i) => (float)Yaml.ParseFloat((YamlScalarNode)v.Children[i]);
+            float f(int i) => (float)Yaml.ParseFloat((YamlScalarNode)v.Children[i]);
 
-            return new Vector4(F(0), F(1), F(2), F(3));
+            return new Vector4(f(0), f(1), f(2), f(3));
         }
 
         if (typeof(IList).IsAssignableFrom(type))

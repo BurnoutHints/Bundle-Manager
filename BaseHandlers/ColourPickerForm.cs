@@ -53,7 +53,7 @@ public class ColourPickerForm : Form
 
         int y = 84;
 
-        void AddRow(string label, NumericUpDown box)
+        void addRow(string label, NumericUpDown box)
         {
             Controls.Add(new Label()
             {
@@ -68,14 +68,14 @@ public class ColourPickerForm : Form
             y += 26;
         }
 
-        AddRow("Red", red);
-        AddRow("Green", green);
-        AddRow("Blue", blue);
-        AddRow("Intensity", strength);
+        addRow("Red", red);
+        addRow("Green", green);
+        addRow("Blue", blue);
+        addRow("Intensity", strength);
 
         if (alphaValue is float a)
         {
-            AddRow("Alpha", alpha);
+            addRow("Alpha", alpha);
             alpha.Value = Clamp(alpha, a);
         }
 

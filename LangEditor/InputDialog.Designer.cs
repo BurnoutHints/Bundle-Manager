@@ -17,6 +17,7 @@ namespace LangEditor
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -34,9 +35,10 @@ namespace LangEditor
             this.lblQuestion = new System.Windows.Forms.Label();
             this.txtInput = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
-            // 
+
+            //
             // btnAccept
-            // 
+            //
             this.btnAccept.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnAccept.Location = new System.Drawing.Point(437, 63);
             this.btnAccept.Name = "btnAccept";
@@ -45,9 +47,10 @@ namespace LangEditor
             this.btnAccept.Text = "Accept";
             this.btnAccept.UseVisualStyleBackColor = true;
             this.btnAccept.Click += new System.EventHandler(this.btnAccept_Click);
-            // 
+
+            //
             // btnCancel
-            // 
+            //
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Location = new System.Drawing.Point(12, 63);
@@ -57,9 +60,10 @@ namespace LangEditor
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
-            // 
+
+            //
             // lblInput
-            // 
+            //
             this.lblInput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblInput.AutoSize = true;
             this.lblInput.Location = new System.Drawing.Point(12, 40);
@@ -67,27 +71,30 @@ namespace LangEditor
             this.lblInput.Size = new System.Drawing.Size(34, 13);
             this.lblInput.TabIndex = 3;
             this.lblInput.Text = "Input:";
-            // 
+
+            //
             // lblQuestion
-            // 
+            //
             this.lblQuestion.AutoSize = true;
             this.lblQuestion.Location = new System.Drawing.Point(12, 9);
             this.lblQuestion.Name = "lblQuestion";
             this.lblQuestion.Size = new System.Drawing.Size(50, 13);
             this.lblQuestion.TabIndex = 4;
             this.lblQuestion.Text = "YourText";
-            // 
+
+            //
             // txtInput
-            // 
-            this.txtInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            //
+            this.txtInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtInput.Location = new System.Drawing.Point(52, 37);
             this.txtInput.Name = "txtInput";
             this.txtInput.Size = new System.Drawing.Size(460, 20);
             this.txtInput.TabIndex = 0;
-            // 
+
+            //
             // InputDialog
-            // 
+            //
             this.AcceptButton = this.btnAccept;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;

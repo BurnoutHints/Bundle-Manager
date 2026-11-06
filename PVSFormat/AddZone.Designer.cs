@@ -17,6 +17,7 @@ namespace PVSFormat
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -34,9 +35,10 @@ namespace PVSFormat
             label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)zoneIdNumericUpDown).BeginInit();
             SuspendLayout();
-            // 
+
+            //
             // okButton
-            // 
+            //
             okButton.Location = new System.Drawing.Point(12, 65);
             okButton.Name = "okButton";
             okButton.Size = new System.Drawing.Size(75, 23);
@@ -44,9 +46,10 @@ namespace PVSFormat
             okButton.Text = "OK";
             okButton.UseVisualStyleBackColor = true;
             okButton.Click += okButton_Click;
-            // 
+
+            //
             // cancelButton
-            // 
+            //
             cancelButton.Location = new System.Drawing.Point(93, 65);
             cancelButton.Name = "cancelButton";
             cancelButton.Size = new System.Drawing.Size(75, 23);
@@ -54,26 +57,35 @@ namespace PVSFormat
             cancelButton.Text = "Cancel";
             cancelButton.UseVisualStyleBackColor = true;
             cancelButton.Click += cancelButton_Click;
-            // 
+
+            //
             // zoneIdNumericUpDown
-            // 
+            //
             zoneIdNumericUpDown.Location = new System.Drawing.Point(42, 32);
-            zoneIdNumericUpDown.Maximum = new decimal(new int[] { 511, 0, 0, 0 });
+            zoneIdNumericUpDown.Maximum = new decimal(new int[]
+            {
+                511,
+                0,
+                0,
+                0
+            });
             zoneIdNumericUpDown.Name = "zoneIdNumericUpDown";
             zoneIdNumericUpDown.Size = new System.Drawing.Size(100, 23);
             zoneIdNumericUpDown.TabIndex = 2;
-            // 
+
+            //
             // label1
-            // 
+            //
             label1.AutoSize = true;
             label1.Location = new System.Drawing.Point(41, 9);
             label1.Name = "label1";
             label1.Size = new System.Drawing.Size(104, 15);
             label1.TabIndex = 3;
             label1.Text = "Enter new zone ID:";
-            // 
+
+            //
             // AddZone
-            // 
+            //
             AcceptButton = okButton;
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;

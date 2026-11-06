@@ -146,7 +146,7 @@ public sealed class TrafficReferenceDialog : Form
                 FlowDirection = FlowDirection.TopDown
             };
 
-            Button Button(string text, Action click)
+            Button button(string text, Action click)
             {
                 Button b = new()
                 {
@@ -159,16 +159,16 @@ public sealed class TrafficReferenceDialog : Form
                 return b;
             }
 
-            Button("Add →", Add);
-            Button("← Remove", () =>
+            button("Add →", Add);
+            button("← Remove", () =>
             {
                 if (chosen.SelectedIndex >= 0)
                     chosen.Items.RemoveAt(chosen.SelectedIndex);
 
                 UpdateStatus();
             });
-            Button("Move up", () => MoveChoice(-1));
-            Button("Move down", () => MoveChoice(1));
+            button("Move up", () => MoveChoice(-1));
+            button("Move down", () => MoveChoice(1));
             lists.Controls.Add(actions, 1, 0);
             Panel selected = new()
             {
@@ -235,7 +235,7 @@ public sealed class TrafficReferenceDialog : Form
         AcceptButton = ok;
         CancelButton = cancel;
 
-        void Filter()
+        void filterCandidates()
         {
             object selected = (candidates.SelectedItem as Choice)?.Value ?? value;
             candidates.Items.Clear();
@@ -249,11 +249,11 @@ public sealed class TrafficReferenceDialog : Form
             candidates.SelectedItem = candidates.Items.Cast<Choice>().FirstOrDefault(c => c.Value == selected);
         }
 
-        filter.TextChanged += (_, _) => Filter();
+        filter.TextChanged += (_, _) => filterCandidates();
         candidates.SelectedIndexChanged += (_, _) => TrafficReferences.Preview?.Invoke((candidates.SelectedItem as Choice)?.Value);
         chosen.SelectedIndexChanged += (_, _) => TrafficReferences.Preview?.Invoke((chosen.SelectedItem as Choice)?.Value);
         FormClosed += (_, _) => TrafficReferences.RestorePreview?.Invoke();
-        Filter();
+        filterCandidates();
         UpdateStatus();
     }
 
