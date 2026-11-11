@@ -11,8 +11,7 @@ using PluginAPI;
 
 namespace BaseHandlers;
 
-// A description that ends with the field's name and, when given, the range the game's own tweak menu allows.
-// PropertyGridEditor warns about values outside the range but keeps them, they're slider limits rather than engine ones.
+// Property description with field name and optional game tweak menu range limits
 [AttributeUsage(AttributeTargets.Property)]
 public class FieldDescriptionAttribute(string description, float min = float.NaN, float max = float.NaN, [CallerMemberName] string field = null)
     : DescriptionAttribute(string.Join(" ", ((string[])[description, float.IsNaN(min)
@@ -24,11 +23,9 @@ public class FieldDescriptionAttribute(string description, float min = float.NaN
     public float Max => max;
 }
 
-// Edits a resource in property grids (or given controls), one tab per page, and saves it on close if it changed
+// Modal property grid editor
 public class PropertyGridEditor : Form, IEntryEditor
 {
-    // serialize gives the bytes write would save. Collection editors change lists in place without telling the grid,
-    // so changes are found by comparing those bytes from opening and closing.
     public PropertyGridEditor(string title, Func<byte[]> serialize, Action write, params (string Name, object Data)[] pages)
     {
         Label warning = new()

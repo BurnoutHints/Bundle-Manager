@@ -12,37 +12,22 @@ namespace PVSFormat;
 
 public struct ZoneList
 {
-    //public List<Vector2> Points; // Redundant; use Zones[zoneIndex].Points
     public List<Zone> Zones;
-
-    //public List<uint> ZonePointStarts; // Per-zone start point index. Unnecessary as they are always sequential multiples of 4
-    //public List<short> ZonePointCounts; // Per-zone point count. Unnecessary as there are always 4 points
     public uint TotalZones;
 
-    //public uint TotalPoints; // Unnecessary, calculated during writing
     public ZoneList()
     {
         Zones = [];
-
-        //ZonePointStarts = new();
-        //ZonePointCounts = new();
     }
 }
 
 public struct Zone
 {
     public List<Vector2> Points;
-
-    //public List<Neighbour> SafeNeighbours; // Unnecessary, always empty
     public List<Neighbour> UnsafeNeighbours;
     public ulong ZoneId;
-
-    //public short ZoneType; // Unnecessary, always 0
-    //public short NumPoints; // Unnecessary, always 4
-    //public short NumSafeNeighbours; // Unnecessary, always 0
     public short NumUnsafeNeighbours;
 
-    //public ulong Flags; // Unnecessary, always 0
     public Zone()
     {
         Points = [];

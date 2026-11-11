@@ -13,8 +13,7 @@ using PluginAPI;
 
 namespace BaseHandlers.Flapt;
 
-// BrnFlapt::FlaptFile, see https://burnout.wiki/wiki/Flapt_File
-// Counts and pointers aren't stored, Write takes them from the list sizes and the layout it builds.
+// BrnFlapt::FlaptFile (https://burnout.wiki/wiki/Flapt_File)
 [TypeConverter(typeof(ExpandableObjectConverter))]
 public class HashedString
 {
@@ -566,11 +565,11 @@ public class FlaptFile : IEntryData
         return true;
     }
 
-    // Lays out pointed-to arrays after the structures that point to them, then a string pool
+    // Array layout writer followed by string pool
     private sealed class LayoutWriter(BinaryWriter2 bw, bool x64)
     {
         private readonly Queue<Action> arrays = new();
-        private readonly Queue<Action> alignedArrays = new(); // Transforms, kept together so they need no padding between them
+        private readonly Queue<Action> alignedArrays = new(); // 16-byte aligned transform arrays
         private readonly List<(long Position, string Value)> strings = [];
 
         public int PtrSize => x64
@@ -688,7 +687,7 @@ public class FlaptFile : IEntryData
         return true;
     }
 
-    // The primary data Write saves, ending with the import table. The same file always gives the same bytes.
+    // Serializes primary data ending with the import table
     public byte[] Serialize(BundleEntry entry, out int importCount)
     {
         using MemoryStream ms = new();

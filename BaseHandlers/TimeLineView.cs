@@ -9,8 +9,7 @@ using BundleFormat;
 
 namespace BaseHandlers.EnvironmentSettings;
 
-// One time line location as a table in time order: the time of day, the keyframe used then, and swatches of the keyframe's
-// sky top, sky horizon and key light colours. Keyframes in the same bundle can be opened in their own editor.
+// Time line location table displaying keyframes in chronological order with color swatches
 public class TimeLineView : UserControl
 {
     private record KeyframeChoice(ulong ID, string Name);
@@ -29,7 +28,6 @@ public class TimeLineView : UserControl
         entry = initialEntry;
         Dock = DockStyle.Fill;
 
-        // Every keyframe in the bundle, and any the time line uses from elsewhere
         List<KeyframeChoice> choices = [.. initialEntry.Archive.Entries
             .Where(e => e.Type == EntryType.BrnEnvironmentKeyframe)
             .Select(e => new KeyframeChoice(e.ID, string.IsNullOrEmpty(e.DebugInfo.Name)
@@ -80,7 +78,7 @@ public class TimeLineView : UserControl
             SortMode = DataGridViewColumnSortMode.NotSortable
         });
 
-        // A time that doesn't parse goes back to what it was, keeping the cell would leave the grid unable to leave it
+        // Revert invalid time values
         grid.CellEndEdit += (_, e) =>
         {
             if (e.ColumnIndex != TimeColumn)
@@ -97,10 +95,10 @@ public class TimeLineView : UserControl
             }
 
             keyframe.mfTime = time;
-            BeginInvoke(() => Fill(keyframe)); // Not while the grid is still ending the edit
+            BeginInvoke(() => Fill(keyframe));
         };
 
-        // Apply a picked keyframe straight away rather than when the cell is left
+        // Immediate commit on selection change
         grid.CurrentCellDirtyStateChanged += (_, _) =>
         {
             if (grid.CurrentCell?.ColumnIndex == KeyframeColumn)
@@ -152,7 +150,6 @@ public class TimeLineView : UserControl
         Fill(null);
     }
 
-    // Finishes a cell being edited first. Ending a time edit queues a refill, so the action is queued after it.
     private void Run(Action action)
     {
         grid.EndEdit();
@@ -165,7 +162,6 @@ public class TimeLineView : UserControl
         ? (TimeLineKeyframe)row.Tag
         : null;
 
-    // Sorts the keyframes by time and shows them, selecting the given one
     private void Fill(TimeLineKeyframe select)
     {
         List<TimeLineKeyframe> sorted = [.. location.Keyframes.OrderBy(k => k.mfTime)];

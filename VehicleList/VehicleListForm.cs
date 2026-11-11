@@ -55,7 +55,7 @@ public partial class VehicleListForm : Form, IEntryEditor
 
         foreach (Vehicle vehicle in sourceList)
         {
-            // The order of these strings must match the order of ColumnHeaders in your ListView.
+            // Column order must match ListView ColumnHeaders
             string[] value = [
                 vehicle.Index.ToString(),
                 vehicle.ID.Value,

@@ -52,6 +52,13 @@ public class BundleArchive
     public string ResourceStringTable;
     public List<BundleEntry> Entries;
 
+    private const ulong StringTableID = 0xC039284A;
+    private const int BND1EntrySize = 0x70, BND1Blocks = 5, BND1DescriptorsSize = 0x28;
+
+    // BND1 saves patch the original file since unhandled memory types and runtime fields are preserved in-place
+    private byte[] bnd1File;
+    private List<BundleEntry> bnd1Entries;
+
     private bool dirty;
 
     public bool Dirty
@@ -204,7 +211,7 @@ public class BundleArchive
                 if (currentFile.EndsWith("_AT"))
                 {
                     string vehicleID = currentFile[4..].Replace("_AT", "").ToLower();
-                    string shownID = currentFile[4..].Replace("_AT", ""); // Upper case, as Criterion named these
+                    string shownID = currentFile[4..].Replace("_AT", "");
                     names.AddRange([shownID + "_AttribSys", shownID + "DeformationModel", vehicleID + "_bpr",
                         vehicleID + "_anim", vehicleID + "_trafficstub", vehicleID + "_vanm"]);
                 }
@@ -222,11 +229,11 @@ public class BundleArchive
             names.Add("trk_clil" + i);
         }
 
-        // Resource IDs hash the lower case name, so names can be shown in Criterion's case
+        // Resource IDs hash lowercase names; preserve original casing for display
         Dictionary<ulong, string> guesses = [];
 
         foreach (string name in names)
-            guesses.TryAdd(CRC32.HashCRC32B(name.ToLowerInvariant()), name); // First pattern wins, as when they were checked in turn
+            guesses.TryAdd(CRC32.HashCRC32B(name.ToLowerInvariant()), name);
 
         return guesses;
     }
@@ -336,7 +343,6 @@ public class BundleArchive
         Flags |= Flags.HasResourceStringTable;
     }
 
-    // Null when the file can't be read; Open says why
     public static BundleArchive Read(string path)
     {
         try
@@ -399,6 +405,11 @@ public class BundleArchive
     {
         br.BigEndian = true;
 
+        long afterMagic = br.BaseStream.Position;
+        br.BaseStream.Position = 0;
+        bnd1File = br.ReadBytes((int)br.BaseStream.Length);
+        br.BaseStream.Position = afterMagic;
+
         // Version number?
         br.ReadUInt32();
 
@@ -452,7 +463,7 @@ public class BundleArchive
         {
             BundleEntry entry = new(this)
             {
-                EntryBlocks = [null, null, new()], // Blocks 2, 4 and 5 aren't read, see below
+                EntryBlocks = [null, null, new()], // Only blocks 0, 1, and 3 are mapped
                 ID = resourceID,
                 Platform = Platform
             };
@@ -611,7 +622,9 @@ public class BundleArchive
                 entry.Dependencies.Add(Dependency.Read(br));
         }
 
-        BundleEntry rst = GetEntryByID(0xC039284A);
+        bnd1Entries = [.. Entries];
+
+        BundleEntry rst = GetEntryByID(StringTableID);
 
         if (rst != null)
         {
@@ -630,7 +643,6 @@ public class BundleArchive
             Entries.Remove(rst);
         }
 
-        // List rows find their entry by index
         for (int i = 0; i < Entries.Count; i++)
             Entries[i].Index = i;
 
@@ -767,9 +779,6 @@ public class BundleArchive
 
     public void Write(string path, CancellationToken cancel = default)
     {
-        if (BNDVersion == 1)
-            throw new NotSupportedException("Saving BND1 (bndl) bundles isn't supported, as Bundle Manager can only write BND2.");
-
         string temp = path + ".saving";
 
         try
@@ -786,8 +795,168 @@ public class BundleArchive
         }
     }
 
+    // Rebuilds BND1 by patching modified blocks and adjusting downstream offsets
+    private byte[] BuildBND1()
+    {
+        if (bnd1File == null)
+            throw new NotSupportedException("Only BND1 bundles opened from a file can be saved.");
+
+        uint read(int at) => BinaryPrimitives.ReadUInt32BigEndian(bnd1File.AsSpan(at));
+
+        byte[] file = [.. bnd1File];
+
+        void write(int at, uint value) => BinaryPrimitives.WriteUInt32BigEndian(file.AsSpan(at), value);
+
+        HashSet<BundleEntry> known = [.. bnd1Entries];
+
+        if (Entries.Any(e => !known.Contains(e)) || Entries.Count != known.Count(e => e.ID != StringTableID))
+            throw new NotSupportedException("Adding or removing resources isn't supported when saving a BND1 bundle.");
+
+        int idList = (int)read(0x48), table = (int)read(0x4C), uncompressedTable = (int)read(0x64);
+        bool compressed = (read(0x5C) & 1) != 0;
+        uint[] chunkStarts = new uint[BND1Blocks + 1];
+
+        for (int j = 0; j < BND1Blocks; j++)
+            chunkStarts[j + 1] = chunkStarts[j] + read(0x0C + j * 8);
+
+        List<(int At, int Length, byte[] Bytes)> changes = [];
+
+        for (int i = 0; i < bnd1Entries.Count; i++)
+        {
+            BundleEntry entry = bnd1Entries[i];
+            int record = table + i * BND1EntrySize;
+
+            if (BinaryPrimitives.ReadUInt64BigEndian(file.AsSpan(idList + i * 8)) != entry.ID || read(record + 8) != (uint)entry.Type)
+                throw new NotSupportedException($"Changing the ID or type of resource 0x{entry.ID:X8} isn't supported when saving a BND1 bundle.");
+
+            List<Dependency> imports = entry.GetImports();
+            int importTable = (int)read(record + 4);
+
+            if (imports.Count != (importTable == 0
+                ? 0
+                : (int)read(importTable)))
+                throw new NotSupportedException($"Changing the number of imports of resource 0x{entry.ID:X8} isn't supported when saving a BND1 bundle.");
+
+            for (int j = 0; j < imports.Count; j++)
+            {
+                int import = importTable + 8 + j * Dependency.Size;
+                BinaryPrimitives.WriteUInt64BigEndian(file.AsSpan(import), imports[j].ID);
+                write(import + 8, imports[j].EntryPointerOffset);
+            }
+
+            // Primary and secondary data blocks (memory types 0 and 2)
+            for (int j = 0; j <= 2; j += 2)
+            {
+                EntryBlock block = entry.EntryBlocks[j / 2];
+                bool tableInPrimary = j == 0 && entry.DependencyCount > 0 && entry.Dependencies.Count == 0;
+                byte[] stored = block?.RawData ?? [];
+
+                if (tableInPrimary)
+                    stored = compressed
+                        ? entry.GetPrimaryWithoutImports().Compress()
+                        : entry.GetPrimaryWithoutImports();
+
+                int length = (int)read(record + 0x0C + j * 8), at = (int)(read(record + 0x34 + j * 8) + chunkStarts[j]);
+
+                if (length == 0 && stored.Length == 0 || length > 0 && stored.AsSpan().SequenceEqual(bnd1File.AsSpan(at, length)))
+                    continue;
+
+                if (length == 0)
+                    throw new NotSupportedException($"Adding a data block to resource 0x{entry.ID:X8} isn't supported when saving a BND1 bundle.");
+
+                write(record + 0x0C + j * 8, (uint)stored.Length);
+
+                if (compressed)
+                    write(uncompressedTable + i * BND1DescriptorsSize + j * 8, (uint)(tableInPrimary
+                        ? entry.GetPrimaryWithoutImports().Length
+                        : block?.Data?.Length ?? 0));
+
+                changes.Add((at, length, stored));
+            }
+        }
+
+        if (changes.Count == 0)
+            return file;
+
+        changes.Sort((a, b) => a.At.CompareTo(b.At));
+
+        uint alignment = 0x10;
+
+        if (!compressed)
+        {
+            for (int j = 0; j < BND1Blocks; j++)
+                alignment = Math.Max(alignment, read(0x10 + j * 8));
+
+            for (int i = 0; i < bnd1Entries.Count; i++)
+                for (int j = 0; j < BND1Blocks; j++)
+                    if (read(table + i * BND1EntrySize + 0x0C + j * 8) != 0)
+                        alignment = Math.Max(alignment, read(table + i * BND1EntrySize + 0x10 + j * 8));
+        }
+
+        int step = (int)System.Numerics.BitOperations.RoundUpToPowerOf2(alignment), total = 0;
+        int[] moved = new int[changes.Count], starts = new int[changes.Count];
+
+        for (int k = 0; k < changes.Count; k++)
+        {
+            total += changes[k].Bytes.Length - changes[k].Length;
+
+            if (changes[k].At + changes[k].Length < file.Length)
+                total = (total + step - 1) & -step;
+
+            moved[k] = total;
+            starts[k] = changes[k].At;
+        }
+
+        uint movedTo(uint position)
+        {
+            int found = Array.BinarySearch(starts, (int)position);
+            found = found >= 0
+                ? found
+                : ~found;
+            return found == 0
+                ? position
+                : (uint)(position + moved[found - 1]);
+        }
+
+        uint[] newStarts = [.. chunkStarts.Select(movedTo)];
+
+        for (int j = 0; j < BND1Blocks; j++)
+            write(0x0C + j * 8, newStarts[j + 1] - newStarts[j]);
+
+        for (int i = 0; i < bnd1Entries.Count; i++)
+        {
+            int record = table + i * BND1EntrySize;
+
+            for (int j = 0; j < BND1Blocks; j++)
+                if (read(record + 0x0C + j * 8) != 0)
+                    write(record + 0x34 + j * 8, movedTo(read(record + 0x34 + j * 8) + chunkStarts[j]) - newStarts[j]);
+        }
+
+        byte[] result = new byte[file.Length + total];
+        int from = 0, to = 0;
+
+        for (int k = 0; k < changes.Count; k++)
+        {
+            Array.Copy(file, from, result, to, changes[k].At - from);
+            to += changes[k].At - from;
+            changes[k].Bytes.CopyTo(result, to);
+            from = changes[k].At + changes[k].Length;
+            to = from + moved[k];
+        }
+
+        Array.Copy(file, from, result, to, file.Length - from);
+        return result;
+    }
+
     public void Write(BinaryWriter2 bw, CancellationToken cancel = default)
     {
+        if (BNDVersion == 1)
+        {
+            bnd1File = BuildBND1();
+            bw.Write(bnd1File);
+            return;
+        }
+
         RebuildRST();
 
         bw.Write(BND2Magic);
@@ -869,7 +1038,7 @@ public class BundleArchive
                     bw.Write((uint)0);
                 else
                 {
-                    // A compressed block's RawData always matches its Data, so only uncompressed ones need compressing
+                    // Compress raw data if not already compressed
                     compressedBlocks[i][j] = !compress
                         ? entryBlock.Data
                         : entryBlock.Compressed
@@ -995,7 +1164,7 @@ public class BundleArchive
 
         for (int i = 0; i < fileCount; i++)
         {
-            uint id = (uint)br.ReadUInt64(); // A 64 bit ID, so console bundles hold the low half second
+            uint id = (uint)br.ReadUInt64();
             br.BaseStream.Position += 0x38;
 
             result.Add(id);
@@ -1049,7 +1218,7 @@ public class BundleArchive
 
         for (int i = 0; i < fileCount; i++)
         {
-            uint id = (uint)br.ReadUInt64(); // A 64 bit ID, so console bundles hold the low half second
+            uint id = (uint)br.ReadUInt64();
             br.BaseStream.Position += 0x30;
             EntryType currentType = (EntryType)br.ReadUInt32();
             br.BaseStream.Position += 0x4;
@@ -1096,7 +1265,7 @@ public class BundleArchive
 
         for (int i = 0; i < fileCount; i++)
         {
-            uint id2 = (uint)br.ReadUInt64(); // A 64 bit ID, so console bundles hold the low half second
+            uint id2 = (uint)br.ReadUInt64();
             br.BaseStream.Position += 0x30;
             EntryType currentType = (EntryType)br.ReadUInt32();
             br.BaseStream.Position += 0x4;

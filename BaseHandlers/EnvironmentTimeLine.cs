@@ -7,8 +7,8 @@ using PluginAPI;
 
 namespace BaseHandlers.EnvironmentSettings;
 
-// BrnWorld::EnvironmentSettings::TimeLine, see https://burnout.wiki/wiki/Environment_Timeline
-// A location's mpfKeyframeTimes and mppKeyframes share a count, so each pair is kept as one TimeLineKeyframe.
+// BrnWorld::EnvironmentSettings::TimeLine (https://burnout.wiki/wiki/Environment_Timeline)
+// Combines mpfKeyframeTimes and mppKeyframes into unified pairs
 public class TimeLineKeyframe
 {
     public const float SecondsPerDay = 24 * 60 * 60;
@@ -22,7 +22,7 @@ public class TimeLineKeyframe
 
 public class TimeLineLocation
 {
-    // In time order, the game looks times up by bracketing them
+    // Time-ordered for lookup
     public List<TimeLineKeyframe> Keyframes { get; set; } = [];
 }
 
@@ -162,7 +162,6 @@ public class EnvironmentTimeLine : IEntryData
             pointers.Add((times: times, keyframes: keyframes));
         }
 
-        // Each location's keyframe pointers, which the imports fill, then its times
         List<Dependency> imports = [];
 
         for (int i = 0; i < mpLocationDatii.Count; i++)

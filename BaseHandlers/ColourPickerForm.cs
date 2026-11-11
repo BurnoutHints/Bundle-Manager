@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace BaseHandlers;
 
-// Picks a float RGB colour that can be brighter than 1: hue, saturation and value pick the colour, intensity multiplies it
+// Float RGB color picker supporting HDR values (>1.0) via intensity multiplier
 public class ColourPickerForm : Form
 {
     private float hue, saturation, value, intensity;
@@ -143,7 +143,7 @@ public class ColourPickerForm : Form
 
     private static decimal Clamp(NumericUpDown box, float v) => Math.Clamp((decimal)v, box.Minimum, box.Maximum);
 
-    // Colours up to 1 have an intensity of 1, brighter ones are split into a colour up to 1 and the intensity
+    // Values >1.0 are normalized to [0, 1] with intensity scaling
     private void SetColour(Vector3 colour)
     {
         intensity = Math.Max(1, Math.Max(colour.X, Math.Max(colour.Y, colour.Z)));
@@ -221,7 +221,6 @@ public class ColourPickerForm : Form
         e.Graphics.DrawRectangle(Pens.Black, 0, y - 2, r.Width - 1, 4);
     }
 
-    // Old colour on top, new below, both at most full brightness
     private void PaintPreview(object sender, PaintEventArgs e)
     {
         Rectangle r = preview.ClientRectangle;
@@ -255,7 +254,7 @@ public class ColourPickerForm : Form
         return rgb + new Vector3(v - c);
     }
 
-    // Grey and black have no hue, so the previous one is kept
+    // Preserve hue for achromatic colors
     private static (float Hue, float Saturation, float Value) ToHSV(Vector3 rgb, float previousHue)
     {
         float max = Math.Max(rgb.X, Math.Max(rgb.Y, rgb.Z));

@@ -11,11 +11,8 @@ using PluginAPI;
 
 namespace BaseHandlers.EnvironmentSettings;
 
-// BrnWorld::EnvironmentSettings::Keyframe, see https://burnout.wiki/wiki/Environment_Keyframe
-// Colours are floats where 1 is full brightness, lighting goes brighter.
-
-// Names, groups and ranges are from the game's environment tweak menu (BrnWorld::Sky::DebugComponent), which
-// doesn't cover bloom, vignette or cloud movement. Those descriptions come from how the game uses the values.
+// BrnWorld::EnvironmentSettings::Keyframe (https://burnout.wiki/wiki/Environment_Keyframe)
+// Names, groups, and ranges derived from BrnWorld::Sky::DebugComponent tweak menu
 public class BloomData
 {
     [DisplayName("Luminance"), FieldDescription("Brightness of the bloom. The game's default is 0.98.")]
@@ -335,7 +332,7 @@ public class EnvironmentKeyframe : IEntryData
         return true;
     }
 
-    // The resource with these values written over its current data, which keeps its padding and import table
+    // Serializes modified values over existing data buffer to preserve padding and imports
     public byte[] Serialize(BundleEntry entry)
     {
         byte[] data = (byte[])entry.EntryBlocks[0].Data.Clone();

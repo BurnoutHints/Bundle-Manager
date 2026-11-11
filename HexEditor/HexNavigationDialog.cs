@@ -6,7 +6,6 @@ using System.Windows.Forms;
 
 namespace HexEditor;
 
-// Native, resizable input dialogs shared by resource byte views.
 public sealed class HexNavigationDialog : Form
 {
     private readonly TextBox input = new()

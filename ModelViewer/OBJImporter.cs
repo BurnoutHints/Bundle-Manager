@@ -63,7 +63,6 @@ public static class OBJImporter
                     Utilities.Parse(split[2], false, out float y);
                     Utilities.Parse(split[3], false, out float z);
 
-                    // Add to global vertices as we might not have a mesh yet.
                     globalVertices.Add(new(x, y, z));
                 }
                 else if (line.StartsWith("vt "))
@@ -76,7 +75,6 @@ public static class OBJImporter
                     Utilities.Parse(split[1], false, out float u);
                     Utilities.Parse(split[2], false, out float v);
 
-                    // Add to global uvs as we might not have a mesh yet.
                     globalUVs.Add(new(u, v));
                 }
                 else if (line.StartsWith("f "))
@@ -147,8 +145,7 @@ public static class OBJImporter
                             [uv1 - startUVIndex, uv2 - startUVIndex, uv3 - startUVIndex], lastMaterial);
                     }
 
-                    // If there is no mesh yet, the file isn't split up into meshes,
-                    // so we should just make one here.
+                    // Create default mesh if none declared
                     if (currentMesh == -1)
                     {
                         result.Meshes.Add(new());

@@ -40,7 +40,7 @@ public class ClusteredMesh : IEntryData
         br.BaseStream.Position = volume + 0x44;
         long mesh = br.ReadUInt32();
 
-        // pointers are relative to the mesh itself
+        // Pointers are relative to the mesh header
         br.BaseStream.Position = mesh + 0x34;
         uint clusterTable = br.ReadUInt32();
         uint clusterCount = br.ReadUInt32();
@@ -96,7 +96,7 @@ public class ClusteredMesh : IEntryData
                     throw new ReadFailedError($"Unknown vertex compression mode {compressionMode} in cluster {i}.");
             }
 
-            // Units start one vector past unitDataStart, which counts from the vertex array
+            // Units begin 16 bytes past unitDataStart relative to vertex array
             br.BaseStream.Position = cluster + 0x10 * (unitDataStart + 1);
 
             for (int u = 0; u < unitCount; u++)
@@ -116,7 +116,7 @@ public class ClusteredMesh : IEntryData
                 if ((header & UnitFlagEdgeAngle) != 0)
                     br.ReadBytes(triangleCount + 2);
 
-                // IDs are little endian on every platform
+                // IDs are little-endian across all platforms
                 int groupID = (header & UnitFlagGroupID) != 0
                     ? ReadID(br, groupIDSize)
                     : defaultGroupID;
@@ -126,7 +126,7 @@ public class ClusteredMesh : IEntryData
 
                 Material material = new($"{groupID:X4}_{surfaceID:X4}", Color.White);
 
-                // Quads and tri lists are strips: (0,1,2), (3,2,1), (2,3,4)...
+                // Strip order: (0,1,2), (3,2,1), (2,3,4)...
                 for (int t = 0; t < triangleCount; t++)
                 {
                     MeshFace face = new()
@@ -169,7 +169,7 @@ public class ClusteredMesh : IEntryData
 
     public bool Write(BundleEntry entry)
     {
-        return false; // BND1 bundles can't be saved
+        return false; // Preview only
     }
 
     public EntryType GetEntryType(BundleEntry entry)

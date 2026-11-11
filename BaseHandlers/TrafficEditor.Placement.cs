@@ -13,7 +13,7 @@ public sealed partial class TrafficEditor
 
     private void InitializePlacement(ToolStripMenuItem editMenu)
     {
-        tree.DuplicateRequested = selection =>
+        Tree.DuplicateRequested = selection =>
         {
             if (selection is PVSCell cell)
             {
@@ -31,8 +31,8 @@ public sealed partial class TrafficEditor
         visibilityCommand.ToolTipText = "Choose which visibility cells include this road area.";
         moveCommand.Click += (_, _) => MoveTraffic();
         visibilityCommand.Click += (_, _) => EditVisibility();
-        tree.AddPlacementCommands(moveCommand, visibilityCommand);
-        tree.SelectionChanged += selection =>
+        Tree.AddPlacementCommands(moveCommand, visibilityCommand);
+        Tree.SelectionChanged += selection =>
         {
             selectedArea = TrafficCopy.AreaOf(data, selection);
             moveCommand.Enabled = TrafficTranslation.CanMove(selection);
@@ -40,7 +40,7 @@ public sealed partial class TrafficEditor
         };
         moveCommand.Enabled = visibilityCommand.Enabled = false;
 
-        ToolStripMenuItem duplicate = new("&Duplicate…", null, (_, _) => tree.DuplicateSelection())
+        ToolStripMenuItem duplicate = new("&Duplicate…", null, (_, _) => Tree.DuplicateSelection())
         {
             ShortcutKeys = Keys.Control | Keys.D
         };
@@ -54,7 +54,7 @@ public sealed partial class TrafficEditor
         editMenu.DropDownItems.AddRange([new ToolStripSeparator(), duplicate, move, visibility]);
         editMenu.DropDownOpening += (_, _) =>
         {
-            duplicate.Enabled = tree.CanDuplicate;
+            duplicate.Enabled = Tree.CanDuplicate;
             move.Enabled = moveCommand.Enabled;
             visibility.Enabled = visibilityCommand.Enabled;
         };
@@ -69,7 +69,7 @@ public sealed partial class TrafficEditor
             catch (ArgumentException exception)
             {
                 view.CancelMove();
-                status.Text = exception.Message;
+                Status.Text = exception.Message;
             }
         };
         view.MoveFinished += accept =>
@@ -81,11 +81,11 @@ public sealed partial class TrafficEditor
                 return;
 
             if (accept)
-                tree.CompleteEdit();
+                Tree.CompleteEdit();
             else
             {
                 preview.Restore();
-                tree.RefreshProperties();
+                Tree.RefreshProperties();
                 view.Rebuild();
             }
         };
@@ -94,7 +94,7 @@ public sealed partial class TrafficEditor
 
     private bool BeginMovement()
     {
-        movement = new(tree.SelectedObject);
+        movement = new(Tree.SelectedObject);
 
         if (movement.Count > 0)
             return true;
@@ -107,10 +107,10 @@ public sealed partial class TrafficEditor
     {
         view.CancelMove();
 
-        if (!TrafficTranslation.CanMove(tree.SelectedObject) || !ValidateChildren())
+        if (!TrafficTranslation.CanMove(Tree.SelectedObject) || !ValidateChildren())
             return;
 
-        TrafficTranslation preview = new(tree.SelectedObject);
+        TrafficTranslation preview = new(Tree.SelectedObject);
         bool accepted = false;
 
         try
@@ -128,11 +128,11 @@ public sealed partial class TrafficEditor
                 preview.Restore();
 
             view.Rebuild();
-            tree.RefreshProperties();
+            Tree.RefreshProperties();
         }
 
         if (accepted)
-            tree.CompleteEdit();
+            Tree.CompleteEdit();
     }
 
     private void DuplicateTraffic(object selection)
@@ -158,11 +158,11 @@ public sealed partial class TrafficEditor
                     return;
 
                 object result = copy.Commit(dialog.Destination, dialog.VisibleCells, dialog.KeepConnections);
-                tree.CompleteEdit(result);
+                Tree.CompleteEdit(result);
             }
             finally
             {
-                view.Highlight(tree.SelectedObject);
+                view.Highlight(Tree.SelectedObject);
             }
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
@@ -178,14 +178,14 @@ public sealed partial class TrafficEditor
         if (!ValidateChildren())
             return;
 
-        if (tree.SelectedObject is PVSCell cell)
+        if (Tree.SelectedObject is PVSCell cell)
         {
             using TrafficReferenceDialog dialog = new(cell, nameof(PVSCell.maHulls), typeof(Hull), true, cell.maHulls);
 
             if (dialog.ShowDialog(this) == DialogResult.OK)
             {
                 cell.maHulls = [.. Array.ConvertAll(dialog.SelectedValues, value => (Hull)value)];
-                tree.CompleteEdit();
+                Tree.CompleteEdit();
             }
 
             return;
@@ -200,7 +200,7 @@ public sealed partial class TrafficEditor
             return;
 
         TrafficVisibility.SetArea(data, selectedArea, visibility.SelectedCells);
-        tree.CompleteEdit();
+        Tree.CompleteEdit();
     }
 
     private void CopyVisibilityCell(PVSCell cell)
@@ -216,7 +216,7 @@ public sealed partial class TrafficEditor
             return;
 
         TrafficVisibility.CopyCells(data, source, dialog.SelectedCells, dialog.Replace);
-        tree.CompleteEdit();
+        Tree.CompleteEdit();
     }
 
     protected override bool ProcessCmdKey(ref Message message, Keys keyData)

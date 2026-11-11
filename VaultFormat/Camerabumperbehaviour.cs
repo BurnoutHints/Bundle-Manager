@@ -56,7 +56,6 @@ public class Camerabumperbehaviour : IAttribute
             BitConverter.GetBytes(AccelerationDampening)
         ];
 
-        //To-Do: again here we have not padding, but usually we should have it
         return bytes.SelectMany(i => i).Count();
     }
 

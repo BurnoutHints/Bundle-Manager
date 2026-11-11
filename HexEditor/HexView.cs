@@ -611,7 +611,7 @@ public class HexView : UserControl
         }
     }
 
-    // The byte under a point and whether it's in the text column. The offset column gives the row's first byte.
+    // Hit-tests coordinate to byte index and text column flag
     private (int Index, bool Text) HitTest(Point point)
     {
         int row = TopRow + Math.Max(0, (point.Y - Inset) / rowHeight);

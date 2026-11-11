@@ -86,7 +86,25 @@ public class ObjectTreeEditor : UserControl
     [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Func<object, bool> DuplicateRequested { get; set; }
 
-    // The selected node's object or list
+    // Maximum collection capacity based on owner and property name
+    [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public Func<object, string, int> CollectionLimit { get; set; } = TrafficRules.CollectionLimit;
+
+    // Indicates collections where items can only be added/removed at the end
+    [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public Func<object, string, bool> PositionsFixed { get; set; }
+
+    [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public string SearchPrompt
+    {
+        get => search.PlaceholderText;
+        set
+        {
+            search.PlaceholderText = value;
+            search.AccessibleName = value;
+        }
+    }
+
     public event Action<object> SelectionChanged;
 
     public event Action Changed;
@@ -247,14 +265,19 @@ public class ObjectTreeEditor : UserControl
         if (value is IList list
             ? list.Count > 0
             : NodeProperties(value).Any(p => p.GetValue(value) != null))
-            node.Nodes.Add(new TreeNode()); // Filled in when it's expanded
+            node.Nodes.Add(new TreeNode()); // Placeholder for lazy expansion
 
         return node;
     }
 
     private void Fill(TreeNode node)
     {
-        tree.BeginUpdate();
+        // Suspend redraw for large collections
+        bool many = node.Tag is IList { Count: > 64 };
+
+        if (many)
+            tree.BeginUpdate();
+
         node.Nodes.Clear();
 
         if (node.Tag is IList list)
@@ -269,10 +292,11 @@ public class ObjectTreeEditor : UserControl
                     node.Nodes.Add(MakeNode(currentProperty.Name, value, false));
         }
 
-        tree.EndUpdate();
+        if (many)
+            tree.EndUpdate();
     }
 
-    // Selects a node by the objects and lists on the way to it from the root, the root itself not included
+    // Selects a node by its object path from root
     public void Select(object[] path)
     {
         TreeNode node = tree.Nodes[0];
@@ -300,13 +324,16 @@ public class ObjectTreeEditor : UserControl
         ? tree.SelectedNode
         : null;
 
+    private bool PositionsAreFixed(TreeNode listNode) => PositionsFixed?.Invoke(listNode.Parent?.Tag, listNode.Name) == true;
+
     private void UpdateCommands()
     {
+        bool positionsFixed = ItemNode != null && PositionsAreFixed(ItemNode.Parent);
         addItem.Enabled = ListNode != null;
         duplicateItem.Enabled = ItemNode != null || DuplicateRequested != null && TrafficCopy.CanCopy(SelectedObject);
-        deleteItem.Enabled = ItemNode != null;
-        upItem.Enabled = ItemNode?.PrevNode != null;
-        downItem.Enabled = ItemNode?.NextNode != null;
+        deleteItem.Enabled = ItemNode != null && (!positionsFixed || ItemNode.NextNode == null);
+        upItem.Enabled = !positionsFixed && ItemNode?.PrevNode != null;
+        downItem.Enabled = !positionsFixed && ItemNode?.NextNode != null;
 
         foreach ((ToolStripButton button, ToolStripMenuItem command) in commandButtons)
             button.Enabled = command.Enabled;
@@ -317,7 +344,7 @@ public class ObjectTreeEditor : UserControl
         usedButton.Enabled = SelectedObject != null && SelectedObject is not IList;
     }
 
-    // Lists the node again, as indexes change, and selects the item that was changed
+    // Rebuilds list child nodes and selects the modified item
     private void Refill(TreeNode listNode, int select)
     {
         Fill(listNode);
@@ -357,8 +384,11 @@ public class ObjectTreeEditor : UserControl
         if (!CanGrow(item.Parent))
             return;
 
-        list.Insert(item.Index + 1, Clone(list[item.Index]));
-        Refill(item.Parent, item.Index + 1);
+        int to = PositionsAreFixed(item.Parent)
+            ? list.Count
+            : item.Index + 1;
+        list.Insert(to, Clone(list[item.Index]));
+        Refill(item.Parent, to);
     }
 
     public void DuplicateSelection() => Duplicate();
@@ -402,7 +432,7 @@ public class ObjectTreeEditor : UserControl
     {
         references = [];
 
-        if (ItemNode is not TreeNode item)
+        if (ItemNode is not TreeNode item || PositionsAreFixed(item.Parent) && item.NextNode != null)
             return false;
 
         references = ObjectGraph.Incoming(root, item.Tag);
@@ -419,7 +449,7 @@ public class ObjectTreeEditor : UserControl
 
     private void MoveItem(int by)
     {
-        if (ItemNode is not TreeNode item)
+        if (ItemNode is not TreeNode item || PositionsAreFixed(item.Parent))
             return;
 
         IList list = (IList)item.Parent.Tag;
@@ -545,37 +575,99 @@ public class ObjectTreeEditor : UserControl
     private void RefreshTree()
     {
         object selected = SelectedObject;
-        HashSet<object> expanded = new(ReferenceEqualityComparer.Instance);
+        Sync(tree.Nodes[0]);
 
-        void remember(TreeNode node)
-        {
-            if (node.IsExpanded && node.Tag != null)
-                expanded.Add(node.Tag);
+        if (SelectedObject != selected)
+            SelectObject(selected);
 
-            foreach (TreeNode child in node.Nodes)
-                remember(child);
-        }
-
-        remember(tree.Nodes[0]);
-        Fill(tree.Nodes[0]);
-
-        void expand(TreeNode node)
-        {
-            if (node.Tag == null || !expanded.Contains(node.Tag))
-                return;
-
-            node.Expand();
-
-            foreach (TreeNode child in node.Nodes)
-                expand(child);
-        }
-
-        expand(tree.Nodes[0]);
-        SelectObject(selected);
         tree.SelectedNode ??= tree.Nodes[0];
         grid.Refresh();
         Search();
         UpdateCommands();
+    }
+
+    private static bool SameChildren(TreeNode node)
+    {
+        if (node.Tag is IList list)
+        {
+            if (list.Count != node.Nodes.Count)
+                return false;
+
+            for (int i = 0; i < list.Count; i++)
+                if (node.Nodes[i].Tag != list[i])
+                    return false;
+
+            return true;
+        }
+
+        int index = 0;
+
+        foreach (PropertyInfo currentProperty in NodeProperties(node.Tag))
+        {
+            if (currentProperty.GetValue(node.Tag) is object value && (index >= node.Nodes.Count || node.Nodes[index++].Tag != value))
+                return false;
+        }
+
+        return index == node.Nodes.Count;
+    }
+
+    // Synchronizes existing nodes, only rebuilding collections with modified items
+    private void Sync(TreeNode node)
+    {
+        string label = Label(node);
+
+        if (node.Text != label)
+            node.Text = label;
+
+        bool placeholder = node.Nodes.Count == 1 && node.Nodes[0].Tag == null;
+
+        if (placeholder || node.Nodes.Count == 0)
+        {
+            if (node.Tag is IList list && placeholder != list.Count > 0)
+            {
+                node.Nodes.Clear();
+
+                if (list.Count > 0)
+                    node.Nodes.Add(new TreeNode());
+            }
+
+            return;
+        }
+
+        if (SameChildren(node))
+        {
+            foreach (TreeNode child in node.Nodes)
+                Sync(child);
+
+            return;
+        }
+
+        HashSet<object> expanded = new(ReferenceEqualityComparer.Instance);
+
+        void remember(TreeNode current)
+        {
+            if (current.IsExpanded && current.Tag != null)
+                expanded.Add(current.Tag);
+
+            foreach (TreeNode child in current.Nodes)
+                remember(child);
+        }
+
+        remember(node);
+        Fill(node);
+
+        void expand(TreeNode current)
+        {
+            if (current.Tag == null || !expanded.Contains(current.Tag))
+                return;
+
+            current.Expand();
+
+            foreach (TreeNode child in current.Nodes)
+                expand(child);
+        }
+
+        expand(node);
     }
 
     private void Search()
@@ -602,7 +694,7 @@ public class ObjectTreeEditor : UserControl
 
     private bool CanGrow(TreeNode listNode)
     {
-        int maximum = TrafficRules.CollectionLimit(listNode.Parent?.Tag, listNode.Name);
+        int maximum = CollectionLimit(listNode.Parent?.Tag, listNode.Name);
 
         if (((IList)listNode.Tag).Count < maximum)
             return true;
@@ -728,7 +820,7 @@ public class ObjectTreeEditor : UserControl
         dialog.ShowDialog(this);
     }
 
-    // Copies what the object holds, and points references to anything copied at the copy
+    // Deep clones an object graph and re-links internal references
     public static object Clone(object value)
     {
         Dictionary<object, object> copies = new(ReferenceEqualityComparer.Instance);
@@ -773,7 +865,7 @@ public class ObjectTreeEditor : UserControl
 
             object propertyValue = currentProperty.GetValue(value);
 
-            // References are kept, a list of them is a new list of the same ones
+            // Retain external references without deep copying
             currentProperty.SetValue(copy, Owned(currentProperty) || !IsObject(currentProperty.PropertyType)
                 ? Copy(propertyValue, copies)
                 : propertyValue is IList references

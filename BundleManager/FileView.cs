@@ -268,7 +268,7 @@ public partial class FileView : Form
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Skipping {currentFile}: {ex.Message}"); // One unreadable bundle shouldn't stop the folder loading
+                System.Diagnostics.Debug.WriteLine($"Skipping {currentFile}: {ex.Message}");
                 continue;
             }
 
@@ -359,7 +359,7 @@ public partial class FileView : Form
             SubForm = true
         };
 
-        form.Shown += async (_, _) => await form.Open(currentFile); // Once it's showing, so the loading dialog has a window to sit over
+        form.Shown += async (_, _) => await form.Open(currentFile);
         form.ShowDialog(this);
     }
 

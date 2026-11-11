@@ -9,13 +9,6 @@ using PluginAPI;
 
 namespace BaseHandlers;
 
-// This data would include:
-// - Race Rivals Number
-// - Large Vehicle Probability
-// - Traffic Density Race
-// - Traffic Density Road Rage
-// - Traffic Density Burning Route
-// - Traffic Density Survival (Marked Man)
 public struct ProgressionRankData
 {
     public float mfTrafficDensityRace;
@@ -60,8 +53,6 @@ public struct EventJunction
     public RaceEventData mpOfflineEvent;
     public ulong OnlineEventOffset;
     public RaceEventData mpOnlineEvent;
-
-    // Guessing the name here
     public ulong BikeEventOffset;
     public RaceEventData BikeEvent;
     public int miShotGroup;
@@ -202,8 +193,6 @@ public class ProgressionData : IEntryData
     public uint muTrophyUnlockCount;
     public ulong CarOpponentSetOffset;
     public uint muCarOpponentsCount;
-
-    // Guessing the name here
     public uint? BaseEventJunctionCount;
     public List<uint> PointerPadding = [];
     public List<EncryptedString> mpaPlayerCarIds = [];
@@ -242,7 +231,7 @@ public class ProgressionData : IEntryData
         muVersionNumber = reader.ReadUInt32();
         muSize = reader.ReadUInt32();
 
-        // The decomp's version retains the original 32-bit offsets
+        // Decomp retains original 32-bit offsets
         bool wide = entry.Platform == BundlePlatform.PCx64 && muVersionNumber >= 44;
         PlayerCarIDsOffset = ReadPointer(reader, wide);
         muPlayerCarIdCount = ReadCount(reader, wide);

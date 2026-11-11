@@ -161,7 +161,7 @@ dotnet_naming_style.pascal_case.capitalization = pascal_case
 # These data models retain member names from the original game source/format.
 # Preserve those spellings; format their code and apply local-variable rules normally.
 # Add new game-data files here before running an automated naming cleanup.
-[BaseHandlers/{AptData,EnvironmentKeyframe,EnvironmentTimeLine,FlaptFile,GraphicsSpec,InstanceList,MaterialEntry,ProgressionData,Renderable,StreetData,TextureState,Traffic,TriggerData}.cs]
+[BaseHandlers/{AISections,AptData,EnvironmentKeyframe,EnvironmentTimeLine,FlaptFile,GraphicsSpec,InstanceList,MaterialEntry,ProgressionData,PropPhysics,Renderable,StreetData,TextureState,Traffic,TriggerData}.cs]
 codestyle_preserve_member_names = true
 dotnet_naming_rule.visible_fields_are_pascal_case.severity = none
 dotnet_naming_rule.properties_are_pascal_case.severity = none

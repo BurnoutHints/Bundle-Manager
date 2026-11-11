@@ -12,8 +12,10 @@ public static class TrafficReferences
 {
     public const string None = "(none)";
 
-    // The traffic data open in its editor, which is modal
+    // Active resource instances for reference resolution
     public static Traffic Data;
+    public static AISections AIData;
+    public static VFXPropCollection VFXData;
     public static Action<object> Preview;
     public static Action RestorePreview;
 
@@ -21,6 +23,12 @@ public static class TrafficReferences
 
     public static List<(string Key, object Value)> Candidates(object owner, string property, Type type)
     {
+        if (type == typeof(AISections.AISection))
+            return Indexed(AIData?.maSections ?? []);
+
+        if (type == typeof(VFXPropCollection.VFXCoronaTypeData))
+            return Indexed(VFXData?.mpCoronaTypeDataTable ?? []);
+
         Traffic data = Data;
 
         if (data == null)
@@ -46,7 +54,7 @@ public static class TrafficReferences
 
         if (type == typeof(Section))
         {
-            // A neighbour has to be in the same hull
+            // Neighbors must reside within the same hull
             Hull only = owner is Neighbour
                 ? HullOf(data, owner)
                 : null;
@@ -111,7 +119,7 @@ public static class TrafficReferences
             ? TrafficLabels.Name(value.GetType().Name)
             : value.ToString();
 
-    // "?" for one that's been deleted, or that can't be referred to from where it is
+    // Returns "?" if deleted or out of scope
     public static string Key(object value, object owner, string property, Type type) =>
             Candidates(owner, property, type).FirstOrDefault(c => c.Value == value).Key ?? "?";
 
@@ -120,7 +128,7 @@ public static class TrafficReferences
             ? None
             : $"{Key(value, owner, property, type)}: {Describe(value)}";
 
-    // A key, or a whole label as the dropdown shows it
+    // Resolves from key or full display label
     public static object Resolve(object owner, string property, Type type, string text)
     {
         text = text.Trim();
@@ -169,7 +177,7 @@ public class TrafficReferenceConverter : TypeConverter
     }
 }
 
-// A list of references as their keys, "1, 4, 7"
+// Formats reference lists as comma-separated keys (e.g. "1, 4, 7")
 public class TrafficReferenceListConverter : TypeConverter
 {
     public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) => false;

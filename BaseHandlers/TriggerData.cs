@@ -605,7 +605,6 @@ public class SignatureStunt
         br.BaseStream.Position = currentPosition;
     }
 
-    // Write something in triggerIds, because we dont have the actual positions yet
     public void Write(BinaryWriter2 bw, bool x64)
     {
         mId.Write(bw);
@@ -980,11 +979,10 @@ public class TriggerData : IEntryData
                 bw.WriteUniquePadding(4); // Padding
         }
 
-        // The game looks regions up as mppRegions[miRegionIndex], so the table is ordered by index with no gaps.
-        // A region whose index is out of range or already taken (e.g. a newly added one) gets the first free index.
+        // Engine indexes mppRegions[miRegionIndex]; table must be contiguous
         List<TriggerRegion> regions = [.. mpVFXBoxRegions, .. mpBlackspots, .. mpGenericRegions, .. mpLandmarks];
 
-        // IDs are unique too (killzones and stunts reference generic regions by mId), so a duplicate gets a new one
+        // Ensure unique region IDs across generic, landmark, blackspot, and VFX regions
         int nextID = 0;
 
         foreach (TriggerRegion region in regions)

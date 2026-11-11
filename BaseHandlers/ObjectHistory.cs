@@ -155,7 +155,7 @@ public static class ObjectGraph
                     visit(currentProperty.GetValue(value), [.. path, currentProperty.GetValue(value)], label + " / " + TrafficLabels.Name(currentProperty.Name));
         }
 
-        visit(root, [], "Traffic");
+        visit(root, [], TrafficReferences.Describe(root));
         return nodes;
     }
 

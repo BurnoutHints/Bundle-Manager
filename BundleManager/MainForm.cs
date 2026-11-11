@@ -535,11 +535,9 @@ public partial class MainForm : Form
         RenameSelectedEntry();
     }
 
-    // Edits the name in a text box over its cell, as the list's own label editing only edits the first column.
-    // Enter or clicking away keeps it, Escape cancels. An empty name removes it, leaving the detected one.
+    // In-place text box editing for the Name column
     private void RenameSelectedEntry()
     {
-        // F2 reaches here from the text box too, which is the list's only child
         if (lstEntries.SelectedItems.Count == 0 || lstEntries.Controls.Count > 0)
             return;
 
@@ -820,16 +818,8 @@ public partial class MainForm : Form
             lstEntries.ListViewItemSorter = sorter;
         }
 
-        // if you're clicking the same column already being sorted
-        //if (sorter.Column == column)
-        //{
-        // change the direction state from true to false or vice-versa
         sorter.Swap();
-
-        // bop-it
         lstEntries.Sort();
-
-        //}
     }
 
     private class EntrySorter : IComparer

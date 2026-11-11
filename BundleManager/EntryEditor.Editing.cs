@@ -216,7 +216,6 @@ public partial class EntryEditor
         ToolStripMenuItem clear = new("Clear / delete bytes", null, (_, _) => RunHex(h => h.DeleteSelection()));
         ToolStripMenuItem currentSelect = new("Select &all bytes", null, (_, _) => RunHex(h => h.SelectAll()));
 
-        // Canvas handles Ctrl+C/X/V/A so text boxes retain their usual editing shortcuts.
         copy.ShortcutKeyDisplayString = "Ctrl+C";
         paste.ShortcutKeyDisplayString = "Ctrl+V";
         cut.ShortcutKeyDisplayString = "Ctrl+X";
@@ -273,7 +272,7 @@ public partial class EntryEditor
         }
     }
 
-    // Synchronize only this window's draft. Navigation never changes the original bundle entry.
+    // Synchronizes editor draft buffer without mutating original bundle entry
     private void FlushHexToDraft()
     {
         if (!loaded || showingImage)

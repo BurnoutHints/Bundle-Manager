@@ -616,12 +616,8 @@ public class StreetData : IEntryData
             roads.Add(r);
         }
 
-        // The header has no miChallengeCount; FixUp() in retail Burnout
-        // Paradise constructs miJunctionCount BitArrays here even though
-        // there are only miRoadCount real entries (this is a game bug -
-        // it should iterate miRoadCount times). The on-disk allocation
-        // matches the game allocation, so the file holds miRoadCount
-        // entries here followed by partially-corrupt bytes.
+        // Retail Burnout Paradise StreetData::FixUp() iterates miJunctionCount times
+        // instead of miRoadCount when initializing challenge bit arrays; disk layout matches.
         br.BaseStream.Position = mpaChallengeParScores;
 
         for (int i = 0; i < miRoadCount; i++)
@@ -638,8 +634,7 @@ public class StreetData : IEntryData
 
     public bool Write(BundleEntry entry)
     {
-        // The spec has no explicit challenge count and the reader uses
-        // miRoadCount, so an unbalanced model would silently corrupt.
+        // Challenges rely on miRoadCount; counts must match to avoid corruption
         if (challenges.Count != roads.Count)
             throw new InvalidOperationException(
                 "StreetData.Write: challenges.Count (" + challenges.Count +
@@ -696,26 +691,8 @@ public class StreetData : IEntryData
         for (int i = 0; i < challenges.Count; i++)
             challenges[i].Write(bw);
 
-        // The game's StreetData::FixUp() iterates miJunctionCount times
-        // (a Burnout bug; it should be miRoadCount) when constructing
-        // mDirty / mValidScores BitArrays inside ChallengeParScoresEntry.
-        // The extra iterations write past the real challenge entries, so
-        // the resource MUST extend at least to
-        //
-        //     mpaChallengeParScores + miJunctionCount * 0x28
-        //
-        // or FixUp() will trample whatever lives after the resource at
-        // runtime. We pad with zeroes here to keep that memory writeable.
-        //
-        // Road span and junction exit arrays used to live in this region
-        // in retail data, but the FixUp bug overwrites them, so the
-        // values are unreliable and the game ignores them. We omit them
-        // entirely - per-road / per-junction mpaSpans, miSpanCount,
-        // mpaExits, miExitCount are all written as 0.
-        //
-        // The decomp is the exception: its arrays are kept, laid out the
-        // way its data compiler did (one 16-byte-aligned allocation per
-        // road, then per junction) so a round trip is byte-identical.
+        // StreetData::FixUp() overruns challenge entries up to (mpaChallengeParScores + miJunctionCount * 0x28).
+        // Zero-pad to ensure buffer memory is writable at runtime. Retail builds omit overwritten span/exit arrays.
         if (x64)
         {
             for (int i = 0; i < roads.Count; i++)

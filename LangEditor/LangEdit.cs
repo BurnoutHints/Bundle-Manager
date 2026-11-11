@@ -20,7 +20,7 @@ public partial class LangEdit : Form, IEntryEditor
 
     private bool ignoreChanges;
     private bool suppressHandlers;
-    private bool dirty; // Grid has edits that haven't been applied to the resource
+    private bool dirty; // Unapplied grid edits
     private object originalCellValue;
 
     private string searchVal;
@@ -546,8 +546,7 @@ public partial class LangEdit : Form, IEntryEditor
             MessageBox.Show(this, error + " Import cancelled.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 
-    // Reads one "key: string" line per string, as written by ExportYAML. A key is a string name or a 0x ID.
-    // Returns an error message, or null on success.
+    // Imports YAML key-value pairs (string name or 0x ID)
     internal string ImportYAML(string path)
     {
         Dictionary<uint, string> data = [];
@@ -613,11 +612,10 @@ public partial class LangEdit : Form, IEntryEditor
             MessageBox.Show($"There was an issue exporting: {error}", "Error", MessageBoxButtons.OK);
     }
 
-    // One "key: string" line per row. The key is the name when it hashes to the row's ID, otherwise the 0x ID.
-    // Returns an error message, or null on success.
+    // Exports strings to YAML keyed by string name or 0x ID hash
     internal string ExportYAML(string path)
     {
-        dgvMain.EndEdit(); // Include the cell being edited
+        dgvMain.EndEdit();
         StringBuilder yaml = new();
         yaml.AppendLine($"# {lang.LanguageName} strings, keyed by name, or by 0x ID where the name is unknown");
 

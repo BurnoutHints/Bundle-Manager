@@ -289,5 +289,5 @@ public sealed class TrafficReferenceDialog : Form
 
     private void UpdateStatus() => status.Text = multiple
         ? $"{chosen.Items.Count} selected · Maximum {maximum}. The right list preserves the saved order."
-        : "Choose an item. Its geometry is highlighted in the traffic view when available.";
+        : "Choose an item. Its geometry is highlighted in the 3D view when available.";
 }

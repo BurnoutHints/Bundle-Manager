@@ -157,7 +157,6 @@ public partial class AttribSysVaultForm : Form, IEntryEditor
         {
             try
             {
-                // Convertion of the AttribSys. Might need smarter structure to only keep the essential data concerning the configuration of the vehicle
                 string jsonContent = JsonSerializer.Serialize(AttribSys, jsonSerializerOptions);
 
                 File.WriteAllText(saveDialog.FileName, jsonContent);

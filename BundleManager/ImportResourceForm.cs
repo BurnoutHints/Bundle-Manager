@@ -170,7 +170,7 @@ public partial class ImportResourceForm : Form
             if (ex is not OperationCanceledException)
                 Warn($"Unable to use {path}: {ex.Message}");
 
-            primaryResourcePathTextBox.Text = primaryPath; // Put the old path back in the text box
+            primaryResourcePathTextBox.Text = primaryPath;
             return false;
         }
     }

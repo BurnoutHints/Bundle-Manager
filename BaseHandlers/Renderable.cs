@@ -144,7 +144,7 @@ public class Renderable : IEntryData
 
     private static VertexData ReadVertexLayout(BinaryReader2 br, VertexAttribute attribute)
     {
-        switch (attribute.Size) // We don't use type here. This is wrong tbh.
+        switch (attribute.Size) // Layout dispatched by attribute size
         {
             case 0xC:
                 return new()
@@ -248,14 +248,14 @@ public class Renderable : IEntryData
                 foreach (VertexAttribute attribute in desc.Attributes)
                 {
                     if (attribute.Type != VertexAttributeType.Positions)
-                        continue; // TODO
+                        continue;
 
-                    attributeToUse = attribute; // This is just wrong
+                    attributeToUse = attribute;
                 }
             }
 
             if (attributeToUse.Size == 0)
-                continue; // Leaves Vertices null, which BuildModel skips
+                continue;
 
             uint first = mesh.Indices.Count > 0
                 ? mesh.Indices.Min()

@@ -219,7 +219,7 @@ public class Mesh
                 }*/
         for (int i = 0; i + 2 < indices2.Count; i += 3)
         {
-            // Drop a triangle with a missing corner whole, as dropping only the corner shifts every triangle after it
+            // Skip triangle if any index is out of bounds
             if (indices2[i] >= Vertices.Count || indices2[i + 1] >= Vertices.Count || indices2[i + 2] >= Vertices.Count)
                 continue;
 

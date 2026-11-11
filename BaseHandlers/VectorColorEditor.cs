@@ -10,8 +10,7 @@ using System.Windows.Forms.Design;
 
 namespace BaseHandlers;
 
-// Colour fields use a swatch and picker rather than the vector's X/Y/Z/W editor.
-// Formatting never converts the stored floating point colour to 8-bit channels.
+// Type converter formatting floating-point color vectors as hex strings
 public class VectorColorConverter : TypeConverter
 {
     public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) =>
@@ -37,8 +36,7 @@ public class VectorColorConverter : TypeConverter
     }
 }
 
-// Picks float RGB colours for Vector3, Vector4 (alpha too) and Vector3[] (pick an element from a list) values with
-// ColourPickerForm, and draws a swatch of each in the grid. Swatches of colours brighter than 1 show their hue.
+// Color editor launching ColourPickerForm for Vector3, Vector4, and Vector3[]
 public class VectorColorEditor : UITypeEditor
 {
     public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
@@ -79,7 +77,6 @@ public class VectorColorEditor : UITypeEditor
         }
     }
 
-    // Null if cancelled
     private static Vector3? Pick(IWindowsFormsEditorService service, Vector3 colour, float? alpha, out float newAlpha)
     {
         using ColourPickerForm form = new(colour, alpha);
@@ -104,7 +101,6 @@ public class VectorColorEditor : UITypeEditor
             _ => []
         };
 
-        // Side by side for arrays
         for (int i = 0; i < colours.Length; i++)
         {
             int left = e.Bounds.Left + e.Bounds.Width * i / colours.Length;

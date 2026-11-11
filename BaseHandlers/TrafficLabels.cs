@@ -9,6 +9,13 @@ using static BaseHandlers.Traffic;
 
 namespace BaseHandlers;
 
+// Marks properties visible only in specific resource layouts
+[AttributeUsage(AttributeTargets.Property)]
+internal sealed class OnlyInAttribute(bool development) : Attribute
+{
+    public bool Development { get; } = development;
+}
+
 public static class TrafficLabels
 {
     private static bool installed;
@@ -63,7 +70,36 @@ public static class TrafficLabels
         ["mPosPlusYRot"] = "Position and Y rotation",
         ["mID"] = "ID",
         ["muID"] = "ID",
-        ["mId"] = "ID"
+        ["mId"] = "ID",
+        ["AISections"] = "AI sections",
+        ["maNoGoLines"] = "No-go lines",
+        ["mu8eDistrict"] = "District",
+        ["mx8Flags"] = "Flags (raw)",
+        ["mCOMOffset"] = "Centre of mass offset",
+        ["mu8JointType"] = "Joint type",
+        ["mu8ExtraTypeInfo"] = "Extra type info",
+        ["mfaCollisionThresholds"] = "Collision thresholds",
+        ["muaResponses"] = "Responses",
+        ["VFXPropCollection"] = "VFX props",
+        ["ParticleDescriptionCollection"] = "Effects",
+        ["TextureNameMap"] = "Effect textures",
+        ["mpPropTable"] = "Props",
+        ["mPropID"] = "Prop ID",
+        ["mpPropStates"] = "States",
+        ["mpVFXMaterial"] = "Materials",
+        ["mpLocators"] = "Effects",
+        ["mHashedName"] = "Effect",
+        ["macDebugLefName"] = "Effect path (debug)",
+        ["mpCoronaType"] = "Light glows",
+        ["mpTypeData"] = "Light glow type",
+        ["mpCoronaTypeDataTable"] = "Light glow types",
+        ["mnID"] = "ID",
+        ["mpTable"] = "Effects",
+        ["mResourceId"] = "Resource ID",
+        ["mpEntries"] = "Textures",
+        ["mpGDBTextureName"] = "GameDB path",
+        ["LionName"] = "Name in effects",
+        ["muHash"] = "Name hash"
     };
 
     private static readonly Dictionary<string, string> help = new()
@@ -82,12 +118,15 @@ public static class TrafficLabels
         ["mPosPlusYRot"] = "X, Y and Z give the position; W gives rotation about the Y axis."
     };
 
+    // Indicates whether the active resource uses a development layout
+    public static bool Development;
+
     public static string Name(string raw)
     {
         if (names.TryGetValue(raw, out string name))
             return name;
 
-        string text = Regex.Replace(raw, "^[mM](?:[aufiex]|[au][fi])?(?=[A-Z])", "");
+        string text = Regex.Replace(raw, "^[mM](?:[aufiexrnbp]|[au][fi]|ac)?(?=[A-Z])", "");
         text = Regex.Replace(text.Replace('_', ' '), "(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", " ");
         return text.Length == 0
             ? raw
@@ -101,8 +140,9 @@ public static class TrafficLabels
 
         installed = true;
 
-        foreach (Type currentType in typeof(Traffic).GetNestedTypes().Where(t => t.IsClass).Append(typeof(Traffic)))
-            TypeDescriptor.AddProvider(new Provider(TypeDescriptor.GetProvider(currentType)), currentType);
+        foreach (Type root in (Type[])[typeof(Traffic), typeof(AISections), typeof(PropPhysics), typeof(VFXPropCollection), typeof(ParticleDescriptionCollection), typeof(TextureNameMap)])
+            foreach (Type currentType in root.GetNestedTypes().Where(t => t.IsClass).Append(root))
+                TypeDescriptor.AddProvider(new Provider(TypeDescriptor.GetProvider(currentType)), currentType);
     }
 
     private sealed class Provider(TypeDescriptionProvider parent) : TypeDescriptionProvider(parent)
@@ -116,13 +156,20 @@ public static class TrafficLabels
 
         public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)
         {
-            List<PropertyDescriptor> properties = [.. base.GetProperties(attributes).Cast<PropertyDescriptor>().Select(p => (PropertyDescriptor)new Field(p))];
+            List<PropertyDescriptor> properties = [.. base.GetProperties(attributes).Cast<PropertyDescriptor>()
+                .Where(p => p.Attributes[typeof(OnlyInAttribute)] is not OnlyInAttribute only || only.Development == Development)
+                .Select(p => (PropertyDescriptor)new Field(p))];
 
             if (type == typeof(FlowType))
                 properties.Add(new MixField());
 
             if (type == typeof(VehicleAsset))
                 properties.Add(new RawVehicleIDField());
+
+            if (type == typeof(AISections.AISection))
+                properties.AddRange((Development
+                    ? AISections.DevelopmentFlags
+                    : AISections.Flags).Select(flag => new FlagField(flag.Name, flag.Mask, flag.Help)));
 
             return new([.. properties]);
         }
@@ -136,15 +183,17 @@ public static class TrafficLabels
             ? "Chance (%)"
             : TrafficLabels.Name(Name);
 
-        public override string Category => Name.Contains("Forward") || Name.Contains("Backward") || Name.Contains("Neighbour") || Name.Contains("Rung")
-            ? "Connections"
-            : Name.Contains("Flow") || Name.Contains("VehiclesPerMinute") || Name.Contains("Speed") || Chance
-                ? "Traffic flow"
-                : Name.Contains("Position") || Name.Contains("Points") || Name.Contains("Transform") || Name.Contains("Length") || Name.Contains("Dimensions") || Name.Contains("Rot")
-                    ? "Geometry"
-                    : Name.Contains("flag") || Name.Contains("Recip") || Name.Contains("Fixed") || Name.Contains("Prob") || Name.Contains("Chance")
-                        ? "Advanced"
-                        : "Properties";
+        public override string Category => inner.Category != CategoryAttribute.Default.Category
+            ? inner.Category
+            : Name.Contains("Forward") || Name.Contains("Backward") || Name.Contains("Neighbour") || Name.Contains("Rung")
+                ? "Connections"
+                : Name.Contains("Flow") || Name.Contains("VehiclesPerMinute") || Name.Contains("Speed") || Chance
+                    ? "Traffic flow"
+                    : Name.Contains("Position") || Name.Contains("Points") || Name.Contains("Transform") || Name.Contains("Length") || Name.Contains("Dimensions") || Name.Contains("Rot")
+                        ? "Geometry"
+                        : Name.Contains("flag") || Name.Contains("Recip") || Name.Contains("Fixed") || Name.Contains("Prob") || Name.Contains("Chance")
+                            ? "Advanced"
+                            : "Properties";
 
         public override string Description => Chance
             ? "Individual share of this vehicle mix. Select the parent mix and edit Vehicle mix to change the chances."
@@ -222,6 +271,35 @@ public static class TrafficLabels
         public override bool ShouldSerializeValue(object component) => false;
     }
 
+    private sealed class FlagField(string name, byte mask, string description) : PropertyDescriptor(name, [])
+    {
+        public override string Category => "Flags";
+
+        public override string Description => description;
+
+        public override Type ComponentType => typeof(AISections.AISection);
+
+        public override Type PropertyType => typeof(bool);
+
+        public override bool IsReadOnly => false;
+
+        public override object GetValue(object component) => (((AISections.AISection)component).mx8Flags & mask) != 0;
+
+        public override void SetValue(object component, object value)
+        {
+            AISections.AISection section = (AISections.AISection)component;
+            section.mx8Flags = (byte)((bool)value
+                ? section.mx8Flags | mask
+                : section.mx8Flags & ~mask);
+        }
+
+        public override bool CanResetValue(object component) => false;
+
+        public override void ResetValue(object component) { }
+
+        public override bool ShouldSerializeValue(object component) => false;
+    }
+
     private sealed class MixField() : PropertyDescriptor("VehicleMix", [new EditorAttribute(typeof(TrafficMixEditor), typeof(UITypeEditor))])
     {
         public override string DisplayName => "Vehicle mix…";
@@ -261,7 +339,30 @@ public static class TrafficLabels
 
     private sealed class FriendlyEnumConverter(Type type) : EnumConverter(type)
     {
-        private string Label(object value) => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(value.ToString().Split('_').Last().ToLowerInvariant());
+        private readonly string prefix = SharedPrefix(Enum.GetNames(type));
+
+        // Truncates prefix at the last underscore to preserve word boundaries
+        private static string SharedPrefix(string[] names)
+        {
+            int length = names[0].Length;
+
+            foreach (string name in names)
+                length = Math.Min(length, name.Zip(names[0]).TakeWhile(pair => pair.First == pair.Second).Count());
+
+            int underscore = names[0].LastIndexOf('_', Math.Max(length - 1, 0));
+            return names[0][..(underscore >= 0 || names.Length < 2
+                ? underscore + 1
+                : length)];
+        }
+
+        private string Label(object value)
+        {
+            string text = value.ToString();
+            text = text.StartsWith(prefix)
+                ? text[prefix.Length..]
+                : text;
+            return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(Regex.Replace(text, "(?<=[a-z])(?=[A-Z])", " ").Replace('_', ' ').ToLowerInvariant());
+        }
 
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) => destinationType == typeof(string) && value != null
             ? Label(value)

@@ -491,7 +491,6 @@ public static class GameImage
                 dstIndex++;
             }
 
-            // Make sure we create a Bitmap that has ownership of its pixels so disposing it frees them
             Bitmap image = new(header.Width, header.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             System.Drawing.Imaging.BitmapData locked = image.LockBits(new(0, 0, header.Width, header.Height),
                 System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
@@ -535,7 +534,7 @@ public static class GameImage
                 mips = header[0x25];
                 faces = header[0x24] == 6
                     ? 6
-                    : 1; // The decomp's converter writes cubes as six deep
+                    : 1; // Cubemap depth is 6
                 break;
             case PlatformType.PS3:
                 mips = header[0x01];               // CellGcmTexture
@@ -649,8 +648,7 @@ public static class GameImage
         public bool PackedMips => (Word(5) >> 11 & 1) != 0;
     }
 
-    // Copies the top mip of an Xbox 360 texture (cube face 0) out of its tiling and GPU byte order into the
-    // layout the other platforms use. Tiling and mip packing follow Xenia's texture_address.h and texture_util.cc
+    // Un-tiles Xbox 360 top mip into linear format following Xenia layout
     private static byte[] LinearX360(byte[] header, byte[] data, CompressionType type)
     {
         X360Fetch f = new(header);
@@ -667,7 +665,7 @@ public static class GameImage
         int width = (f.Width + blockSize - 1) / blockSize, height = (f.Height + blockSize - 1) / blockSize;
         int pitch = (f.Pitch / blockSize + 31) & ~31; // Rows are padded to whole 32 block tiles
 
-        // Mips of 16 texels or less share one tile, and when the texture is that small its top mip is in there too
+        // Mip levels <= 16 texels are packed within a single tile
         int offsetX = 0, offsetY = 0;
 
         if (f.PackedMips && Math.Min(f.Width, f.Height) <= 16)

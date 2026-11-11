@@ -129,7 +129,7 @@ public class Traffic : IEntryData
 
         [Browsable(false)] public List<StopLine> maStopLines { get; set; } = [];
 
-        // By Directions: E_DIR_STRAIGHT_ON, E_DIR_LEFT, E_DIR_RIGHT
+        // Indexed by EDirections: E_DIR_STRAIGHT_ON, E_DIR_LEFT, E_DIR_RIGHT
         internal Section[] Forward
         {
             get => [mForwardStraightOn, mForwardLeft, mForwardRight];
@@ -321,7 +321,7 @@ public class Traffic : IEntryData
         E_TRAFFICLIGHTSTATE_GREEN
     }
 
-    // VehicleTypeData and VehicleTypeUpdateData, the two arrays have an entry for each type
+    // Combines VehicleTypeData and VehicleTypeUpdateData structures
     public class VehicleType
     {
         [Description("From muTrailerFlowTypeId."), TypeConverter(typeof(TrafficReferenceConverter))]
@@ -487,7 +487,6 @@ public class Traffic : IEntryData
             ? count
             : throw new ReadFailedError($"Traffic data has {count} {what}, more than the {max} there's room for.");
 
-        // Ranges into a shared array become lists in their owners, which only keeps the data if they follow on from each other
         List<T> take<T>(List<T> all, ref int next, int offset, int count, string what)
         {
             if (offset != next || offset + count > all.Count)
@@ -503,7 +502,7 @@ public class Traffic : IEntryData
                 throw new ReadFailedError($"Traffic data has {what} that nothing uses, so it can't be edited as lists.");
         }
 
-        // Indexes become references once everything they can refer to is read
+        // Deferred link resolution after all entities are loaded
         List<Action> links = [];
 
         T get<T>(List<T> list, int index, string what) =>
@@ -524,9 +523,9 @@ public class Traffic : IEntryData
         int numKillZones = u16(), numKillZoneRegions = u16();
         long killZoneIDs = ptr(), killZones = ptr(), killZoneRegions = ptr(), vehicleTypes = ptr(), vehicleTypesUpdate = ptr(), vehicleAssets = ptr(), vehicleTraits = ptr();
         int numLights = u16(), numLightTypes = u16();
-        u16(); // muNumCoronas, the light types give it (and the v1.0 X360 file has it byte swapped)
+        u16(); // muNumCoronas (recomputed on save; byte-swapped in v1.0 X360)
         long lightPositions = ptr(), instanceIDs = ptr(), instanceTypes = ptr(), lightTypes = ptr(), coronaTypes = ptr(), coronaPositions = ptr();
-        br.ReadBytes(129 * 2); // mauInstanceHashOffsets, and the two hash tables after it, are rebuilt when saving
+        br.ReadBytes(129 * 2); // Hash tables are rebuilt on save
         ptr();
         ptr();
         int numPaintColours = br.ReadByte();
@@ -611,7 +610,7 @@ public class Traffic : IEntryData
                 br.ReadUInt32();
                 section.maRungs = take(allRungs, ref nextRung, rungOffset, sectionRungs, "section rung");
 
-                if (sectionStopLines > 0) // A section without any has 255 as its offset
+                if (sectionStopLines > 0) // Stop line offset is 255 if none
                     section.maStopLines = take(allStopLines, ref nextStopLine, stopLineOffset, sectionStopLines, "section stop line");
 
                 List<Neighbour> neighbours(int start, int count) => [..take(allNeighbours, ref nextNeighbour, start, count, "section neighbour").Select(raw =>
@@ -904,7 +903,6 @@ public class Traffic : IEntryData
             links.Add(() => light.mType = get(maTrafficLightTypes, currentType4, "traffic light type"));
         }
 
-        // Each hull has a range of the lights, and a hull without any has where the next range would start
         int nextLight = 0;
 
         for (int currentI7 = 0; currentI7 < numHulls; currentI7++)
@@ -946,7 +944,7 @@ public class Traffic : IEntryData
         return true;
     }
 
-    private sealed class FlatWriter(bool bigEndian, int pointerSize)
+    internal sealed class FlatWriter(bool bigEndian, int pointerSize)
     {
         public sealed class Block
         {
@@ -969,7 +967,6 @@ public class Traffic : IEntryData
             Bw.Write(new byte[pointerSize]);
         }
 
-        // An empty block is placed too, its pointer is where it would start
         public void Start(Block block)
         {
             Pad(16);
@@ -1030,7 +1027,6 @@ public class Traffic : IEntryData
         return indexes;
     }
 
-    // A reference's index, or none's value for one that isn't set
     private static int Index<T>(Dictionary<T, int> indexes, T target, string what, int? none = null) where T : class
     {
         if (target == null)
@@ -1063,70 +1059,70 @@ public class Traffic : IEntryData
 
     public byte[] Serialize(BundleEntry entry) => Serialize(entry.Console, PointerSize(entry));
 
-    // Validate what the user has set so the game won't crash
+    // Validates structural constraints required by the game engine
     private void Validate()
     {
-        static void Require(bool ok, string message)
+        static void require(bool ok, string message)
         {
             if (!ok)
                 throw new InvalidDataException(message);
         }
 
-        Require(maHulls.Count <= 400, $"There are {maHulls.Count} hulls, the game has room for 400.");
+        require(maHulls.Count <= 400, $"There are {maHulls.Count} hulls, the game has room for 400.");
         List<TrafficLight> lights = [.. maHulls.SelectMany(h => h.maTrafficLights)];
-        Require(lights.Count <= 600, $"There are {lights.Count} traffic lights, the game has room for 600.");
-        Require(maVehicleAssets.Count < 64, $"There are {maVehicleAssets.Count} vehicle assets, the game has room for 63.");
-        Require(maVehicleTypes.Count <= 96, $"There are {maVehicleTypes.Count} vehicle types, the game has room for 96.");
-        Require(maKillZones.Sum(z => z.maRegions.Count) <= 8192, "There are more kill zone regions than the game's 8192.");
+        require(lights.Count <= 600, $"There are {lights.Count} traffic lights, the game has room for 600.");
+        require(maVehicleAssets.Count < 64, $"There are {maVehicleAssets.Count} vehicle assets, the game has room for 63.");
+        require(maVehicleTypes.Count <= 96, $"There are {maVehicleTypes.Count} vehicle types, the game has room for 96.");
+        require(maKillZones.Sum(z => z.maRegions.Count) <= 8192, "There are more kill zone regions than the game's 8192.");
 
-        HashSet<uint> lightIds = [];
+        HashSet<uint> lightIDs = [];
+
         foreach (TrafficLight light in lights)
-            Require(lightIds.Add(light.muInstanceID), $"Traffic light ID {light.muInstanceID} is used more than once, and the game finds lights by ID.");
+            require(lightIDs.Add(light.muInstanceID), $"Traffic light ID {light.muInstanceID} is used more than once, and the game finds lights by ID.");
 
         for (int i = 0; i < maFlowTypes.Count; i++)
         {
             List<FlowVehicleType> types = maFlowTypes[i].maVehicleTypes;
-            Require(types.Count > 0, $"Flow type {i} has no vehicle types to spawn.");
-            Require(types[^1].muCumulativeProb == 255, $"Flow type {i}: the last vehicle type's muCumulativeProb has to be 255, so the game's 0 to 255 roll always picks one.");
+            require(types.Count > 0, $"Flow type {i} has no vehicle types to spawn.");
+            require(types[^1].muCumulativeProb == 255, $"Flow type {i}: the last vehicle type's muCumulativeProb has to be 255, so the game's 0 to 255 roll always picks one.");
         }
 
         for (int h = 0; h < maHulls.Count; h++)
         {
             Hull hull = maHulls[h];
-            Require(hull.maJunctions.Count < 16, $"Hull {h} has {hull.maJunctions.Count} junctions, the game has room for 15.");
-            Require(hull.maSections.Sum(s => s.maStopLines.Count) <= 64, $"Hull {h} has more than the game's 64 stop lines.");
+            require(hull.maJunctions.Count < 16, $"Hull {h} has {hull.maJunctions.Count} junctions, the game has room for 15.");
+            require(hull.maSections.Sum(s => s.maStopLines.Count) <= 64, $"Hull {h} has more than the game's 64 stop lines.");
 
             for (int j = 0; j < hull.maJunctions.Count; j++)
-                Require(hull.maJunctions[j].maStates.Count > 0, $"Hull {h} junction {j} has no states, the game divides by how many there are.");
+                require(hull.maJunctions[j].maStates.Count > 0, $"Hull {h} junction {j} has no states, the game divides by how many there are.");
 
             for (int s = 0; s < hull.maSections.Count; s++)
             {
                 Section section = hull.maSections[s];
                 List<LaneRung> rungs = section.maRungs;
-                Require(rungs.Count >= 2, $"Hull {h} section {s} has {rungs.Count} rungs, a lane needs at least 2.");
-                Require(rungs[0].mfCumulativeLength == 0, $"Hull {h} section {s}: the first rung's mfCumulativeLength has to be 0.");
+                require(rungs.Count >= 2, $"Hull {h} section {s} has {rungs.Count} rungs, a lane needs at least 2.");
+                require(rungs[0].mfCumulativeLength == 0, $"Hull {h} section {s}: the first rung's mfCumulativeLength has to be 0.");
 
                 for (int r = 1; r < rungs.Count; r++)
-                    Require(rungs[r].mfCumulativeLength > rungs[r - 1].mfCumulativeLength,
+                    require(rungs[r].mfCumulativeLength > rungs[r - 1].mfCumulativeLength,
                         $"Hull {h} section {s} rung {r}: mfCumulativeLength has to be more than the rung before's ({rungs[r - 1].mfCumulativeLength}), the game measures along the lane with it.");
 
                 foreach (Neighbour neighbour in section.maLeftNeighbours.Concat(section.maRightNeighbours))
                 {
                     int ours = rungs.IndexOf(neighbour.mOurStartRung), theirs = neighbour.mSection?.maRungs.IndexOf(neighbour.mTheirStartRung) ?? -1;
-                    Require(ours < 0 || ours + neighbour.muSharedLength <= rungs.Count, $"Hull {h} section {s} neighbour: mOurStartRung plus muSharedLength goes past the section's rungs.");
-                    Require(theirs < 0 || theirs + neighbour.muSharedLength <= neighbour.mSection.maRungs.Count, $"Hull {h} section {s} neighbour: mTheirStartRung plus muSharedLength goes past its section's rungs.");
+                    require(ours < 0 || ours + neighbour.muSharedLength <= rungs.Count, $"Hull {h} section {s} neighbour: mOurStartRung plus muSharedLength goes past the section's rungs.");
+                    require(theirs < 0 || theirs + neighbour.muSharedLength <= neighbour.mSection.maRungs.Count, $"Hull {h} section {s} neighbour: mTheirStartRung plus muSharedLength goes past its section's rungs.");
                 }
             }
         }
 
         foreach (KillZone zone in maKillZones)
             foreach (KillZoneRegion region in zone.maRegions)
-                Require(region.mSection == null || region.mSection.maRungs.IndexOf(region.mStartRung) <= region.mSection.maRungs.IndexOf(region.mEndRung),
+                require(region.mSection == null || region.mSection.maRungs.IndexOf(region.mStartRung) <= region.mSection.maRungs.IndexOf(region.mEndRung),
                     $"Kill zone 0x{zone.mId:X}: a region's mStartRung comes after its mEndRung.");
     }
 
-    // The game only streams in a hull's listed vehicle assets, and using one that isn't loaded crashes it,
-    // so any its lanes and static vehicles can spawn are added
+    // Ensures vehicle assets referenced by lanes or static vehicles are included in the hull stream list
     private List<VehicleAsset> StreamedAssets(Hull hull)
     {
         IEnumerable<FlowType> flows = hull.maSections.Select(s => s.mFlowType).Concat(hull.maStaticTrafficVehicles.Select(v => v.mFlowType));
@@ -1166,7 +1162,7 @@ public class Traffic : IEntryData
                 refs.StopLines.TryAdd(line, (h: currentH, stopLine++));
         }
 
-        // The game finds kill zones by binary search on their IDs, and traffic lights by ID in 128 buckets of its low bits
+        // Sort kill zones by ID for binary search; bucket traffic lights into 128 hash slots
         List<KillZone> zones = [.. maKillZones.OrderBy(z => z.mId)];
         int[] hashed = [.. Enumerable.Range(0, lights.Count).OrderBy(i => lights[i].muInstanceID & 127).ThenBy(i => lights[i].muInstanceID)];
         List<Corona> coronas = [.. maTrafficLightTypes.SelectMany(t => t.maCoronas)];
@@ -1180,7 +1176,7 @@ public class Traffic : IEntryData
         bw.Write(muDataVersion);
         bw.Write((byte)0);
         bw.Write(U16(maHulls.Count, "Hulls"));
-        bw.Write(0u); // muSizeInBytes, filled in at the end
+        bw.Write(0u); // muSizeInBytes placeholder
         w.Ptr(pvs);
         w.Ptr(hullPointers);
         w.Ptr(flowPointers);
@@ -1473,7 +1469,7 @@ public class Traffic : IEntryData
         {
             Section section = sections[i];
             string sectionName = $"{name} section {i}";
-            byte stopLineStart = byte.MaxValue; // What a section without stop lines has
+            byte stopLineStart = byte.MaxValue; // 255 indicates no stop lines
 
             if (section.maStopLines.Count > 0)
                 stopLineStart = stopLineOffset < byte.MaxValue

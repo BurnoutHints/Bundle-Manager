@@ -16,8 +16,7 @@ internal static class ImageImportDialog
                 : CompressionType.DXT5;
         long compressedSize = GameImage.TextureSize(compressed, width, height);
         long linearSize = GameImage.TextureSize(CompressionType.BGRA, width, height);
-        bool compressible = width % 4 == 0 && height % 4 == 0; // GameImage.SetImage refuses other sizes
-
+        bool compressible = width % 4 == 0 && height % 4 == 0; // Block compression requires 4x4 alignment
         TaskDialogCommandLinkButton compressedButton = new("Compressed (recommended)", compressible
             ? $"{compressed}{(hasAlpha
                 ? ", keeps the transparency"

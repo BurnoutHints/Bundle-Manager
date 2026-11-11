@@ -3,7 +3,7 @@ using BundleFormat;
 
 namespace BundleManager;
 
-// Own every mutable buffer/list; keep only the archive identity shared for reference lookup.
+// Deep copy mutable entry state while retaining shared archive reference
 internal static class EntryDraft
 {
     public static BundleEntry Copy(BundleEntry entry)

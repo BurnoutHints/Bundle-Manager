@@ -81,8 +81,6 @@ public class VertexDesc
                 br.BaseStream.Position += 1;
                 attribute.Size = br.ReadByte();
                 attribute.Offset = br.ReadByte();
-
-                // These are probably in the following bytes but I'll need to check where.
                 attribute.Unknown1 = 0;
                 attribute.Unknown2 = 0;
 

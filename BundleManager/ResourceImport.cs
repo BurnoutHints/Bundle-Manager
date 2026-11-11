@@ -59,7 +59,7 @@ public static partial class ResourceImport
             : data;
     }
 
-    // We now export the primary data without its import table and include a YAP-style yaml file for imports
+    // Exports primary data without import table and writes YAP-compatible imports YAML
     public static void WritePrimary(string path, BundleEntry entry)
     {
         List<BundleDependency> imports = entry.GetDependencies();
@@ -70,7 +70,7 @@ public static partial class ResourceImport
         if (imports.Count > 0)
             File.WriteAllLines(yamlPath, imports.Select(d => $"- 0x{d.EntryPointerOffset:x8}: 0x{d.EntryID:x8}"));
         else if (File.Exists(yamlPath))
-            File.Delete(yamlPath); // From an earlier export of this resource, it would add imports back on import
+            File.Delete(yamlPath); // Remove stale imports YAML
     }
 
     public static void WritePrimaryWithTable(string path, BundleEntry entry)
@@ -186,7 +186,7 @@ public static partial class ResourceImport
         // Model
         else if (data.Length <= 0x20)
         {
-            // 32 bit model, then 64 bit model (32 bit is technically padded to nearest 0x10, so this would run anyway)
+            // Check 32-bit (0x13) and 64-bit (0x1F) model type markers
             if ((data.Length > 0x13 && data[0x13] == 0x2)
                 || (data.Length > 0x1F && data[0x1F] == 0x2))
                 currentType = EntryType.Model;
