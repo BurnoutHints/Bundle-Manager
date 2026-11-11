@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RoslynToolsPath>$(MSBuildSDKsPath)/../DotnetTools/dotnet-format</RoslynToolsPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CodeAnalysis" HintPath="$(RoslynToolsPath)/Microsoft.CodeAnalysis.dll" Private="false" />
+    <Reference Include="Microsoft.CodeAnalysis.CSharp" HintPath="$(RoslynToolsPath)/Microsoft.CodeAnalysis.CSharp.dll" Private="false" />
+    <Reference Include="Microsoft.CodeAnalysis.Workspaces" HintPath="$(RoslynToolsPath)/Microsoft.CodeAnalysis.Workspaces.dll" Private="false" />
+    <Reference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" HintPath="$(RoslynToolsPath)/Microsoft.CodeAnalysis.CSharp.Workspaces.dll" Private="false" />
+    <Reference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" HintPath="$(RoslynToolsPath)/Microsoft.CodeAnalysis.Workspaces.MSBuild.dll" Private="false" />
+    <InternalsVisibleTo Include="CodeStyle.Tests" />
+  </ItemGroup>
+</Project>
