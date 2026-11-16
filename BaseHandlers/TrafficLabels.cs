@@ -98,6 +98,10 @@ public static class TrafficLabels
         ["mResourceId"] = "Resource ID",
         ["mpEntries"] = "Textures",
         ["mpGDBTextureName"] = "GameDB path",
+        ["RND_Vol"] = "Random volume",
+        ["RND_Pitch"] = "Random pitch",
+        ["Az"] = "Azimuth",
+        ["eRollOffType"] = "Roll-off type",
         ["LionName"] = "Name in effects",
         ["muHash"] = "Name hash"
     };
@@ -140,7 +144,7 @@ public static class TrafficLabels
 
         installed = true;
 
-        foreach (Type root in (Type[])[typeof(Traffic), typeof(AISections), typeof(PropPhysics), typeof(VFXPropCollection), typeof(ParticleDescriptionCollection), typeof(TextureNameMap), typeof(HudMessages)])
+        foreach (Type root in (Type[])[typeof(Traffic), typeof(AISections), typeof(PropPhysics), typeof(VFXPropCollection), typeof(ParticleDescriptionCollection), typeof(TextureNameMap), typeof(HudMessages), typeof(Splicer)])
             foreach (Type currentType in root.GetNestedTypes().Where(t => t.IsClass).Append(root))
                 TypeDescriptor.AddProvider(new Provider(TypeDescriptor.GetProvider(currentType)), currentType);
     }

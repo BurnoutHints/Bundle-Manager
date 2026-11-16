@@ -16,6 +16,7 @@ public static class TrafficReferences
     public static Traffic Data;
     public static AISections AIData;
     public static VFXPropCollection VFXData;
+    public static Splicer SplicerData;
     public static Action<object> Preview;
     public static Action RestorePreview;
 
@@ -28,6 +29,9 @@ public static class TrafficReferences
 
         if (type == typeof(VFXPropCollection.VFXCoronaTypeData))
             return Indexed(VFXData?.mpCoronaTypeDataTable ?? []);
+
+        if (type == typeof(Splicer.Sample))
+            return Indexed(SplicerData?.Samples ?? []);
 
         Traffic data = Data;
 

@@ -71,6 +71,14 @@ internal static partial class Program
                 return 0;
             }
 
+            if (args.Contains("--splicer-only"))
+            {
+                CheckSplicerFiles(args);
+                CheckSplicerPlatforms(args);
+                Console.WriteLine($"All {checks} splicer checks passed.");
+                return 0;
+            }
+
             if (args.Contains("--hud-only"))
             {
                 CheckHudMessageFiles(args);
@@ -128,6 +136,7 @@ internal static partial class Program
                 CheckBnd1PlatformRefusal();
                 CheckTriggerFiles(args);
                 CheckHudMessageFiles(args);
+                CheckSplicerFiles(args);
             }
 
             Console.WriteLine($"All {checks} checks passed.");
