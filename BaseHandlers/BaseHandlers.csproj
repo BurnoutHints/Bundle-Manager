@@ -8,6 +8,9 @@
     <PackageReference Include="NAudio.WinMM" Version="2.2.1" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="..\resources\AttribSchema.json" LogicalName="AttribSchema.json" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\BundleFormat\BundleFormat.csproj" />
     <ProjectReference Include="..\BundleUtilities\BundleUtilities.csproj" />
     <ProjectReference Include="..\BurnoutImage\BurnoutImage.csproj" />

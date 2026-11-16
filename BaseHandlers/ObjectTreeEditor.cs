@@ -90,6 +90,10 @@ public class ObjectTreeEditor : UserControl
     [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Func<object, string, int> CollectionLimit { get; set; } = TrafficRules.CollectionLimit;
 
+    // Finds what refers to an object for Used by, when references aren't object properties
+    [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public Func<object, List<ObjectGraph.Usage>> FindUses { get; set; }
+
     // Indicates collections where items can only be added/removed at the end
     [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Func<object, string, bool> PositionsFixed { get; set; }
@@ -326,14 +330,17 @@ public class ObjectTreeEditor : UserControl
 
     private bool PositionsAreFixed(TreeNode listNode) => PositionsFixed?.Invoke(listNode.Parent?.Tag, listNode.Name) == true;
 
+    // Read-only lists (ReadOnlyCollection) can't be added to, removed from or reordered
+    private static bool FixedSize(TreeNode listNode) => listNode?.Tag is IList { IsFixedSize: true };
+
     private void UpdateCommands()
     {
-        bool positionsFixed = ItemNode != null && PositionsAreFixed(ItemNode.Parent);
-        addItem.Enabled = ListNode != null;
-        duplicateItem.Enabled = ItemNode != null || DuplicateRequested != null && TrafficCopy.CanCopy(SelectedObject);
-        deleteItem.Enabled = ItemNode != null && (!positionsFixed || ItemNode.NextNode == null);
-        upItem.Enabled = !positionsFixed && ItemNode?.PrevNode != null;
-        downItem.Enabled = !positionsFixed && ItemNode?.NextNode != null;
+        bool positionsFixed = ItemNode != null && PositionsAreFixed(ItemNode.Parent), fixedSize = FixedSize(ListNode);
+        addItem.Enabled = ListNode != null && !fixedSize;
+        duplicateItem.Enabled = ItemNode != null && !fixedSize || DuplicateRequested != null && TrafficCopy.CanCopy(SelectedObject);
+        deleteItem.Enabled = ItemNode != null && !fixedSize && (!positionsFixed || ItemNode.NextNode == null);
+        upItem.Enabled = !positionsFixed && !fixedSize && ItemNode?.PrevNode != null;
+        downItem.Enabled = !positionsFixed && !fixedSize && ItemNode?.NextNode != null;
 
         foreach ((ToolStripButton button, ToolStripMenuItem command) in commandButtons)
             button.Enabled = command.Enabled;
@@ -432,7 +439,7 @@ public class ObjectTreeEditor : UserControl
     {
         references = [];
 
-        if (ItemNode is not TreeNode item || PositionsAreFixed(item.Parent) && item.NextNode != null)
+        if (ItemNode is not TreeNode item || FixedSize(item.Parent) || PositionsAreFixed(item.Parent) && item.NextNode != null)
             return false;
 
         references = ObjectGraph.Incoming(root, item.Tag);
@@ -449,7 +456,7 @@ public class ObjectTreeEditor : UserControl
 
     private void MoveItem(int by)
     {
-        if (ItemNode is not TreeNode item || PositionsAreFixed(item.Parent))
+        if (ItemNode is not TreeNode item || FixedSize(item.Parent) || PositionsAreFixed(item.Parent))
             return;
 
         IList list = (IList)item.Parent.Tag;
@@ -694,6 +701,9 @@ public class ObjectTreeEditor : UserControl
 
     private bool CanGrow(TreeNode listNode)
     {
+        if (FixedSize(listNode))
+            return false;
+
         int maximum = CollectionLimit(listNode.Parent?.Tag, listNode.Name);
 
         if (((IList)listNode.Tag).Count < maximum)
@@ -748,7 +758,7 @@ public class ObjectTreeEditor : UserControl
 
     private void ShowUses(object value, bool deleting)
     {
-        List<ObjectGraph.Usage> usages = ObjectGraph.Incoming(root, value);
+        List<ObjectGraph.Usage> usages = FindUses?.Invoke(value) ?? ObjectGraph.Incoming(root, value);
         using Form dialog = new()
         {
             Text = deleting

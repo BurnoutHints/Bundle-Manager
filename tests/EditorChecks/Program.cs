@@ -79,6 +79,13 @@ internal static partial class Program
                 return 0;
             }
 
+            if (args.Contains("--vault-only"))
+            {
+                CheckVaultFiles(args);
+                Console.WriteLine($"All {checks} vault checks passed.");
+                return 0;
+            }
+
             if (args.Contains("--hud-only"))
             {
                 CheckHudMessageFiles(args);
@@ -137,6 +144,7 @@ internal static partial class Program
                 CheckTriggerFiles(args);
                 CheckHudMessageFiles(args);
                 CheckSplicerFiles(args);
+                CheckVaultFiles(args);
             }
 
             Console.WriteLine($"All {checks} checks passed.");

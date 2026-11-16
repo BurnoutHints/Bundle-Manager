@@ -37,5 +37,6 @@ public class BasePlugin : IPlugin
         EntryTypeRegistry.Register(EntryType.BrnEnvironmentTimeLine, new EnvironmentTimeLine());
         EntryTypeRegistry.Register(EntryType.HudMessage, new HudMessages());
         EntryTypeRegistry.Register(EntryType.Splicer, new Splicer());
+        EntryTypeRegistry.Register(EntryType.AttribSysVault, new AttribVault());
     }
 }
