@@ -71,10 +71,26 @@ internal static partial class Program
                 return 0;
             }
 
+            if (args.Contains("--hud-only"))
+            {
+                CheckHudMessageFiles(args);
+                Console.WriteLine($"All {checks} HUD message checks passed.");
+                return 0;
+            }
+
             if (args.Contains("--particles-only"))
             {
                 CheckParticles(args);
                 Console.WriteLine($"All {checks} particle checks passed.");
+                return 0;
+            }
+
+            if (args.Contains("--triggers-only"))
+            {
+                CheckPVSNeighbourPruning();
+                CheckBnd1PlatformRefusal();
+                CheckTriggerFiles(args);
+                Console.WriteLine($"All {checks} trigger, PVS and BND1 checks passed.");
                 return 0;
             }
 
@@ -96,6 +112,7 @@ internal static partial class Program
 
             CheckHex();
             CheckResources();
+            CheckPS3Textures();
 
             if (!args.Contains("--resources-only"))
             {
@@ -107,6 +124,10 @@ internal static partial class Program
                 CheckParticles(args);
                 CheckWorldVisualization();
                 CheckTrafficWorkflows();
+                CheckPVSNeighbourPruning();
+                CheckBnd1PlatformRefusal();
+                CheckTriggerFiles(args);
+                CheckHudMessageFiles(args);
             }
 
             Console.WriteLine($"All {checks} checks passed.");

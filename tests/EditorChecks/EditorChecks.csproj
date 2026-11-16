@@ -8,5 +8,6 @@
   <ItemGroup>
     <ProjectReference Include="../../BundleManager/BundleManager.csproj" />
     <ProjectReference Include="../../BaseHandlers/BaseHandlers.csproj" />
+    <ProjectReference Include="../../PVSFormat/PVSFormat.csproj" />
   </ItemGroup>
 </Project>

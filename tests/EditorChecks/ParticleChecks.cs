@@ -331,6 +331,9 @@ internal static partial class Program
             int states = word(8), materials = word(16), locators = word(24);
             Check(word(48) == 3 && states == 0x60 && word(states + 8) == -1 && word(materials + 12 + 8) == -1 && word(materials + 8) == 0 && word(materials + 36 + 8) == 2,
                 $"Empty lists are stored as -1 and the others as runs of the next table for {platform}");
+            int synchronised = word(40) + 32 + 0x1C;
+            Check(saved[synchronised] == 1 && saved[synchronised + 1] == 0 && saved[synchronised + 2] == 0 && saved[synchronised + 3] == 0,
+                $"A light glow type's synchronised flag is the one byte at +0x1C the game reads, for {platform}");
             Check(BinaryPrimitives.ReadUInt32LittleEndian(saved.AsSpan(locators + 12)) == (bigEndian
                 ? 0x0100C07Fu
                 : 0x7FC00001u), $"A locator keeps what the tools left after its position for {platform}");
