@@ -36,7 +36,7 @@ public class TextureState
 
                 if (descEntry1 != null && descEntry1.Type == EntryType.Texture)
                 {
-                    result.Texture = GameImage.GetImage(descEntry1.EntryBlocks[0].Data, descEntry1.EntryBlocks[1].Data, descEntry1.Platform);
+                    result.Texture = GameImage.GetImage(descEntry1);
 
                     if (result.Texture != null)
                         TextureCache.AddToCache(id, result.Texture);

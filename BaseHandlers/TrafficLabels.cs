@@ -140,7 +140,7 @@ public static class TrafficLabels
 
         installed = true;
 
-        foreach (Type root in (Type[])[typeof(Traffic), typeof(AISections), typeof(PropPhysics), typeof(VFXPropCollection), typeof(ParticleDescriptionCollection), typeof(TextureNameMap)])
+        foreach (Type root in (Type[])[typeof(Traffic), typeof(AISections), typeof(PropPhysics), typeof(VFXPropCollection), typeof(ParticleDescriptionCollection), typeof(TextureNameMap), typeof(HudMessages)])
             foreach (Type currentType in root.GetNestedTypes().Where(t => t.IsClass).Append(root))
                 TypeDescriptor.AddProvider(new Provider(TypeDescriptor.GetProvider(currentType)), currentType);
     }

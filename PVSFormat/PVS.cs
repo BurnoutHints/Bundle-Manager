@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using BundleFormat;
 using BundleUtilities;
@@ -161,19 +162,17 @@ public class PVS : IEntryData
                 bw.Write(ptr);
         }
 
-        // Update neighbours in case of zone deletion
+        // Update neighbours in case of zone deletion. Removing inside a forward
+        // loop skipped the entry after each removal, so a second neighbour of a
+        // deleted zone survived and was written pointing at no zone.
+        HashSet<ulong> zoneIds = [.. data.Zones.Select(z => z.ZoneId)];
+
         for (int i = 0; i < data.TotalZones; ++i)
         {
-            for (int j = 0; j < data.Zones[i].NumUnsafeNeighbours; ++j)
-            {
-                if (data.Zones.FindIndex(z => z.ZoneId == data.Zones[i].UnsafeNeighbours[j].ZoneId) == -1)
-                {
-                    Zone zone = data.Zones[i];
-                    zone.UnsafeNeighbours.RemoveAt(j);
-                    zone.NumUnsafeNeighbours--;
-                    data.Zones[i] = zone;
-                }
-            }
+            Zone zone = data.Zones[i];
+            zone.UnsafeNeighbours.RemoveAll(n => !zoneIds.Contains(n.ZoneId));
+            zone.NumUnsafeNeighbours = (short)zone.UnsafeNeighbours.Count;
+            data.Zones[i] = zone;
         }
 
         // Get necessary information before writing
@@ -333,7 +332,7 @@ public class PVS : IEntryData
 
         if (descEntry1 != null && descEntry1.Type == EntryType.Texture)
         {
-            image = GameImage.GetImage(descEntry1.EntryBlocks[0].Data, descEntry1.EntryBlocks[1].Data, descEntry1.Platform);
+            image = GameImage.GetImage(descEntry1);
 
             if (image != null)
                 TextureCache.AddToCache(id, image);

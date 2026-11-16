@@ -410,7 +410,8 @@ public class BundleArchive
         bnd1File = br.ReadBytes((int)br.BaseStream.Length);
         br.BaseStream.Position = afterMagic;
 
-        // Version number?
+        // Bundle version: 3, 4 or 5. Version 4 adds the flags and the uncompressed
+        // descriptor table, version 5 adds the two memory alignments
         br.ReadUInt32();
 
         uint entryCount = br.ReadUInt32();
@@ -423,7 +424,7 @@ public class BundleArchive
             br.BaseStream.Position += 4; // Padding
         }
 
-        br.BaseStream.Position += 0x14; // Unknown Data
+        br.BaseStream.Position += 0x14; // Runtime pool addresses, one per pool
 
         uint idListOffset = br.ReadUInt32();
         uint idTableOffset = br.ReadUInt32();
@@ -431,8 +432,16 @@ public class BundleArchive
         br.ReadUInt32(); // dependency block
         br.ReadUInt32(); // start of data block
 
-        Platform = BundlePlatform.X360; // Xbox only for now
-        br.ReadUInt32(); // might be platform (2 being X360)
+        // The platform position depends on the pool count it states.
+        // 4 pools on PC (0x4C), 5 on Xbox 360 (0x58), 6 on PS3 (0x64).
+        // Everything here is laid out for Xbox 360's 5 pools, 
+        // so any other platform is refused
+        uint platform = br.ReadUInt32();
+
+        if (platform != 2)
+            throw new ReadFailedError("This is a version 1 (bndl) bundle that isn't for Xbox 360. Bundle Manager only reads Xbox 360 version 1 bundles.");
+
+        Platform = BundlePlatform.X360;
 
         uint compressed = br.ReadUInt32();
 
@@ -441,7 +450,10 @@ public class BundleArchive
         else
             Flags = 0;
 
-        br.ReadUInt32(); // unknown purpose sometimes the same as entryCount
+        // muUncompressedDescriptorCount
+        // how many whole descriptors the uncompressed size table holds,
+        // which equals the resource count in every bundle I've tried
+        br.ReadUInt32();
 
         uint uncompressedInfoOffset = br.ReadUInt32();
 

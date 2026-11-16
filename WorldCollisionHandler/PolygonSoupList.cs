@@ -664,7 +664,7 @@ public class PolygonSoupList : IEntryData
         long cPos = bw.BaseStream.Position;
         uint chunkPointerStart = (uint)bw.BaseStream.Position;
         bw.BaseStream.Position = chunkPointerStartPos;
-        bw.Write((uint)cPos);
+        writePtr(cPos);
         bw.BaseStream.Position = cPos;
 
         for (int i = 0; i < Chunks.Count; i++)

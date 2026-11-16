@@ -35,5 +35,6 @@ public class BasePlugin : IPlugin
         EntryTypeRegistry.Register(EntryType.FlaptFile, new FlaptFile());
         EntryTypeRegistry.Register(EntryType.BrnEnvironmentKeyframe, new EnvironmentKeyframe());
         EntryTypeRegistry.Register(EntryType.BrnEnvironmentTimeLine, new EnvironmentTimeLine());
+        EntryTypeRegistry.Register(EntryType.HudMessage, new HudMessages());
     }
 }

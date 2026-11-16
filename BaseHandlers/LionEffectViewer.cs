@@ -774,7 +774,7 @@ public sealed class LionEffectRenderer
             {
                 try
                 {
-                    using Image image = GameImage.GetImage(entry.EntryBlocks[0].Data, entry.EntryBlocks[1].Data, entry.Platform);
+                    using Image image = GameImage.GetImage(entry);
                     texture = image == null
                         ? null
                         : Texture.FromImage(image);

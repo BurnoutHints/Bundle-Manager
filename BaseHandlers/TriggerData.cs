@@ -97,22 +97,22 @@ public class StartingGrid
 
         for (int i = 0; i < 8; i++)
         {
-            StartingPositions[i] = new(
+            StartingPositions.Add(new(
                 br.ReadSingle(),
                 br.ReadSingle(),
                 br.ReadSingle(),
-                br.ReadSingle());
+                br.ReadSingle()));
         }
 
         StartingDirections = new(8);
 
         for (int i = 0; i < 8; i++)
         {
-            StartingDirections[i] = new(
+            StartingDirections.Add(new(
                 br.ReadSingle(),
                 br.ReadSingle(),
                 br.ReadSingle(),
-                br.ReadSingle());
+                br.ReadSingle()));
         }
     }
 
@@ -623,7 +623,7 @@ public class SignatureStunt
     {
         long currentPosition = bw.BaseStream.Position;
         bw.BaseStream.Position = stuntElementOffsetPosition;
-        bw.Write(currentPosition);
+        TriggerData.WritePtr(bw, currentPosition, x64);
         bw.BaseStream.Position = currentPosition;
 
         foreach (int trigger in stuntElementRegions)

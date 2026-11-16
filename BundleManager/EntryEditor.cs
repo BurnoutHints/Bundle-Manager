@@ -160,7 +160,7 @@ public partial class EntryEditor : Form
         UpdateDraftStatus();
 
         Image image = texture
-            ? await Task.Run(() => GameImage.GetImage(entry.EntryBlocks[0].Data, entry.EntryBlocks[1].Data, entry.Platform))
+            ? await Task.Run(() => GameImage.GetImage(entry))
             : null;
         ImageHeader header = image != null
             ? GameImage.GetImageHeader(entry.EntryBlocks[0].Data, entry.Platform)
@@ -229,7 +229,7 @@ public partial class EntryEditor : Form
         try
         {
             if (string.Equals(Path.GetExtension(path), ".dds", StringComparison.OrdinalIgnoreCase))
-                File.WriteAllBytes(path, GameImage.GetDDS(Entry.EntryBlocks[0].Data, Entry.EntryBlocks[1].Data, Entry.Platform));
+                File.WriteAllBytes(path, GameImage.GetDDS(Entry));
             else
                 Image.Save(path, ImageFormat.Png);
         }

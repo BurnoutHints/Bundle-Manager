@@ -196,6 +196,11 @@ public class VFXPropCollection : IEntryData
         [Category("Timing"), Description("Whether every glow of this type blinks together.")]
         public bool mbSynchronised { get; set; }
 
+        // mbSynchronised is a one-byte bool at 0x1C
+        // These are the three bytes of struct padding after it, just keeping them the same
+        [Browsable(false)]
+        public byte[] SynchronisedPadding { get; set; } = new byte[3];
+
         public override string ToString() => $"ID {mnID}, texture {(uint)mType}";
     }
 
@@ -282,7 +287,8 @@ public class VFXPropCollection : IEntryData
             mrSizeMin = br.ReadSingle(),
             mrSizeMax = br.ReadSingle(),
             mrMasterTime = br.ReadSingle(),
-            mbSynchronised = br.ReadUInt32() != 0
+            mbSynchronised = br.ReadByte() != 0,
+            SynchronisedPadding = br.ReadBytes(3)
         });
 
         VFXLocator[] locators = table(3, () => new VFXLocator
@@ -482,9 +488,13 @@ public class VFXPropCollection : IEntryData
             bw.Write(data.mrSizeMin);
             bw.Write(data.mrSizeMax);
             bw.Write(data.mrMasterTime);
-            bw.Write(data.mbSynchronised
-                ? 1u
-                : 0u);
+
+            bw.Write((byte)(data.mbSynchronised
+                ? 1
+                : 0));
+            bw.Write(data.SynchronisedPadding is { Length: 3 } padding
+                ? padding
+                : new byte[3]);
         }
 
         return ms.ToArray();

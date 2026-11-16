@@ -372,7 +372,7 @@ public static class GameImage
         {
             br.BaseStream.Seek(0x00, SeekOrigin.Begin);
 
-            CompressionType currentType4 = br.ReadByte() switch
+            CompressionType currentType4 = (br.ReadByte() & ~0x60) switch // Without the linear and unnormalised flags
             {
                 0x85 => CompressionType.ARGB,
                 0x86 => CompressionType.DXT1,
@@ -394,6 +394,11 @@ public static class GameImage
             throw new InvalidDataException($"A texture header of 0x{data.Length:X} bytes isn't one Bundle Manager knows.");
         }
     }
+
+    // The body is memory type 2 on PS3, 1 elsewhere
+    public static Image GetImage(BundleEntry entry) => GetImage(entry.EntryBlocks[0].Data, entry.EntryBlocks[entry.SecondaryBlock]?.Data, entry.Platform);
+
+    public static byte[] GetDDS(BundleEntry entry) => GetDDS(entry.EntryBlocks[0].Data, entry.EntryBlocks[entry.SecondaryBlock]?.Data, entry.Platform);
 
     public static Image GetImage(byte[] data, byte[] extraData, BundlePlatform? bundle = null)
     {
@@ -417,6 +422,9 @@ public static class GameImage
             if (extraData.Length < needed)
                 throw new InvalidDataException($"The texture data is {extraData.Length} bytes, but a {header.Width}×{header.Height} {header.CompressionType} texture needs {needed}.");
 
+            if (header.Platform == PlatformType.PS3)
+                extraData = LinearPS3(data, extraData, header.CompressionType, 1, 1, 0);
+
             byte[] pixels = header.CompressionType switch
             {
                 CompressionType.DXT1 => ImageUtil.DecompressImage(extraData, header.Width, header.Height, CompressionFormat.Bc1),
@@ -429,23 +437,14 @@ public static class GameImage
 
             int rO, gO, bO, aO;
 
+            // The block decoder writes RGBA on every platform; PS3 DXT data is in PC byte order
             if (header.CompressionType == CompressionType.DXT1
              || header.CompressionType == CompressionType.DXT5)
             {
-                if (header.Platform == PlatformType.PS3)
-                {
-                    rO = 1;
-                    gO = 2;
-                    bO = 3;
-                    aO = 0; // ARGB
-                }
-                else
-                {
-                    rO = 0;
-                    gO = 1;
-                    bO = 2;
-                    aO = 3; // RGBA
-                }
+                rO = 0;
+                gO = 1;
+                bO = 2;
+                aO = 3;
             }
             else
             {
@@ -553,12 +552,15 @@ public static class GameImage
             throw new NotSupportedException($"This {info.Platform} texture's format isn't supported yet.");
 
         int faceSize = TextureSize(currentType, width, height, mips), padded = (faceSize + 0x7F) & ~0x7F;
-        int stride = info.Platform == PlatformType.PC && data.Length >= faces * padded
+        int stride = info.Platform is PlatformType.PC or PlatformType.PS3 && data.Length >= faces * padded
             ? padded
             : faceSize;
 
         if (data.Length < (faces - 1) * stride + faceSize)
             throw new InvalidDataException($"The texture data is {data.Length} bytes, but a {width}×{height} {currentType} texture with {mips} mips and {faces} faces needs {faces * faceSize}.");
+
+        if (info.Platform == PlatformType.PS3)
+            data = LinearPS3(header, data, currentType, mips, faces, stride);
 
         bool compressed = currentType is CompressionType.DXT1 or CompressionType.DXT5 or CompressionType.BC7;
         (uint flags, uint fourCC, uint r, uint g, uint b, uint a) = currentType switch // DDS_PIXELFORMAT
@@ -707,6 +709,40 @@ public static class GameImage
                 foreach (ref uint word in words)
                     word = BitOperations.RotateLeft(word, 16);
                 break;
+        }
+
+        return linear;
+    }
+
+    // Uncompressed PS3 textures without CELL_GCM_TEXTURE_LN keep each mip in Morton order
+    private static byte[] LinearPS3(byte[] header, byte[] data, CompressionType type, int mips, int faces, int stride)
+    {
+        if ((header[0] & 0x20) != 0 || type is not (CompressionType.ARGB or CompressionType.RGBA or CompressionType.BGRA))
+            return data;
+
+        byte[] linear = (byte[])data.Clone();
+        int width0 = BinaryPrimitives.ReadUInt16BigEndian(header.AsSpan(8)), height0 = BinaryPrimitives.ReadUInt16BigEndian(header.AsSpan(10));
+
+        for (int face = 0; face < faces; face++)
+        {
+            for (int mip = 0, offset = face * stride, width = width0, height = height0; mip < mips;
+                 mip++, offset += width * height * 4, width = Math.Max(1, width / 2), height = Math.Max(1, height / 2))
+            {
+                int shared = BitOperations.Log2((uint)Math.Min(width, height));
+
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        int src = (x >> shared | y >> shared) << 2 * shared;
+
+                        for (int i = 0; i < shared; i++)
+                            src |= (x >> i & 1) << 2 * i | (y >> i & 1) << 2 * i + 1;
+
+                        Array.Copy(data, offset + src * 4, linear, offset + (y * width + x) * 4, 4);
+                    }
+                }
+            }
         }
 
         return linear;
