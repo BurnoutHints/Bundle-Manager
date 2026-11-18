@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Numerics;
-using System.Security.Principal;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -28,6 +27,12 @@ public static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        if (args is [Elevation.CopyArgument, string source, string target])
+        {
+            Environment.ExitCode = Elevation.RunCopy(source, target);
+            return;
+        }
+
         CultureInfo.DefaultThreadCurrentCulture = new("en-US");
 
         ResourceDB.Preload();
@@ -45,8 +50,6 @@ public static class Program
 
         FileModeForm = new();
         FolderModeForm = new();
-
-        CheckElevation();
 
         if (args.Length == 0)
         {
@@ -132,21 +135,6 @@ public static class Program
                     Application.Run(FileModeForm);
                 }
             }
-        }
-    }
-
-    public static void CheckElevation()
-    {
-        using WindowsIdentity identity = WindowsIdentity.GetCurrent();
-        WindowsPrincipal principal = new(identity);
-
-        if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
-        {
-            MessageBox.Show("Bundle Manager is running with standard permissions.\n"
-                + "Saving may fail in write-protected locations.",
-                "Running non-elevated",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning);
         }
     }
 

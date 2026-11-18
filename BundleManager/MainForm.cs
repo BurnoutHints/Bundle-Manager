@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -351,15 +352,27 @@ public partial class MainForm : Form
     private async Task<bool> SaveTo(string path)
     {
         BundleArchive archive = CurrentArchive;
+        string temp = null;
+
+        Task write(string to) => LoadingDialog.RunAsync(this, "Saving: " + path, (_, cancel) =>
+        {
+            lock (saveLock)
+                archive.Write(to, cancel);
+            return true;
+        });
 
         try
         {
-            await LoadingDialog.RunAsync(this, "Saving: " + path, (_, cancel) =>
+            try
             {
-                lock (saveLock)
-                    archive.Write(path, cancel);
-                return true;
-            });
+                await write(path);
+            }
+            catch (UnauthorizedAccessException) when (Elevation.Offer(this, path))
+            {
+                temp = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                await write(temp);
+                await Elevation.Copy(temp, path);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -370,6 +383,14 @@ public partial class MainForm : Form
             MessageBox.Show(this, $"{path} wasn't saved, and is unchanged:\n{ex.Message}", "Error",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
+        }
+        finally
+        {
+            if (temp != null)
+            {
+                File.Delete(temp);
+                File.Delete(temp + ".error");
+            }
         }
 
         archive.Dirty = false;

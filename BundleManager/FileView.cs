@@ -316,6 +316,10 @@ public partial class FileView : Form
             sw.Close();
             s.Close();
         }
+        catch (UnauthorizedAccessException)
+        {
+            // A write-protected folder (i.e. Program Files without admin) just isn't cached
+        }
         catch (IOException ex)
         {
             _ = InvokeAsync(() => MessageBox.Show(this, "Failed to cache file types:\n" + ex.Message + "\n" + ex.StackTrace));
