@@ -130,7 +130,7 @@ public static class TrafficLabels
         if (names.TryGetValue(raw, out string name))
             return name;
 
-        string text = Regex.Replace(raw, "^[mM](?:[aufiexrnbp]|[au][fi]|ac)?(?=[A-Z])", "");
+        string text = Regex.Replace(raw, "^[mM](?:[aufiexrnbp]|[au][fi]|ac|pa|[ui](?:8|16|32))?(?=[A-Z])", "");
         text = Regex.Replace(text.Replace('_', ' '), "(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", " ");
         return text.Length == 0
             ? raw
@@ -147,6 +147,12 @@ public static class TrafficLabels
         foreach (Type root in (Type[])[typeof(Traffic), typeof(AISections), typeof(PropPhysics), typeof(VFXPropCollection), typeof(ParticleDescriptionCollection), typeof(TextureNameMap), typeof(HudMessages), typeof(Splicer)])
             foreach (Type currentType in root.GetNestedTypes().Where(t => t.IsClass).Append(root))
                 TypeDescriptor.AddProvider(new Provider(TypeDescriptor.GetProvider(currentType)), currentType);
+
+        // Progression's records are top-level classes
+        foreach (Type currentType in (Type[])[typeof(ProgressionData), typeof(PlayerCarID), typeof(ProgressionRankData), typeof(EventJunction), typeof(RaceEventData),
+            typeof(EventStartGridSlot), typeof(CheckpointData), typeof(Rival), typeof(OpponentBalanceData), typeof(EventRacerPersonality), typeof(TrophyUnlockData),
+            typeof(CarOpponent), typeof(CarOpponentSet)])
+            TypeDescriptor.AddProvider(new Provider(TypeDescriptor.GetProvider(currentType)), currentType);
     }
 
     private sealed class Provider(TypeDescriptionProvider parent) : TypeDescriptionProvider(parent)

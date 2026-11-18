@@ -17,6 +17,7 @@ public static class TrafficReferences
     public static AISections AIData;
     public static VFXPropCollection VFXData;
     public static Splicer SplicerData;
+    public static ProgressionData Progression;
     public static Action<object> Preview;
     public static Action RestorePreview;
 
@@ -32,6 +33,9 @@ public static class TrafficReferences
 
         if (type == typeof(Splicer.Sample))
             return Indexed(SplicerData?.Samples ?? []);
+
+        if (type == typeof(RaceEventData))
+            return Indexed(Progression?.mpaEvents ?? []);
 
         Traffic data = Data;
 

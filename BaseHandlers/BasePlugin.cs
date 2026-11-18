@@ -38,5 +38,6 @@ public class BasePlugin : IPlugin
         EntryTypeRegistry.Register(EntryType.HudMessage, new HudMessages());
         EntryTypeRegistry.Register(EntryType.Splicer, new Splicer());
         EntryTypeRegistry.Register(EntryType.AttribSysVault, new AttribVault());
+        EntryTypeRegistry.Register(EntryType.WorldPainter2D, new WorldPainter2D());
     }
 }
